@@ -51,8 +51,6 @@ persistence:
   accessMode: ReadWriteOnce
   size: 1Gi
 
-config: {}
-
 readinessProbe:
   httpGet:
     path: /actuator/health
@@ -67,3 +65,24 @@ autoscaling:
   minReplicas: 1
   maxReplicas: 10
   targetCPUUtilizationPercentage: 80
+
+config:
+  # === Database ===
+  FITPUB_DATABASE_URL: "jdbc:postgresql://postgres:5432/fitpub"
+  FITPUB_DATABASE_USERNAME: "fitpub"
+  FITPUB_DATABASE_PASSWORD: "change-me"
+
+  # === Application ===
+  SPRING_PROFILES_ACTIVE: "prod"
+  FITPUB_PORT: "8080"
+  FITPUB_DOMAIN: "example.fit"
+  FITPUB_BASE_URL: "https://example.fit"
+
+  # === Security ===
+  FITPUB_JWT_SECRET: "change-me-super-secret"
+  FITPUB_JWT_EXPIRATION_MS: "86400000"
+
+  # === Flyway ===
+  SPRING_FLYWAY_ENABLED: "true"
+  SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+  SPRING_FLYWAY_VALIDATE_ON_MIGRATE: "true"
