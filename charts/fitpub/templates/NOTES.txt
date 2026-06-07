@@ -1,0 +1,44 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}
+
+{{- if .Values.ingress.enabled }}
+
+You can access the application at:
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}{{ (index .paths 0).path }}
+{{- end }}
+
+{{- else if contains "NodePort" .Values.service.type }}
+
+Get the application URL by running:
+  export NODE_PORT=$(kubectl get svc {{ include "fitpub.fullname" . }} -o jsonpath="{.spec.ports[0].nodePort}")
+  export NODE_IP=$(kubectl get nodes -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+
+{{- else if contains "LoadBalancer" .Values.service.type }}
+
+It may take a few minutes for the LoadBalancer IP to be available.
+You can watch the status by running:
+  kubectl get svc -w {{ include "fitpub.fullname" . }}
+
+{{- else if contains "ClusterIP" .Values.service.type }}
+
+The application is exposed via ClusterIP.
+You can port-forward to access it locally:
+
+  kubectl port-forward svc/{{ include "fitpub.fullname" . }} 8080:{{ .Values.service.port }}
+
+Then open http://127.0.0.1:8080 in your browser.
+
+{{- end }}
+
+Important:
+- Most configuration is done through the `config` section in values.yaml
+- Make sure to change all default secrets and passwords before going to production
+- A PersistentVolumeClaim is created for file uploads by default
