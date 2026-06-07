@@ -17,7 +17,7 @@ Helm chart for deploying [Fitpub](https://codeberg.org/fitpub/fitpub) — a fede
 
 ## Prerequisites
 
-- Kubernetes 1.21+
+- Kubernetes 1.26+
 - Helm 3.8+
 
 ## Installation
