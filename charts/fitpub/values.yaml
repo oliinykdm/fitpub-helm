@@ -103,3 +103,14 @@ config:
   FITPUB_MAIL_USERNAME: "user@example.com"
   FITPUB_MAIL_PASSWORD: "change-me"
   FITPUB_MAIL_FROM_ADDRESS: "noreply@example.fit"
+
+  # === ActivityPub ===
+  FITPUB_ACTIVITYPUB_ENABLED: "true"
+
+  # === Registration ===
+  FITPUB_REGISTRATION_ENABLED: "true"
+  FITPUB_REGISTRATION_PASSWORD: "change-me"
+
+  # === File Upload ===
+  FILE_UPLOAD_MAX_SIZE: "50MB"
+  FILE_UPLOAD_DIR: "/app/uploads"
