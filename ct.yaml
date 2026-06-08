@@ -1,0 +1,7 @@
+# Chart Testing configuration
+chart-dirs:
+  - charts
+target-branch: main
+helm-extra-args: "--timeout 600s"
+check-version-increment: true
+validate-maintainers: false
