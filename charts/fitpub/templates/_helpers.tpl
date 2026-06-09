@@ -60,3 +60,17 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Create the name of the ConfigMap used for non-secret environment variables.
+*/}}
+{{- define "fitpub.configMapName" -}}
+{{- printf "%s-config" (include "fitpub.fullname" .) }}
+{{- end }}
+
+{{/*
+Create the name of the Secret used for secret environment variables.
+*/}}
+{{- define "fitpub.secretName" -}}
+{{- default (printf "%s-secret" (include "fitpub.fullname" .)) .Values.applicationSecret.existingSecret }}
+{{- end }}
