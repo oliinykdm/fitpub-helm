@@ -39,6 +39,14 @@ Then open http://127.0.0.1:8080 in your browser.
 {{- end }}
 
 Important:
-- Most configuration is done through the `config` section in values.yaml
-- Make sure to change all default secrets and passwords before going to production
-- A PersistentVolumeClaim is created for file uploads by default
+- Non-secret environment variables are rendered from `config` into a ConfigMap
+- Secret environment variables come from `applicationSecret.data` or `applicationSecret.existingSecret`
+- FitPub requires an external PostgreSQL database with PostGIS enabled
+- FITPUB_BASE_URL must be the canonical public URL without a trailing slash
+- A PersistentVolumeClaim is created for `/app/uploads` by default
+{{- if not .Values.productionChecks.enabled }}
+- Consider enabling `productionChecks.enabled=true` in production values to fail fast on missing required settings
+{{- end }}
+{{- if gt (int .Values.replicaCount) 1 }}
+- Multiple replicas should be used only after validating FitPub background jobs, federation processing and shared storage behavior
+{{- end }}
