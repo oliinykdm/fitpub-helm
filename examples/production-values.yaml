@@ -1,0 +1,54 @@
+# Example production values for FitPub with an external PostGIS database.
+#
+# Create the Secret separately with keys matching applicationSecret.data:
+# kubectl create secret generic fitpub-secret \
+#   --from-literal=FITPUB_DATABASE_USERNAME=fitpub \
+#   --from-literal=FITPUB_DATABASE_PASSWORD="$(openssl rand -base64 32)" \
+#   --from-literal=FITPUB_JWT_SECRET="$(openssl rand -base64 64)" \
+#   --from-literal=FITPUB_EMAIL_SECRET="$(openssl rand -base64 64)"
+
+productionChecks:
+  enabled: true
+
+image:
+  tag: "1.1.1"
+
+config:
+  FITPUB_DATABASE_URL: "jdbc:postgresql://postgres.example.com:5432/fitpub"
+  FITPUB_DOMAIN: "fitpub.example.com"
+  # Important: no trailing slash. A trailing slash produces broken ActivityPub URLs.
+  FITPUB_BASE_URL: "https://fitpub.example.com"
+  FITPUB_PUSH_ENABLED: "false"
+  FITPUB_MAIL_HOST: "smtp.example.com"
+  FITPUB_MAIL_FROM_ADDRESS: "admin@example.com"
+
+applicationSecret:
+  existingSecret: "fitpub-secret"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: fitpub.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: fitpub-tls
+      hosts:
+        - fitpub.example.com
+
+persistence:
+  enabled: true
+  size: 10Gi
+
+# Optional: mount legal/about Markdown pages from an existing Secret.
+# kubectl create secret generic fitpub-pages --from-file=terms.md --from-file=imprint.md --from-file=about.md
+pages:
+  existingSecret: ""
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
