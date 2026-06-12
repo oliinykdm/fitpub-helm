@@ -1,10 +1,24 @@
 # FitPub Helm Chart
 
-[![Lint](https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml)
+[![Lint and Test](https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml)
+[![Release](https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml)
+![Chart Version](https://img.shields.io/badge/chart-0.2.0-blue)
+![App Version](https://img.shields.io/badge/app-1.1.1-blue)
+![Kubernetes](https://img.shields.io/badge/kubernetes-%3E%3D1.26-blue)
+![Helm](https://img.shields.io/badge/helm-%3E%3D3.8-blue)
 
 Helm chart for deploying [FitPub](https://codeberg.org/fitpub/fitpub), a federated fitness tracking platform.
 
 > **Status:** Production-oriented chart in active development. Review values carefully before exposing a public instance.
+
+## Validation Status
+
+- Helm lint: enabled in CI with `ct lint`
+- Render tests: default values and `examples/production-values.yaml`
+- Kubernetes API validation: kind cluster with `kubectl apply --dry-run=server`
+- Release packaging: chart-releaser publishes packages and `index.yaml` to GitHub Pages
+- Runtime install test: not enabled yet; it requires PostGIS and application startup checks
+- Production status: ready for controlled testing, not yet broadly battle-tested
 
 ## Features
 
@@ -24,12 +38,20 @@ Helm chart for deploying [FitPub](https://codeberg.org/fitpub/fitpub), a federat
 
 ## Installation
 
+Charts are published through GitHub Pages by the release workflow:
+
 ```bash
 helm repo add fitpub https://oliinykdm.github.io/fitpub-helm
+helm repo update
+```
+
+Install with your production values:
+
+```bash
 helm install fitpub fitpub/fitpub -f production-values.yaml
 ```
 
-Or install directly from the repository:
+Or install directly from the repository while developing the chart:
 
 ```bash
 git clone https://github.com/oliinykdm/fitpub-helm.git
@@ -77,6 +99,8 @@ applicationSecret:
 ```
 
 `FITPUB_BASE_URL` must not include a trailing slash. For ActivityPub/WebFinger compatibility, use `https://example.com`, not `https://example.com/`.
+
+Enable `productionChecks.enabled=true` in production values. It fails rendering early when required public settings or chart-managed secrets are missing.
 
 See [values.yaml](charts/fitpub/values.yaml) and [examples/production-values.yaml](examples/production-values.yaml) for available options.
 
@@ -154,6 +178,34 @@ If you enable `autoscaling`, make sure your storage, background jobs, federation
 
 `networkPolicy.enabled` is disabled by default. FitPub needs egress to PostgreSQL, SMTP and federated/external HTTP services. If your cluster enforces egress policies, start with explicit rules for those dependencies.
 
+Example shape for restricted egress:
+
+```yaml
+networkPolicy:
+  enabled: true
+  egress:
+    allowAll: false
+    extraRules:
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: database
+        ports:
+          - protocol: TCP
+            port: 5432
+      - ports:
+          - protocol: UDP
+            port: 53
+          - protocol: TCP
+            port: 587
+```
+
+Adjust this to your actual PostgreSQL, DNS, SMTP and federation egress model.
+
+## Security Notes
+
+The chart drops Linux capabilities, disables privilege escalation and runs FitPub as UID/GID `1001`. `readOnlyRootFilesystem` is disabled by default because FitPub writes uploads, logs, temp files and caches; enabling it requires additional writable mounts for every write path.
+
 ## Upgrade
 
 ```bash
@@ -165,6 +217,7 @@ When changing ConfigMap or chart-managed Secret values, the Deployment rolls aut
 ## Important Production Checklist
 
 - Use external PostgreSQL with PostGIS.
+- Enable `productionChecks.enabled=true`.
 - Set `SPRING_PROFILES_ACTIVE=prod`.
 - Set strong values for `FITPUB_DATABASE_PASSWORD`, `FITPUB_JWT_SECRET` and `FITPUB_EMAIL_SECRET`.
 - Keep `FITPUB_BASE_URL` public, canonical and without a trailing slash.
