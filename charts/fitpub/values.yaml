@@ -44,6 +44,8 @@ securityContext:
   capabilities:
     drop:
       - ALL
+  # FitPub writes uploads, logs, temp files and caches. Enabling this requires
+  # writable mounts for every write path used by the application and JVM.
   readOnlyRootFilesystem: false
 
 initContainers:
@@ -224,6 +226,8 @@ livenessProbe:
   failureThreshold: 3
 
 autoscaling:
+  # FitPub is single-replica by default because uploads and background work need
+  # explicit validation before running multiple pods.
   enabled: false
   minReplicas: 1
   maxReplicas: 10
@@ -235,6 +239,8 @@ podDisruptionBudget:
   minAvailable: 1
 
 networkPolicy:
+  # Disabled by default because FitPub needs egress to PostGIS, SMTP and
+  # federated/external HTTP services. Enable only with rules matching your cluster.
   enabled: false
   ingress:
     enabled: true
