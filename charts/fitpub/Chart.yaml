@@ -19,7 +19,7 @@ maintainers:
     url: https://github.com/oliinykdm
 annotations:
   artifacthub.io/category: social
-  artifacthub.io/license: AGPL-3.0-or-later
+  artifacthub.io/license: Apache-2.0
   artifacthub.io/prerelease: "false"
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/changes: |
@@ -31,3 +31,7 @@ annotations:
       description: Add production checks for required FitPub settings and secrets.
     - kind: added
       description: Add support for mounting Markdown pages from an existing Secret.
+    - kind: added
+      description: Add ServiceMonitor and pod extension points for sidecars and extra init containers.
+    - kind: added
+      description: Add GitOps, troubleshooting and contribution documentation.
