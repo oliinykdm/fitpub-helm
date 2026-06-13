@@ -59,6 +59,8 @@ initContainers:
 service:
   type: ClusterIP
   port: 8080
+  annotations: {}
+  labels: {}
 
 ingress:
   enabled: false
@@ -189,6 +191,8 @@ applicationSecret:
 
 extraEnv: []
 extraEnvFrom: []
+extraInitContainers: []
+sidecars: []
 
 productionChecks:
   # Keep disabled for chart linting and local rendering without real secrets.
@@ -250,6 +254,15 @@ networkPolicy:
     # Keep unrestricted unless your cluster has explicit egress policy requirements.
     allowAll: true
     extraRules: []
+
+serviceMonitor:
+  enabled: false
+  labels: {}
+  annotations: {}
+  interval: 30s
+  scrapeTimeout: 10s
+  path: /actuator/prometheus
+  scheme: http
 
 terminationGracePeriodSeconds: 60
 
