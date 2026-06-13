@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - 'charts/**'
+      - 'artifacthub-repo.yml'
       - '.github/workflows/release.yaml'
 
 jobs:
@@ -51,3 +52,25 @@ jobs:
           skip_existing: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Publish Artifact Hub metadata
+        run: |
+          if [ ! -f artifacthub-repo.yml ]; then
+            echo "artifacthub-repo.yml not found, skipping"
+            exit 0
+          fi
+
+          worktree="$(mktemp -d)"
+          git fetch origin gh-pages
+          git worktree add "$worktree" origin/gh-pages
+          cp artifacthub-repo.yml "$worktree/artifacthub-repo.yml"
+
+          cd "$worktree"
+          if [ -z "$(git status --porcelain -- artifacthub-repo.yml)" ]; then
+            echo "artifacthub-repo.yml is already up to date"
+            exit 0
+          fi
+
+          git add artifacthub-repo.yml
+          git commit -m "Update Artifact Hub repository metadata"
+          git push origin HEAD:gh-pages
