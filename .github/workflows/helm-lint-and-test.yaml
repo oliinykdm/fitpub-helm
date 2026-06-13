@@ -9,6 +9,9 @@ on:
       - 'examples/**'
       - 'docs/**'
       - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'LICENSE'
+      - '.github/ISSUE_TEMPLATE/**'
       - '.github/workflows/helm-lint-and-test.yaml'
       - '.github/workflows/runtime-smoke-test.yaml'
   pull_request:
@@ -18,6 +21,9 @@ on:
       - 'examples/**'
       - 'docs/**'
       - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'LICENSE'
+      - '.github/ISSUE_TEMPLATE/**'
       - '.github/workflows/helm-lint-and-test.yaml'
       - '.github/workflows/runtime-smoke-test.yaml'
 
