@@ -20,6 +20,8 @@ Helm chart for deploying [FitPub](https://codeberg.org/fitpub/fitpub), a federat
 - Runtime install test: not enabled yet; it requires PostGIS and application startup checks
 - Production status: ready for controlled testing, not yet broadly battle-tested
 
+If the release badge is red after a failed first publish, rerun the `Release Helm Chart` workflow manually after `gh-pages` initialization fixes are merged.
+
 ## Features
 
 - Deployment running as the non-root FitPub user (`1001`)
@@ -103,6 +105,11 @@ applicationSecret:
 Enable `productionChecks.enabled=true` in production values. It fails rendering early when required public settings or chart-managed secrets are missing.
 
 See [values.yaml](charts/fitpub/values.yaml) and [examples/production-values.yaml](examples/production-values.yaml) for available options.
+
+Additional examples:
+
+- [examples/production-values.yaml](examples/production-values.yaml): production-style values with an externally managed Secret
+- [examples/chart-managed-secret-values.yaml](examples/chart-managed-secret-values.yaml): controlled testing values where Helm creates the Secret
 
 ## Ingress
 
@@ -214,6 +221,12 @@ helm upgrade fitpub fitpub/fitpub -f production-values.yaml
 
 When changing ConfigMap or chart-managed Secret values, the Deployment rolls automatically because checksum annotations are included on the pod template.
 
+Read [docs/upgrade-notes.md](docs/upgrade-notes.md) before upgrading across chart minor versions.
+
+## Design Notes
+
+This chart intentionally uses an external PostGIS database, a `Deployment` with a dedicated uploads PVC and a single-replica default. See [docs/design.md](docs/design.md) for the reasoning and current CI guarantees.
+
 ## Important Production Checklist
 
 - Use external PostgreSQL with PostGIS.
@@ -231,6 +244,8 @@ When changing ConfigMap or chart-managed Secret values, the Deployment rolls aut
 - FitPub project: https://codeberg.org/fitpub/fitpub
 - Original Kubernetes manifests discussion: https://codeberg.org/fitpub/fitpub/issues/301
 - This chart repository: https://github.com/oliinykdm/fitpub-helm
+- Upgrade notes: [docs/upgrade-notes.md](docs/upgrade-notes.md)
+- Design notes: [docs/design.md](docs/design.md)
 
 ## Contributing
 

@@ -12,6 +12,9 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    concurrency:
+      group: helm-chart-release
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -35,10 +38,7 @@ jobs:
           current_revision="$(git rev-parse HEAD)"
           git switch --orphan gh-pages
           git rm -rf . >/dev/null 2>&1 || true
-          cat > index.yaml <<'EOF'
-          apiVersion: v1
-          entries: {}
-          EOF
+          printf 'apiVersion: v1\nentries: {}\n' > index.yaml
           git add index.yaml
           git commit -m "Initialize Helm chart repository"
           git push origin gh-pages
