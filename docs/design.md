@@ -45,4 +45,11 @@ The CI pipeline verifies:
 - rendering with `examples/production-values.yaml`;
 - Kubernetes API validation in kind using `kubectl apply --dry-run=server`.
 
-The CI pipeline does not yet verify full runtime readiness. A runtime test would need PostGIS, valid application secrets and an HTTP health check after startup.
+The separate runtime smoke-test workflow verifies:
+
+- a kind cluster can run the chart;
+- a temporary PostGIS deployment is reachable;
+- FitPub can be installed with `helm install --wait`;
+- `/actuator/health` responds inside the cluster.
+
+The runtime smoke test is manual and weekly instead of mandatory on every PR because it pulls application and PostGIS images and can be slower or more sensitive to registry/network issues.
