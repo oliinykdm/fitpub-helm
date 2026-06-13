@@ -1,0 +1,47 @@
+name: Bug Report
+description: Report a problem with the FitPub Helm chart
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+    validations:
+      required: true
+  - type: input
+    id: chart-version
+    attributes:
+      label: Chart version
+      placeholder: "0.2.0"
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: FitPub app version
+      placeholder: "1.1.1"
+  - type: input
+    id: kubernetes-version
+    attributes:
+      label: Kubernetes version
+      placeholder: "1.30.0"
+  - type: textarea
+    id: values
+    attributes:
+      label: Relevant values
+      description: Remove secrets before pasting.
+      render: yaml
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or rendered manifests
+      render: shell
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
