@@ -40,7 +40,8 @@ jobs:
           git switch --orphan gh-pages
           git rm -rf . >/dev/null 2>&1 || true
           printf 'apiVersion: v1\nentries: {}\n' > index.yaml
-          git add index.yaml
+          touch .nojekyll
+          git add index.yaml .nojekyll
           git commit -m "Initialize Helm chart repository"
           git push origin gh-pages
           git checkout "$current_revision"
@@ -64,13 +65,14 @@ jobs:
           git fetch origin gh-pages
           git worktree add "$worktree" origin/gh-pages
           cp artifacthub-repo.yml "$worktree/artifacthub-repo.yml"
+          touch "$worktree/.nojekyll"
 
           cd "$worktree"
-          if [ -z "$(git status --porcelain -- artifacthub-repo.yml)" ]; then
-            echo "artifacthub-repo.yml is already up to date"
+          if [ -z "$(git status --porcelain -- artifacthub-repo.yml .nojekyll)" ]; then
+            echo "Artifact Hub metadata is already up to date"
             exit 0
           fi
 
-          git add artifacthub-repo.yml
-          git commit -m "Update Artifact Hub repository metadata"
+          git add artifacthub-repo.yml .nojekyll
+          git commit -m "Update Helm repository metadata"
           git push origin HEAD:gh-pages
