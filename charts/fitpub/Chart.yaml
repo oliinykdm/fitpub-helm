@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.2.0
+version: 0.2.1
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -24,14 +24,12 @@ annotations:
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/changes: |
     - kind: changed
-      description: Split application configuration into ConfigMap and Secret values.
+      description: Improve production documentation, release metadata and Artifact Hub publishing support.
     - kind: added
-      description: Add Ingress, HPA, PDB, NetworkPolicy and ServiceAccount templates.
-    - kind: added
-      description: Add production checks for required FitPub settings and secrets.
-    - kind: added
-      description: Add support for mounting Markdown pages from an existing Secret.
+      description: Add Runtime Smoke Test workflow with kind, PostGIS and health endpoint validation.
     - kind: added
       description: Add ServiceMonitor and pod extension points for sidecars and extra init containers.
     - kind: added
       description: Add GitOps, troubleshooting and contribution documentation.
+    - kind: added
+      description: Add development values and chart-managed secret examples.
