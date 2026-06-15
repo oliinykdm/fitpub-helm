@@ -145,7 +145,7 @@ Enable Ingress when exposing FitPub publicly:
 ```yaml
 ingress:
   enabled: true
-  className: nginx
+  className: traefik
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
   hosts:
@@ -159,7 +159,7 @@ ingress:
         - fitpub.example.com
 ```
 
-FitPub's production profile uses forwarded headers, so make sure your ingress controller or gateway passes `X-Forwarded-Proto` and `X-Forwarded-Port` correctly.
+Set `className` to the ingress controller used by your cluster. The example uses Traefik as a common self-hosted default. FitPub's production profile uses forwarded headers, so make sure your ingress controller or gateway passes `X-Forwarded-Proto` and `X-Forwarded-Port` correctly.
 
 ## Markdown Pages
 
