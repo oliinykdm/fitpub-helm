@@ -3,6 +3,7 @@
 [![Lint and Test](https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml)
 [![Runtime Smoke Test](https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml)
 [![Release](https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/fitpub)](https://artifacthub.io/packages/search?repo=fitpub)
 ![Chart Version](https://img.shields.io/badge/chart-0.2.0-blue)
 ![App Version](https://img.shields.io/badge/app-1.1.1-blue)
 ![Kubernetes](https://img.shields.io/badge/kubernetes-%3E%3D1.26-blue)
