@@ -13,6 +13,7 @@ on:
       - 'CONTRIBUTING.md'
       - 'LICENSE'
       - '.github/ISSUE_TEMPLATE/**'
+      - '.github/scripts/**'
       - '.github/workflows/helm-lint-and-test.yaml'
       - '.github/workflows/runtime-smoke-test.yaml'
   pull_request:
@@ -26,6 +27,7 @@ on:
       - 'CONTRIBUTING.md'
       - 'LICENSE'
       - '.github/ISSUE_TEMPLATE/**'
+      - '.github/scripts/**'
       - '.github/workflows/helm-lint-and-test.yaml'
       - '.github/workflows/runtime-smoke-test.yaml'
 

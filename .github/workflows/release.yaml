@@ -8,6 +8,7 @@ on:
     paths:
       - 'charts/**'
       - 'artifacthub-repo.yml'
+      - '.github/scripts/prune-helm-index.rb'
       - '.github/workflows/release.yaml'
 
 jobs:
@@ -75,4 +76,22 @@ jobs:
 
           git add artifacthub-repo.yml .nojekyll
           git commit -m "Update Helm repository metadata"
+          git push origin HEAD:gh-pages
+
+      - name: Prune missing chart packages from index
+        run: |
+          worktree="$(mktemp -d)"
+          git fetch origin gh-pages
+          git worktree add "$worktree" origin/gh-pages
+
+          ruby .github/scripts/prune-helm-index.rb "$worktree/index.yaml"
+
+          cd "$worktree"
+          if [ -z "$(git status --porcelain -- index.yaml)" ]; then
+            echo "index.yaml does not contain stale chart package entries"
+            exit 0
+          fi
+
+          git add index.yaml
+          git commit -m "Prune missing chart packages from index"
           git push origin HEAD:gh-pages
