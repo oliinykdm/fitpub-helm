@@ -49,6 +49,8 @@ persistence:
 pages:
   existingSecret: ""
 
+# maxUnavailable: 1 allows voluntary evictions (node drain) for a single-replica
+# deployment. Using minAvailable: 1 with replicaCount: 1 would block all drains.
 podDisruptionBudget:
   enabled: true
-  minAvailable: 1
+  maxUnavailable: 1
