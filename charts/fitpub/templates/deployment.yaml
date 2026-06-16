@@ -35,6 +35,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "fitpub.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -50,10 +51,18 @@ spec:
             - sh
             - -c
             - |
-              chown 1001:1001 /data
+              chown {{ default 1001 .Values.podSecurityContext.runAsUser }}:{{ default 1001 .Values.podSecurityContext.fsGroup }} /data
               chmod 775 /data
           securityContext:
             runAsUser: 0
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+                - DAC_OVERRIDE
           volumeMounts:
             - name: uploads
               mountPath: /data
