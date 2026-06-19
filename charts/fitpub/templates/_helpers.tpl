@@ -40,6 +40,21 @@ helm.sh/chart: {{ include "fitpub.chart" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- with .Values.commonLabels }}
+{{ toYaml . | trim }}
+{{- end }}
+{{- end }}
+
+{{/*
+Common annotations for all resources. Accepts a dict of resource-specific
+annotations as .annotations and the root context as .context.
+Usage: {{- include "fitpub.annotations" (dict "annotations" .Values.service.annotations "context" $) | nindent 4 }}
+*/}}
+{{- define "fitpub.annotations" -}}
+{{- $merged := merge (default (dict) .annotations) (default (dict) .context.Values.commonAnnotations) -}}
+{{- if $merged -}}
+{{- toYaml $merged }}
+{{- end -}}
 {{- end }}
 
 {{/*
