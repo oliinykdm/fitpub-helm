@@ -5,9 +5,10 @@ metadata:
   name: {{ include "fitpub.fullname" . }}
   labels:
     {{- include "fitpub.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
+  {{- $ann := include "fitpub.annotations" (dict "annotations" .Values.ingress.annotations "context" $) }}
+  {{- if $ann }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- $ann | nindent 4 }}
   {{- end }}
 spec:
   {{- with .Values.ingress.className }}
