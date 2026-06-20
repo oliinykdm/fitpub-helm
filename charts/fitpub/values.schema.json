@@ -4,7 +4,27 @@
   "properties": {
     "replicaCount": { "type": "integer", "minimum": 1 },
     "revisionHistoryLimit": { "type": "integer", "minimum": 0 },
+    "minReadySeconds": { "type": "integer", "minimum": 0 },
     "deploymentStrategy": { "type": "object" },
+    "commonLabels": { "type": "object" },
+    "commonAnnotations": { "type": "object" },
+    "diagnosticMode": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "command": { "type": "array", "items": { "type": "string" } },
+        "args": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "command": { "type": "array", "items": { "type": "string" } },
+    "args": { "type": "array", "items": { "type": "string" } },
+    "lifecycleHooks": { "type": "object" },
+    "priorityClassName": { "type": "string" },
+    "schedulerName": { "type": "string" },
+    "runtimeClassName": { "type": "string" },
+    "hostAliases": { "type": "array" },
+    "dnsPolicy": { "type": "string", "enum": ["", "ClusterFirst", "ClusterFirstWithHostNet", "Default", "None"] },
+    "dnsConfig": { "type": "object" },
     "image": {
       "type": "object",
       "properties": {
@@ -135,7 +155,14 @@
         "targetMemoryUtilizationPercentage": { "type": ["integer", "string"] }
       }
     },
-    "podDisruptionBudget": { "type": "object" },
+    "podDisruptionBudget": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "minAvailable": { "type": ["integer", "string"] },
+        "maxUnavailable": { "type": ["integer", "string"] }
+      }
+    },
     "networkPolicy": { "type": "object" },
     "serviceMonitor": { "type": "object" },
     "terminationGracePeriodSeconds": { "type": "integer", "minimum": 1 },
