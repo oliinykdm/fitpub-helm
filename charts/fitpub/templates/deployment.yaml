@@ -158,7 +158,7 @@ spec:
           volumeMounts:
             {{- if .Values.persistence.enabled }}
             - name: uploads
-              mountPath: /app/uploads
+              mountPath: {{ .Values.persistence.mountPath }}
             {{- end }}
             {{- if .Values.pages.existingSecret }}
             - name: pages
