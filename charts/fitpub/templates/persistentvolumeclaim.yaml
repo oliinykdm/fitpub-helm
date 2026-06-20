@@ -5,9 +5,10 @@ metadata:
   name: {{ include "fitpub.fullname" . }}-uploads
   labels:
     {{- include "fitpub.labels" . | nindent 4 }}
-  {{- with .Values.persistence.annotations }}
+  {{- $ann := include "fitpub.annotations" (dict "annotations" .Values.persistence.annotations "context" $) }}
+  {{- if $ann }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- $ann | nindent 4 }}
   {{- end }}
 spec:
   accessModes:
