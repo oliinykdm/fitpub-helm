@@ -6,8 +6,42 @@ replicaCount: 1
 
 revisionHistoryLimit: 10
 
+# Minimum seconds a newly created pod must be ready before it counts as
+# available. Only relevant when using RollingUpdate strategy.
+minReadySeconds: 0
+
 deploymentStrategy:
   type: Recreate
+
+# Labels added to every resource created by this chart. Useful for cost
+# allocation, environment tagging or platform-wide label policies.
+commonLabels: {}
+# commonLabels:
+#   environment: production
+#   team: platform
+
+# Annotations added to every resource created by this chart.
+commonAnnotations: {}
+# commonAnnotations:
+#   reloader.stakater.com/auto: "true"
+
+# ---------------------------------------------------------------------------
+# Diagnostic mode
+# ---------------------------------------------------------------------------
+# When enabled, overrides the container command with `sleep infinity` so you
+# can exec into the pod and inspect the runtime environment without startup
+# or probe failures interfering.
+#
+#   helm upgrade fitpub fitpub/fitpub \
+#     --reuse-values \
+#     --set diagnosticMode.enabled=true
+#
+diagnosticMode:
+  enabled: false
+  command:
+    - sleep
+  args:
+    - infinity
 
 image:
   # Container image for Fitpub
@@ -23,7 +57,9 @@ fullnameOverride: ""
 
 serviceAccount:
   create: true
-  automount: true
+  # FitPub does not call the Kubernetes API; disable token automount to reduce
+  # the attack surface if the pod is ever compromised.
+  automount: false
   annotations: {}
   name: ""
 
@@ -85,9 +121,13 @@ resources:
 # =============================================================================
 persistence:
   enabled: true
+  # Set to "-" to request the default storage class explicitly (equivalent to
+  # omitting storageClassName). Leave empty to omit the field entirely.
   storageClass: ""
   accessMode: ReadWriteOnce
   size: 1Gi
+  # Add helm.sh/resource-policy: keep to prevent the PVC (and your uploads)
+  # from being deleted on `helm uninstall`.
   annotations: {}
   existingClaim: ""
 
@@ -189,6 +229,27 @@ applicationSecret:
     FITPUB_MAIL_USERNAME: ""
     FITPUB_MAIL_PASSWORD: ""
 
+# Override the default container entrypoint. Useful for custom JVM flags or
+# init wrapper scripts. Leave empty to use the image default.
+command: []
+# command:
+#   - java
+
+# Override the default container arguments. Leave empty to use image defaults.
+args: []
+# args:
+#   - -XX:MaxRAMPercentage=75
+#   - -jar
+#   - /app/fitpub.jar
+
+# Lifecycle hooks for the main container. The recommended preStop hook adds a
+# small sleep so the load balancer can drain connections before SIGTERM.
+lifecycleHooks: {}
+# lifecycleHooks:
+#   preStop:
+#     exec:
+#       command: ["sh", "-c", "sleep 5"]
+
 extraEnv: []
 extraEnvFrom: []
 extraInitContainers: []
@@ -202,11 +263,19 @@ productionChecks:
 # =============================================================================
 # Health Probes
 # =============================================================================
+# startupProbe gates both readiness and liveness: neither probe starts until
+# startupProbe succeeds. Do not add initialDelaySeconds to readiness/liveness
+# when startupProbe is defined — it only adds unnecessary extra delay on top.
+#
+# Spring Boot Actuator exposes fine-grained endpoints:
+#   /actuator/health/liveness  — suitable for livenessProbe
+#   /actuator/health/readiness — suitable for readinessProbe
+# Override path here if your FitPub version exposes those endpoints and you
+# want separate liveness vs. readiness semantics.
 readinessProbe:
   httpGet:
     path: /actuator/health
     port: http
-  initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
   failureThreshold: 3
@@ -215,6 +284,7 @@ startupProbe:
   httpGet:
     path: /actuator/health
     port: http
+  # Allow up to 15 + 12×10 = 135 s for JVM startup before declaring failure.
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -224,7 +294,7 @@ livenessProbe:
   httpGet:
     path: /actuator/health
     port: http
-  initialDelaySeconds: 60
+  # No initialDelaySeconds: startupProbe already guards the startup window.
   periodSeconds: 15
   timeoutSeconds: 5
   failureThreshold: 3
@@ -240,7 +310,12 @@ autoscaling:
 
 podDisruptionBudget:
   enabled: false
-  minAvailable: 1
+  # Use maxUnavailable for single-replica deployments to allow voluntary
+  # evictions (node drain). minAvailable: 1 with replicaCount: 1 blocks all
+  # drains and is an operational anti-pattern.
+  # Exactly one of minAvailable or maxUnavailable must be set.
+  minAvailable: ""
+  maxUnavailable: 1
 
 networkPolicy:
   # Disabled by default because FitPub needs egress to PostGIS, SMTP and
@@ -265,6 +340,38 @@ serviceMonitor:
   scheme: http
 
 terminationGracePeriodSeconds: 60
+
+# Assign a PriorityClass to prevent the pod from being evicted under node
+# resource pressure. Requires a PriorityClass resource to exist in the cluster.
+priorityClassName: ""
+
+# Use a non-default scheduler (e.g. a batch or GPU scheduler). Leave empty for
+# the default Kubernetes scheduler.
+schedulerName: ""
+
+# Use a specific container runtime class (e.g. kata, gvisor) for sandboxed
+# execution. Leave empty for the node default.
+runtimeClassName: ""
+
+# Add entries to the pod's /etc/hosts. Useful for local DNS overrides or
+# testing federation with a self-hosted instance.
+hostAliases: []
+# hostAliases:
+#   - ip: "192.168.1.10"
+#     hostnames:
+#       - "other-fitpub.internal"
+
+# Override the pod's DNS policy. Valid values: ClusterFirst, ClusterFirstWithHostNet,
+# Default, None. Leave empty for the cluster default (ClusterFirst).
+dnsPolicy: ""
+
+# Additional DNS configuration. Useful with dnsPolicy: None for custom resolvers.
+dnsConfig: {}
+# dnsConfig:
+#   nameservers:
+#     - 1.1.1.1
+#   searches:
+#     - ns1.svc.cluster.local
 
 nodeSelector: {}
 tolerations: []
