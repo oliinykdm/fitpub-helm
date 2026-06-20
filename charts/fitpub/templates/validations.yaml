@@ -2,6 +2,10 @@
 {{- fail "config.FITPUB_BASE_URL must not end with a slash; trailing slash breaks generated ActivityPub/WebFinger URLs" -}}
 {{- end -}}
 
+{{- if and .Values.config.FITPUB_PORT (ne (.Values.config.FITPUB_PORT | toString) (.Values.service.port | toString)) -}}
+{{- fail (printf "config.FITPUB_PORT (%s) must match service.port (%v); the app listens on FITPUB_PORT but health probes and the Service use service.port" .Values.config.FITPUB_PORT .Values.service.port) -}}
+{{- end -}}
+
 {{- if .Values.productionChecks.enabled -}}
 {{- $requiredConfig := list "FITPUB_DATABASE_URL" "FITPUB_DOMAIN" "FITPUB_BASE_URL" -}}
 {{- range $key := $requiredConfig -}}

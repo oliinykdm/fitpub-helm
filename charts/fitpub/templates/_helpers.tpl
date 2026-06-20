@@ -51,7 +51,7 @@ annotations as .annotations and the root context as .context.
 Usage: {{- include "fitpub.annotations" (dict "annotations" .Values.service.annotations "context" $) | nindent 4 }}
 */}}
 {{- define "fitpub.annotations" -}}
-{{- $merged := merge (default (dict) .annotations) (default (dict) .context.Values.commonAnnotations) -}}
+{{- $merged := merge (deepCopy (default (dict) .annotations)) (default (dict) .context.Values.commonAnnotations) -}}
 {{- if $merged -}}
 {{- toYaml $merged }}
 {{- end -}}
