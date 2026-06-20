@@ -68,3 +68,19 @@ Next steps:
 - Put FitPub behind HTTPS before public federation use
 - Back up PostGIS and the uploads PVC
 - Read docs/troubleshooting.md if the pod does not become ready
+
+Debugging:
+If the pod fails to start, enable diagnostic mode to exec into the container
+without startup or probe failures blocking you:
+
+  helm upgrade {{ .Release.Name }} fitpub/fitpub \
+    --reuse-values \
+    --set diagnosticMode.enabled=true
+
+  kubectl exec -it deployment/{{ include "fitpub.fullname" . }} -n {{ .Release.Namespace }} -- sh
+
+Remember to disable diagnostic mode afterwards:
+
+  helm upgrade {{ .Release.Name }} fitpub/fitpub \
+    --reuse-values \
+    --set diagnosticMode.enabled=false
