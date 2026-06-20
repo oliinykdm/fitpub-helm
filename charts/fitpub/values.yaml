@@ -133,6 +133,10 @@ persistence:
   # from being deleted on `helm uninstall`.
   annotations: {}
   existingClaim: ""
+  # Path inside the container where the uploads PVC is mounted.
+  # Must match config.FILE_UPLOAD_DIR — changing one without the other causes
+  # uploads to be written to ephemeral storage and lost on pod restart.
+  mountPath: /app/uploads
 
 pages:
   # Mount Markdown legal/about pages from an existing Secret.
