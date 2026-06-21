@@ -121,8 +121,11 @@ resources:
 # =============================================================================
 persistence:
   enabled: true
-  # Set to "-" to request the default storage class explicitly (equivalent to
-  # omitting storageClassName). Leave empty to omit the field entirely.
+  # Storage class for the uploads PVC.
+  #   ""    — omit storageClassName; cluster uses its default StorageClass
+  #   "-"   — set storageClassName: ""; disables dynamic provisioning, binds to
+  #           a pre-existing PV without a StorageClass
+  #   "x"   — use the named StorageClass explicitly
   storageClass: ""
   accessMode: ReadWriteOnce
   size: 1Gi
