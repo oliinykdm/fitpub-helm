@@ -114,3 +114,12 @@ config:
   # === File Upload ===
   FILE_UPLOAD_MAX_SIZE: "50MB"
   FILE_UPLOAD_DIR: "/app/uploads"
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health
+    port: http
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 3
