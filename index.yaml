@@ -67,7 +67,7 @@ entries:
         url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
     apiVersion: v2
     appVersion: 1.1.1
-    created: '2026-06-21T21:27:57.442933898Z'
+    created: '2026-06-21T14:46:33.118274051Z'
     description: Helm chart for FitPub - federated fitness tracking platform
     digest: e6408b4661b089ba518d046d007a872be41240a85a1d70e9db2a516bfbe9a377
     home: https://codeberg.org/fitpub/fitpub
@@ -141,7 +141,7 @@ entries:
         url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
     apiVersion: v2
     appVersion: 1.1.1
-    created: '2026-06-21T21:11:11.538493417Z'
+    created: '2026-06-21T13:58:02.774193620Z'
     description: Helm chart for FitPub - federated fitness tracking platform
     digest: cf4f6aebb939424be45cb8f2adc53f46f489bb8408631e023c141c0e15d75370
     home: https://codeberg.org/fitpub/fitpub
@@ -199,7 +199,7 @@ entries:
         url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
     apiVersion: v2
     appVersion: 1.1.1
-    created: '2026-06-21T20:42:31.240707319Z'
+    created: '2026-06-20T13:55:20.901336774Z'
     description: Helm chart for FitPub - federated fitness tracking platform
     digest: 5f4e6ef2fa9ea6bcc68f8d582bce5751f8dfb7cbd77a1a914e499bfbf761fe24
     home: https://codeberg.org/fitpub/fitpub
@@ -235,7 +235,7 @@ entries:
         url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
     apiVersion: v2
     appVersion: 1.1.1
-    created: '2026-06-21T18:20:03.822144009Z'
+    created: '2026-06-17T17:05:09.443771208Z'
     description: Helm chart for FitPub - federated fitness tracking platform
     digest: c41fb2e4d4c3f8942cb7656c6ee151bb55e9d4a39f74f9df8924b68f828d779e
     home: https://codeberg.org/fitpub/fitpub
@@ -268,7 +268,7 @@ entries:
       artifacthub.io/prerelease: 'false'
     apiVersion: v2
     appVersion: 1.1.1
-    created: '2026-06-21T17:53:34.143912926Z'
+    created: '2026-06-16T12:18:44.612980517Z'
     description: Helm chart for FitPub - federated fitness tracking platform
     digest: 43e635a758416fe2bef4d3c67c08a9ad1d29b64b2325b20bd660a54af4845ef5
     home: https://codeberg.org/fitpub/fitpub
@@ -301,7 +301,7 @@ entries:
       artifacthub.io/prerelease: 'false'
     apiVersion: v2
     appVersion: 1.1.1
-    created: '2026-06-21T16:43:53.886404193Z'
+    created: '2026-06-15T14:42:11.357028994Z'
     description: Helm chart for FitPub - federated fitness tracking platform
     digest: 05f65ac7c05b0b030e2c2fd89730ec6c7188963de4a9198aafcb17f5442be153
     home: https://codeberg.org/fitpub/fitpub
@@ -322,4 +322,4 @@ entries:
     urls:
     - https://github.com/oliinykdm/fitpub-helm/releases/download/fitpub-0.2.2/fitpub-0.2.2.tgz
     version: 0.2.2
-generated: '2026-06-21T21:27:57.442960818Z'
+generated: '2026-06-21T14:46:40.882013774Z'
