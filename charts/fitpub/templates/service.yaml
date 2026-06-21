@@ -7,9 +7,10 @@ metadata:
     {{- with .Values.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- with .Values.service.annotations }}
+  {{- $ann := include "fitpub.annotations" (dict "annotations" .Values.service.annotations "context" $) }}
+  {{- if $ann }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- $ann | nindent 4 }}
   {{- end }}
 spec:
   type: {{ .Values.service.type }}
