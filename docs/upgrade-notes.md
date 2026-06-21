@@ -1,5 +1,35 @@
 # Upgrade Notes
 
+## 0.2.9
+
+### Config keys corrected to match the application
+
+Three keys in `config` did not map to any property the application reads and have been corrected. The application behavior is unchanged on default values, but if you relied on the old keys to tune anything, move to the new ones:
+
+| Removed / inert key | Use instead |
+| --- | --- |
+| `LOGGING_LEVEL_ORG_OPERATON` | `LOGGING_LEVEL_NET_JAVAHIPPIE_FITPUB` (FitPub's actual base package) |
+| `FITPUB_JWT_EXPIRATION_MS` | `FITPUB_SECURITY_JWT_EXPIRATION` (binds to `fitpub.security.jwt.expiration`) |
+| `FILE_UPLOAD_MAX_SIZE` | `SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE` / `SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE` |
+
+**Action required** only if you set any of the old keys in your own values — rename them, otherwise the change is transparent.
+
+### New config knobs: `FITPUB_FEDERATION_PROTOCOL`, `FITPUB_ALLOW_PRIVATE_IPS`
+
+`FITPUB_FEDERATION_PROTOCOL` (default `https`) controls the protocol used in generated federation URLs, and `FITPUB_ALLOW_PRIVATE_IPS` (default `false`) controls whether federation requests to private/loopback ranges are allowed. Keep the production defaults; the development example flips both for local federation testing.
+
+### Validation: `config.FITPUB_DOMAIN` must be a bare host
+
+`FITPUB_DOMAIN` must be a host with an optional port (`example.fit` or `example.fit:8443`), never a URL. Setting a scheme or a trailing slash now fails rendering, because it produces broken WebFinger/ActivityPub handles such as `acct:user@https://example.fit`.
+
+### NOTES.txt — write-test command used hardcoded path
+
+The `kubectl exec` write-test command shown after `helm install` used the hardcoded path `/app/uploads` instead of the configured `persistence.mountPath`. If you set a custom mount path, the command shown in NOTES would silently try to write to the wrong directory. The command now always reflects the configured value.
+
+### Validation: `dnsPolicy: None` requires `dnsConfig.nameservers`
+
+If `dnsPolicy` is set to `None` without providing `dnsConfig.nameservers`, `helm install`/`helm upgrade` now fails with a descriptive error. Previously this configuration was accepted by the chart but rejected by the Kubernetes admission controller with a non-obvious pod startup error.
+
 ## 0.2.8
 
 ### PDB — `minAvailable: 0` and `maxUnavailable: 0` now work correctly

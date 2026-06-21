@@ -169,10 +169,19 @@ config:
   FITPUB_SITE_BANNER_TEXT: ""
 
   # ---------------------------------------------------------------------------
-  # Security
+  # Security & Federation
   # ---------------------------------------------------------------------------
-  FITPUB_JWT_EXPIRATION_MS: "86400000"
+  # JWT lifetime in milliseconds. Binds to fitpub.security.jwt.expiration.
+  # (The FITPUB_JWT_EXPIRATION_MS name used by some compose setups is not read
+  # by the application.)
+  FITPUB_SECURITY_JWT_EXPIRATION: "86400000"
   FITPUB_ACTIVITYPUB_ENABLED: "true"
+  # Protocol used when generating federated/ActivityPub URLs. Keep "https" in
+  # production; "http" is only for local federation testing.
+  FITPUB_FEDERATION_PROTOCOL: "https"
+  # Allow federation requests to private/loopback IP ranges. Keep "false" in
+  # production — enabling it opens an SSRF path to internal services.
+  FITPUB_ALLOW_PRIVATE_IPS: "false"
 
   # ---------------------------------------------------------------------------
   # Database Migrations (Flyway)
@@ -201,7 +210,11 @@ config:
   # ---------------------------------------------------------------------------
   # File Uploads
   # ---------------------------------------------------------------------------
-  FILE_UPLOAD_MAX_SIZE: "50MB"
+  # Upload limits are the standard Spring Boot multipart properties. Keep
+  # max-request-size >= max-file-size. (FILE_UPLOAD_MAX_SIZE, used by some
+  # compose setups, is not read by the application.)
+  SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: "50MB"
+  SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: "50MB"
   FILE_UPLOAD_DIR: "/app/uploads"
   FITPUB_PAGES_PATH: "/app/pages"
 
@@ -214,7 +227,9 @@ config:
   # Logging
   # ---------------------------------------------------------------------------
   LOGGING_LEVEL_ROOT: "INFO"
-  LOGGING_LEVEL_ORG_OPERATON: "INFO"
+  # FitPub's own code lives under net.javahippie.fitpub. Set this to DEBUG to
+  # troubleshoot application behavior.
+  LOGGING_LEVEL_NET_JAVAHIPPIE_FITPUB: "INFO"
   LOGGING_LEVEL_ORG_SPRINGFRAMEWORK: "INFO"
   LOGGING_LEVEL_ORG_HIBERNATE: "WARN"
   LOGGING_LEVEL_ORG_FLYWAYDB: "INFO"
@@ -343,6 +358,10 @@ serviceMonitor:
   annotations: {}
   interval: 30s
   scrapeTimeout: 10s
+  # The prod profile only exposes health,info,metrics on the actuator. To scrape
+  # this path you must also expose the Prometheus endpoint, e.g. set in config:
+  #   MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
+  # and ensure the micrometer-registry-prometheus dependency is present.
   path: /actuator/prometheus
   scheme: http
 

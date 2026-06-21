@@ -6,6 +6,14 @@
 {{- fail "config.FITPUB_BASE_URL must not end with a slash; trailing slash breaks generated ActivityPub/WebFinger URLs" -}}
 {{- end -}}
 
+{{- if and .Values.config.FITPUB_DOMAIN (regexMatch "://|/" (.Values.config.FITPUB_DOMAIN | toString)) -}}
+{{- fail (printf "config.FITPUB_DOMAIN (%s) must be a bare host with optional port, not a URL; remove the scheme and any trailing slash, e.g. \"example.fit\" not \"https://example.fit/\"" .Values.config.FITPUB_DOMAIN) -}}
+{{- end -}}
+
+{{- if and .Values.config.FITPUB_FEDERATION_PROTOCOL (not (has (.Values.config.FITPUB_FEDERATION_PROTOCOL | toString) (list "http" "https"))) -}}
+{{- fail (printf "config.FITPUB_FEDERATION_PROTOCOL (%s) must be either \"http\" or \"https\"" .Values.config.FITPUB_FEDERATION_PROTOCOL) -}}
+{{- end -}}
+
 {{- if and .Values.config.FITPUB_PORT (ne (.Values.config.FITPUB_PORT | toString) (.Values.service.port | toString)) -}}
 {{- fail (printf "config.FITPUB_PORT (%s) must match service.port (%v); the app listens on FITPUB_PORT but health probes and the Service use service.port" .Values.config.FITPUB_PORT .Values.service.port) -}}
 {{- end -}}

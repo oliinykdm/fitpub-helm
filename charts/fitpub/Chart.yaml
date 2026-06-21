@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.2.8
+version: 0.2.9
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -32,6 +32,18 @@ annotations:
     fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
   artifacthub.io/changes: |
+    - kind: fixed
+      description: config — app log level now uses LOGGING_LEVEL_NET_JAVAHIPPIE_FITPUB; the previous LOGGING_LEVEL_ORG_OPERATON targeted a package that does not exist in FitPub and had no effect.
+    - kind: fixed
+      description: config — JWT lifetime now uses FITPUB_SECURITY_JWT_EXPIRATION and upload limits use SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE/MAX_REQUEST_SIZE; the previous FITPUB_JWT_EXPIRATION_MS and FILE_UPLOAD_MAX_SIZE keys are not read by the application.
+    - kind: added
+      description: config — FITPUB_FEDERATION_PROTOCOL and FITPUB_ALLOW_PRIVATE_IPS knobs for federation behavior, with validation that the protocol is http or https.
+    - kind: added
+      description: Validation now fails if config.FITPUB_DOMAIN contains a scheme or a slash; it must be a bare host (with optional port) to keep WebFinger/ActivityPub handles valid.
+    - kind: fixed
+      description: NOTES.txt — the write-test command and PVC path note now use persistence.mountPath instead of the hardcoded /app/uploads; the command was broken for users who customised the mount path.
+    - kind: fixed
+      description: Validation now fails if dnsPolicy is set to None without dnsConfig.nameservers; Kubernetes admission rejects such pods at apply time, making the error hard to trace.
     - kind: fixed
       description: PDB — maxUnavailable:0 and minAvailable:0 no longer trigger a false "not set" validation error; both values are now handled correctly in validation and rendering.
     - kind: fixed
