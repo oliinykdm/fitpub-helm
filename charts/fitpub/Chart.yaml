@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.2.1
+version: 0.2.2
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -18,18 +18,12 @@ maintainers:
   - name: Dmytro Oliinyk
     url: https://github.com/oliinykdm
 annotations:
-  artifacthub.io/category: social
+  artifacthub.io/category: skip-prediction
   artifacthub.io/license: Apache-2.0
   artifacthub.io/prerelease: "false"
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/changes: |
     - kind: changed
-      description: Improve production documentation, release metadata and Artifact Hub publishing support.
-    - kind: added
-      description: Add Runtime Smoke Test workflow with kind, PostGIS and health endpoint validation.
-    - kind: added
-      description: Add ServiceMonitor and pod extension points for sidecars and extra init containers.
-    - kind: added
-      description: Add GitOps, troubleshooting and contribution documentation.
-    - kind: added
-      description: Add development values and chart-managed secret examples.
+      description: Use a valid Artifact Hub category annotation.
+    - kind: changed
+      description: Prepare chart metadata for Artifact Hub ingestion.
