@@ -46,7 +46,7 @@ spec:
       existingSecret: fitpub-secret
     ingress:
       enabled: true
-      className: nginx
+      className: traefik
       hosts:
         - host: fitpub.example.com
           paths:
@@ -80,7 +80,7 @@ spec:
           existingSecret: fitpub-secret
         ingress:
           enabled: true
-          className: nginx
+          className: traefik
           hosts:
             - host: fitpub.example.com
               paths:
