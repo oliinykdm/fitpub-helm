@@ -6,6 +6,22 @@
 {{- fail (printf "config.FITPUB_PORT (%s) must match service.port (%v); the app listens on FITPUB_PORT but health probes and the Service use service.port" .Values.config.FITPUB_PORT .Values.service.port) -}}
 {{- end -}}
 
+{{- if and .Values.persistence.enabled .Values.config.FILE_UPLOAD_DIR (ne .Values.config.FILE_UPLOAD_DIR .Values.persistence.mountPath) -}}
+{{- fail (printf "config.FILE_UPLOAD_DIR (%s) must match persistence.mountPath (%s); a mismatch causes uploads to be written to ephemeral storage and lost on pod restart" .Values.config.FILE_UPLOAD_DIR .Values.persistence.mountPath) -}}
+{{- end -}}
+
+{{- if and .Values.pages.existingSecret .Values.config.FITPUB_PAGES_PATH (ne .Values.config.FITPUB_PAGES_PATH .Values.pages.mountPath) -}}
+{{- fail (printf "config.FITPUB_PAGES_PATH (%s) must match pages.mountPath (%s); a mismatch means the app looks for Markdown pages in the wrong directory" .Values.config.FITPUB_PAGES_PATH .Values.pages.mountPath) -}}
+{{- end -}}
+
+{{- if and .Values.serviceMonitor.enabled -}}
+{{- $interval := .Values.serviceMonitor.interval | toString | trimSuffix "s" | int -}}
+{{- $timeout := .Values.serviceMonitor.scrapeTimeout | toString | trimSuffix "s" | int -}}
+{{- if and (gt $interval 0) (gt $timeout 0) (ge $timeout $interval) -}}
+{{- fail (printf "serviceMonitor.scrapeTimeout (%s) must be less than serviceMonitor.interval (%s)" .Values.serviceMonitor.scrapeTimeout .Values.serviceMonitor.interval) -}}
+{{- end -}}
+{{- end -}}
+
 {{- if .Values.productionChecks.enabled -}}
 {{- $requiredConfig := list "FITPUB_DATABASE_URL" "FITPUB_DOMAIN" "FITPUB_BASE_URL" -}}
 {{- range $key := $requiredConfig -}}
@@ -20,6 +36,13 @@
 {{- if not (index $.Values.applicationSecret.data $key) -}}
 {{- fail (printf "applicationSecret.data.%s is required when productionChecks.enabled=true" $key) -}}
 {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{- if eq (index $.Values.config "FITPUB_PUSH_ENABLED" | default "true" | toString) "true" -}}
+{{- $hasPubKey := or (index $.Values.applicationSecret.data "FITPUB_VAPID_PUBLIC_KEY") ($.Values.applicationSecret.existingSecret) -}}
+{{- if not $hasPubKey -}}
+{{- fail "config.FITPUB_PUSH_ENABLED is true but applicationSecret.data.FITPUB_VAPID_PUBLIC_KEY is not set; provide VAPID keys or disable push with config.FITPUB_PUSH_ENABLED=false" -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
