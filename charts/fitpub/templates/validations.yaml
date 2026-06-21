@@ -1,3 +1,7 @@
+{{- if and (eq (.Values.dnsPolicy | default "") "None") (not .Values.dnsConfig.nameservers) -}}
+{{- fail "dnsPolicy: None requires dnsConfig.nameservers; Kubernetes rejects pods with dnsPolicy=None and no nameservers configured" -}}
+{{- end -}}
+
 {{- if and .Values.config.FITPUB_BASE_URL (regexMatch "/$" .Values.config.FITPUB_BASE_URL) -}}
 {{- fail "config.FITPUB_BASE_URL must not end with a slash; trailing slash breaks generated ActivityPub/WebFinger URLs" -}}
 {{- end -}}
@@ -12,6 +16,10 @@
 
 {{- if and .Values.pages.existingSecret .Values.config.FITPUB_PAGES_PATH (ne .Values.config.FITPUB_PAGES_PATH .Values.pages.mountPath) -}}
 {{- fail (printf "config.FITPUB_PAGES_PATH (%s) must match pages.mountPath (%s); a mismatch means the app looks for Markdown pages in the wrong directory" .Values.config.FITPUB_PAGES_PATH .Values.pages.mountPath) -}}
+{{- end -}}
+
+{{- if and .Values.autoscaling.enabled (not .Values.autoscaling.targetCPUUtilizationPercentage) (not .Values.autoscaling.targetMemoryUtilizationPercentage) -}}
+{{- fail "autoscaling: at least one of targetCPUUtilizationPercentage or targetMemoryUtilizationPercentage must be set when autoscaling.enabled=true; the HPA metrics list would be empty" -}}
 {{- end -}}
 
 {{- if and .Values.serviceMonitor.enabled -}}

@@ -16,6 +16,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     concurrency:
       group: helm-chart-release
       cancel-in-progress: false

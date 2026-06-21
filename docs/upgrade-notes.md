@@ -1,5 +1,21 @@
 # Upgrade Notes
 
+## 0.2.8
+
+### PDB — `minAvailable: 0` and `maxUnavailable: 0` now work correctly
+
+Go templates treat `0` as falsy. Previously, setting `podDisruptionBudget.maxUnavailable: 0` (meaning "no pod may be voluntarily evicted") triggered a false "one of minAvailable or maxUnavailable must be set" error at render time. Setting `minAvailable: 0` would silently fall through to the `else` branch and render `maxUnavailable: 1` instead — the PDB spec the user expected was never created.
+
+Both the validation logic and the spec rendering now use `toString` comparison against `""` so that zero is treated as an explicitly set value.
+
+### HPA — validation for empty metrics list
+
+If both `autoscaling.targetCPUUtilizationPercentage` and `autoscaling.targetMemoryUtilizationPercentage` are absent, empty, or zero when `autoscaling.enabled: true`, `helm install`/`helm upgrade` now fails with a descriptive error. Previously this would render an HPA with `metrics: null`, which Kubernetes rejects at apply time with a non-obvious error.
+
+### release workflow — `timeout-minutes: 30`
+
+The release CI job now has a 30-minute timeout, preventing a hung `chart-releaser` or GitHub Pages push from holding the runner for up to six hours.
+
 ## 0.2.7
 
 ### New value: `persistence.mountPath`

@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.2.7
+version: 0.2.8
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -32,6 +32,12 @@ annotations:
     fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
   artifacthub.io/changes: |
+    - kind: fixed
+      description: PDB — maxUnavailable:0 and minAvailable:0 no longer trigger a false "not set" validation error; both values are now handled correctly in validation and rendering.
+    - kind: fixed
+      description: HPA — validation now fails if both targetCPUUtilizationPercentage and targetMemoryUtilizationPercentage are absent or zero, preventing an empty metrics list that Kubernetes rejects.
+    - kind: changed
+      description: release workflow — added timeout-minutes:30 so a hung chart-releaser or gh-pages push cannot occupy the runner for up to six hours.
     - kind: added
       description: persistence.mountPath — configurable uploads volume mount path; must match config.FILE_UPLOAD_DIR to prevent silent data loss on pod restart.
     - kind: fixed

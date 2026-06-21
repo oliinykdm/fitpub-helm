@@ -1,8 +1,10 @@
 {{- if .Values.podDisruptionBudget.enabled }}
-{{- if and .Values.podDisruptionBudget.minAvailable .Values.podDisruptionBudget.maxUnavailable }}
+{{- $minAvail := .Values.podDisruptionBudget.minAvailable | toString }}
+{{- $maxUnavail := .Values.podDisruptionBudget.maxUnavailable | toString }}
+{{- if and (ne $minAvail "") (ne $maxUnavail "") }}
 {{- fail "podDisruptionBudget: set either minAvailable or maxUnavailable, not both" }}
 {{- end }}
-{{- if and (not .Values.podDisruptionBudget.minAvailable) (not .Values.podDisruptionBudget.maxUnavailable) }}
+{{- if and (eq $minAvail "") (eq $maxUnavail "") }}
 {{- fail "podDisruptionBudget: one of minAvailable or maxUnavailable must be set" }}
 {{- end }}
 apiVersion: policy/v1
@@ -17,7 +19,7 @@ metadata:
     {{- $ann | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.podDisruptionBudget.minAvailable }}
+  {{- if ne $minAvail "" }}
   minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
   {{- else }}
   maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
