@@ -1,0 +1,21 @@
+{{- if and .Values.config.FITPUB_BASE_URL (regexMatch "/$" .Values.config.FITPUB_BASE_URL) -}}
+{{- fail "config.FITPUB_BASE_URL must not end with a slash; trailing slash breaks generated ActivityPub/WebFinger URLs" -}}
+{{- end -}}
+
+{{- if .Values.productionChecks.enabled -}}
+{{- $requiredConfig := list "FITPUB_DATABASE_URL" "FITPUB_DOMAIN" "FITPUB_BASE_URL" -}}
+{{- range $key := $requiredConfig -}}
+{{- if not (index $.Values.config $key) -}}
+{{- fail (printf "config.%s is required when productionChecks.enabled=true" $key) -}}
+{{- end -}}
+{{- end -}}
+
+{{- if not .Values.applicationSecret.existingSecret -}}
+{{- $requiredSecrets := list "FITPUB_DATABASE_USERNAME" "FITPUB_DATABASE_PASSWORD" "FITPUB_JWT_SECRET" "FITPUB_EMAIL_SECRET" -}}
+{{- range $key := $requiredSecrets -}}
+{{- if not (index $.Values.applicationSecret.data $key) -}}
+{{- fail (printf "applicationSecret.data.%s is required when productionChecks.enabled=true" $key) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
