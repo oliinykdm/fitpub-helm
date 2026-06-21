@@ -44,7 +44,7 @@ Important:
 - Secret environment variables come from `applicationSecret.data` or `applicationSecret.existingSecret`
 - FitPub requires an external PostgreSQL database with PostGIS enabled
 - FITPUB_BASE_URL must be the canonical public URL without a trailing slash
-- A PersistentVolumeClaim is created for `/app/uploads` by default
+- A PersistentVolumeClaim is created for `{{ .Values.persistence.mountPath }}` by default
 - ConfigMap: {{ include "fitpub.configMapName" . }}
 - Secret: {{ include "fitpub.secretName" . }}
 {{- if not .Values.productionChecks.enabled }}
@@ -57,7 +57,7 @@ Important:
 Useful checks:
 
   kubectl logs deployment/{{ include "fitpub.fullname" . }} -n {{ .Release.Namespace }}
-  kubectl exec deployment/{{ include "fitpub.fullname" . }} -n {{ .Release.Namespace }} -- sh -c 'touch /app/uploads/.write-test && rm /app/uploads/.write-test'
+  kubectl exec deployment/{{ include "fitpub.fullname" . }} -n {{ .Release.Namespace }} -- sh -c 'touch {{ .Values.persistence.mountPath }}/.write-test && rm {{ .Values.persistence.mountPath }}/.write-test'
 
 Health endpoint from inside the cluster:
 
