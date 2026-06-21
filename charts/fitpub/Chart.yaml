@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for Fitpub - federated fitness tracking platform
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
