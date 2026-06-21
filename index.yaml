@@ -1,2 +1,27 @@
 apiVersion: v1
-entries: {}
+entries:
+  fitpub:
+  - apiVersion: v2
+    appVersion: 1.1.1
+    created: "2026-06-21T12:28:50.884830586Z"
+    description: Helm chart for Fitpub - federated fitness tracking platform
+    digest: ff68054108ae7b9559ccf11e7d29ab25749db9f0ad8f986e690072cc53ed484f
+    home: https://codeberg.org/fitpub/fitpub
+    icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+    keywords:
+    - fitness
+    - activitypub
+    - spring-boot
+    - postgresql
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - name: Dmytro Oliinyk
+      url: https://github.com/oliinykdm
+    name: fitpub
+    sources:
+    - https://codeberg.org/fitpub/fitpub
+    type: application
+    urls:
+    - https://github.com/oliinykdm/fitpub-helm/releases/download/fitpub-0.2.0/fitpub-0.2.0.tgz
+    version: 0.2.0
+generated: "2026-06-21T12:28:50.88483811Z"
