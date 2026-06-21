@@ -34,7 +34,9 @@
       "type": "object",
       "properties": {
         "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer"] },
-        "port": { "type": "integer", "minimum": 1, "maximum": 65535 }
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "annotations": { "type": "object" },
+        "labels": { "type": "object" }
       }
     },
     "ingress": {
@@ -112,6 +114,8 @@
     },
     "extraEnv": { "type": "array" },
     "extraEnvFrom": { "type": "array" },
+    "extraInitContainers": { "type": "array" },
+    "sidecars": { "type": "array" },
     "productionChecks": {
       "type": "object",
       "properties": {
@@ -133,6 +137,7 @@
     },
     "podDisruptionBudget": { "type": "object" },
     "networkPolicy": { "type": "object" },
+    "serviceMonitor": { "type": "object" },
     "terminationGracePeriodSeconds": { "type": "integer", "minimum": 1 },
     "nodeSelector": { "type": "object" },
     "tolerations": { "type": "array" },
