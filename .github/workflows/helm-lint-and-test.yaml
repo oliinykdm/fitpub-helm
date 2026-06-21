@@ -3,7 +3,7 @@ name: Lint and Test Helm Chart
 on:
   workflow_dispatch:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
     paths:
       - 'charts/**'
       - 'examples/**'
@@ -19,7 +19,7 @@ on:
       - '.github/workflows/helm-lint-and-test.yaml'
       - '.github/workflows/runtime-smoke-test.yaml'
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
     paths:
       - 'charts/**'
       - 'examples/**'
@@ -38,6 +38,7 @@ on:
 jobs:
   lint-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
