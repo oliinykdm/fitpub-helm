@@ -4,6 +4,7 @@ description: Helm chart for Fitpub - federated fitness tracking platform
 type: application
 version: 0.1.0
 appVersion: "1.1.1"
+kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
 sources:
   - https://codeberg.org/fitpub/fitpub
