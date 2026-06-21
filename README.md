@@ -30,7 +30,8 @@ If the release badge is red after a failed first publish, rerun the `Release Hel
 - Optional Secret mount for Markdown legal/about pages at `/app/pages`
 - ConfigMap/Secret split for non-secret and secret environment variables
 - Readiness, startup and liveness probes on `/actuator/health`
-- Optional Ingress, HPA, PDB and NetworkPolicy templates
+- Optional Ingress, HPA, PDB, NetworkPolicy and ServiceMonitor templates
+- Extension points for extra env, envFrom, volumes, volume mounts, init containers and sidecars
 - Support for an external PostgreSQL database with PostGIS
 
 ## Prerequisites
@@ -111,7 +112,30 @@ Additional examples:
 
 - [examples/production-values.yaml](examples/production-values.yaml): production-style values with an externally managed Secret
 - [examples/chart-managed-secret-values.yaml](examples/chart-managed-secret-values.yaml): controlled testing values where Helm creates the Secret
+- [examples/development-values.yaml](examples/development-values.yaml): development-style values for throwaway clusters
 - [examples/runtime-smoke-values.yaml](examples/runtime-smoke-values.yaml): CI-only values used by the runtime smoke test
+
+## Extending The Pod
+
+The chart exposes common extension points without editing templates:
+
+```yaml
+extraEnv:
+  - name: JAVA_TOOL_OPTIONS
+    value: "-XX:MaxRAMPercentage=70"
+
+extraEnvFrom: []
+extraInitContainers: []
+sidecars: []
+volumes: []
+volumeMounts: []
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: []
+```
+
+Use these for platform integrations such as sidecar agents, projected Secrets, custom CA bundles or cluster scheduling rules.
 
 ## Ingress
 
@@ -211,6 +235,19 @@ networkPolicy:
 
 Adjust this to your actual PostgreSQL, DNS, SMTP and federation egress model.
 
+## Monitoring
+
+If your cluster runs Prometheus Operator, enable `ServiceMonitor`:
+
+```yaml
+serviceMonitor:
+  enabled: true
+  labels:
+    release: kube-prometheus-stack
+```
+
+The default scrape path is `/actuator/prometheus`. Make sure the FitPub application exposes that endpoint before relying on metrics scraping.
+
 ## Security Notes
 
 The chart drops Linux capabilities, disables privilege escalation and runs FitPub as UID/GID `1001`. `readOnlyRootFilesystem` is disabled by default because FitPub writes uploads, logs, temp files and caches; enabling it requires additional writable mounts for every write path.
@@ -228,6 +265,10 @@ Read [docs/upgrade-notes.md](docs/upgrade-notes.md) before upgrading across char
 ## Design Notes
 
 This chart intentionally uses an external PostGIS database, a `Deployment` with a dedicated uploads PVC and a single-replica default. See [docs/design.md](docs/design.md) for the reasoning and current CI guarantees.
+
+## GitOps
+
+Flux and Argo CD examples are available in [docs/gitops.md](docs/gitops.md). Production GitOps setups should manage secrets through SOPS, External Secrets Operator, Sealed Secrets or a similar workflow.
 
 ## Troubleshooting
 
@@ -252,8 +293,11 @@ See [docs/troubleshooting.md](docs/troubleshooting.md) for common Kubernetes dep
 - This chart repository: https://github.com/oliinykdm/fitpub-helm
 - Upgrade notes: [docs/upgrade-notes.md](docs/upgrade-notes.md)
 - Design notes: [docs/design.md](docs/design.md)
+- GitOps examples: [docs/gitops.md](docs/gitops.md)
 - Troubleshooting: [docs/troubleshooting.md](docs/troubleshooting.md)
 
 ## Contributing
 
 This chart is currently maintained in a personal repository. Once it reaches a stable state, it can be proposed to the upstream FitPub project on Codeberg.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow and chart design principles.
