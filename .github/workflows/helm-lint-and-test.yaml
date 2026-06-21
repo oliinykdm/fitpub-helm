@@ -26,3 +26,24 @@ jobs:
 
       - name: Render chart templates
         run: helm template fitpub ./charts/fitpub
+
+      - name: Render production example
+        run: helm template fitpub ./charts/fitpub -f examples/production-values.yaml
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1.14.0
+
+      - name: Validate manifests against Kubernetes API
+        run: |
+          kubectl create secret generic fitpub-secret \
+            --from-literal=FITPUB_DATABASE_USERNAME=fitpub \
+            --from-literal=FITPUB_DATABASE_PASSWORD=test-password \
+            --from-literal=FITPUB_JWT_SECRET=test-jwt-secret-with-more-than-32-characters \
+            --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          helm template fitpub ./charts/fitpub \
+            -f examples/production-values.yaml \
+            --set ingress.enabled=false \
+            --set podDisruptionBudget.enabled=false \
+            | kubectl apply --dry-run=server -f -
