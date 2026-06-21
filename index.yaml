@@ -86,7 +86,7 @@ entries:
     - https://codeberg.org/fitpub/fitpub
     type: application
     urls:
-    - https://github.com/oliinykdm/fitpub-helm/releases/download/fitpub-0.2.9/fitpub-0.2.9.tgz
+    - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.9.tgz
     version: 0.2.9
   - annotations:
       artifacthub.io/category: skip-prediction
@@ -160,7 +160,7 @@ entries:
     - https://codeberg.org/fitpub/fitpub
     type: application
     urls:
-    - https://github.com/oliinykdm/fitpub-helm/releases/download/fitpub-0.2.8/fitpub-0.2.8.tgz
+    - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.8.tgz
     version: 0.2.8
   - annotations:
       artifacthub.io/category: skip-prediction
@@ -218,7 +218,7 @@ entries:
     - https://codeberg.org/fitpub/fitpub
     type: application
     urls:
-    - https://github.com/oliinykdm/fitpub-helm/releases/download/fitpub-0.2.6/fitpub-0.2.6.tgz
+    - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.6.tgz
     version: 0.2.6
   - annotations:
       artifacthub.io/category: skip-prediction
@@ -254,7 +254,7 @@ entries:
     - https://codeberg.org/fitpub/fitpub
     type: application
     urls:
-    - https://github.com/oliinykdm/fitpub-helm/releases/download/fitpub-0.2.4/fitpub-0.2.4.tgz
+    - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.4.tgz
     version: 0.2.4
   - annotations:
       artifacthub.io/category: skip-prediction
@@ -287,7 +287,7 @@ entries:
     - https://codeberg.org/fitpub/fitpub
     type: application
     urls:
-    - https://github.com/oliinykdm/fitpub-helm/releases/download/fitpub-0.2.3/fitpub-0.2.3.tgz
+    - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.3.tgz
     version: 0.2.3
   - annotations:
       artifacthub.io/category: skip-prediction
@@ -320,6 +320,6 @@ entries:
     - https://codeberg.org/fitpub/fitpub
     type: application
     urls:
-    - https://github.com/oliinykdm/fitpub-helm/releases/download/fitpub-0.2.2/fitpub-0.2.2.tgz
+    - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.2.tgz
     version: 0.2.2
 generated: '2026-06-21T14:46:40.882013774Z'

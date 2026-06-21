@@ -1,0 +1,105 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+annotations:
+  artifacthub.io/category: skip-prediction
+  artifacthub.io/changes: |
+    - kind: fixed
+      description: config — app log level now uses LOGGING_LEVEL_NET_JAVAHIPPIE_FITPUB; the previous LOGGING_LEVEL_ORG_OPERATON targeted a package that does not exist in FitPub and had no effect.
+    - kind: fixed
+      description: config — JWT lifetime now uses FITPUB_SECURITY_JWT_EXPIRATION and upload limits use SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE/MAX_REQUEST_SIZE; the previous FITPUB_JWT_EXPIRATION_MS and FILE_UPLOAD_MAX_SIZE keys are not read by the application.
+    - kind: added
+      description: config — FITPUB_FEDERATION_PROTOCOL and FITPUB_ALLOW_PRIVATE_IPS knobs for federation behavior, with validation that the protocol is http or https.
+    - kind: added
+      description: Validation now fails if config.FITPUB_DOMAIN contains a scheme or a slash; it must be a bare host (with optional port) to keep WebFinger/ActivityPub handles valid.
+    - kind: fixed
+      description: NOTES.txt — the write-test command and PVC path note now use persistence.mountPath instead of the hardcoded /app/uploads; the command was broken for users who customised the mount path.
+    - kind: fixed
+      description: Validation now fails if dnsPolicy is set to None without dnsConfig.nameservers; Kubernetes admission rejects such pods at apply time, making the error hard to trace.
+    - kind: fixed
+      description: PDB — maxUnavailable:0 and minAvailable:0 no longer trigger a false "not set" validation error; both values are now handled correctly in validation and rendering.
+    - kind: fixed
+      description: HPA — validation now fails if both targetCPUUtilizationPercentage and targetMemoryUtilizationPercentage are absent or zero, preventing an empty metrics list that Kubernetes rejects.
+    - kind: changed
+      description: release workflow — added timeout-minutes:30 so a hung chart-releaser or gh-pages push cannot occupy the runner for up to six hours.
+    - kind: added
+      description: persistence.mountPath — configurable uploads volume mount path; must match config.FILE_UPLOAD_DIR to prevent silent data loss on pod restart.
+    - kind: fixed
+      description: Validation now fails if config.FILE_UPLOAD_DIR and persistence.mountPath differ, catching a silent data-loss misconfiguration.
+    - kind: fixed
+      description: Validation now fails if config.FITPUB_PAGES_PATH and pages.mountPath differ, preventing Markdown pages from being invisibly missing at runtime.
+    - kind: fixed
+      description: productionChecks now validates FITPUB_VAPID_PUBLIC_KEY when FITPUB_PUSH_ENABLED=true, preventing a broken push configuration from reaching production.
+    - kind: fixed
+      description: Validation now fails if serviceMonitor.scrapeTimeout is greater than or equal to serviceMonitor.interval, preventing Prometheus scrape errors.
+    - kind: added
+      description: diagnosticMode — run the container as sleep infinity for safe exec-based debugging without probe interference.
+    - kind: added
+      description: lifecycleHooks — configurable preStop/postStart hooks for graceful shutdown and load balancer drain.
+    - kind: added
+      description: priorityClassName, schedulerName, runtimeClassName — scheduling knobs for production cluster policies.
+    - kind: added
+      description: hostAliases, dnsPolicy, dnsConfig — DNS customization for federation testing and private resolvers.
+    - kind: added
+      description: commonLabels and commonAnnotations — apply labels and annotations to every chart resource from a single location.
+    - kind: added
+      description: command and args overrides for the main container entrypoint.
+    - kind: added
+      description: minReadySeconds for deployment stability window.
+    - kind: fixed
+      description: ServiceMonitor now includes namespaceSelector so Prometheus running in a different namespace can discover FitPub.
+    - kind: fixed
+      description: automountServiceAccountToken is now set on the pod spec in addition to the ServiceAccount, preventing token mount when an external SA is used.
+    - kind: changed
+      description: commonAnnotations propagated to all chart resources via a shared helper.
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/images: |
+    - name: fitpub
+      image: codeberg.org/fitpub/fitpub:1.1.1
+    - name: volume-permissions
+      image: busybox:1.37
+      whitelisted: true
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/signKey: |
+    fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+    url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+apiVersion: v2
+appVersion: 1.1.1
+description: Helm chart for FitPub - federated fitness tracking platform
+home: https://codeberg.org/fitpub/fitpub
+icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+keywords:
+- - fitness
+- - activitypub
+- - spring-boot
+- - postgresql
+kubeVersion: '>= 1.26.0'
+maintainers:
+- - name: Dmytro Oliinyk
+  url: https://github.com/oliinykdm
+name: fitpub
+sources:
+- - https://codeberg.org/fitpub/fitpub
+type: application
+version: 0.2.9
+
+...
+files:
+  fitpub-0.2.9.tgz: sha256:e6408b4661b089ba518d046d007a872be41240a85a1d70e9db2a516bfbe9a377
+-----BEGIN PGP SIGNATURE-----
+
+wsFcBAEBCgAQBQJqOFdaCRBJvZ5epsJDtwAAuCUQAA6v80eLT9D/Nx27ditJ+g2g
+2gYvHTCUtrJgML0rcdf9oR07LmZE8duyXlKJnwLyhlI7mOXcpNASgXVJmTMbKMU6
+wvmeeyAgZ7tPau3BrsxRKyScZG/L+wPvTVdXtPQMYmKpBGRGy3kce9Ct4kzDKzc4
+2cgAD2YoCLM4a6prNpCRqCHgKO2PFq6tDcIbDYbLKpKxYEsz1b63g0EzyChQWdco
+K/xWbWzVRtOWwcwR9OGNllQVeN+WPJxa7CHsaw3wefLwlN5Atq+yfnyDjPZFNMIp
+k6pzDKbkfgDWEtJj0ubFMasB2YTk2Tq0oIrFD+W2Ek2kIIe0N4qjubkVcBwgpvTb
+0Wqg1YOXTzKqzMZZAWnWBrBPqpRM5cY98Iw2MNe/Xj0ROEZFzfDqMo12W1MIPE0/
+H1TNR7+H1kv7IdYXdFuBvQNFJIIrj2EXXRI5Xe2yI+s3skeEki7GsNBoPdE9eJRy
++3+a+CKipAce8BI4NGnyk9+Oabq0UzekZltA7DHeJ/JXqdFhNVSI2/8Mqj+nRpSN
+zcBehKsTCCQlyyX6CEIeG4xpZobyBIQou2xHBTKIqSYrDb41ITlGZxDd6P5aDqnI
+QPSN3sP1VbaP5sfgNoNjaTy4EEDF6DJxA3jiKhI8R1tyypVmO9q2LuofAKGTb5TP
+YXIX9qOTRCJ8H8eZHMZA
+=Ub0K
+-----END PGP SIGNATURE-----

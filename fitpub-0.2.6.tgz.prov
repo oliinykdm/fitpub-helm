@@ -1,0 +1,77 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+annotations:
+  artifacthub.io/category: skip-prediction
+  artifacthub.io/changes: |
+    - kind: added
+      description: diagnosticMode — run the container as sleep infinity for safe exec-based debugging without probe interference.
+    - kind: added
+      description: lifecycleHooks — configurable preStop/postStart hooks for graceful shutdown and load balancer drain.
+    - kind: added
+      description: priorityClassName, schedulerName, runtimeClassName — scheduling knobs for production cluster policies.
+    - kind: added
+      description: hostAliases, dnsPolicy, dnsConfig — DNS customization for federation testing and private resolvers.
+    - kind: added
+      description: commonLabels and commonAnnotations — apply labels and annotations to every chart resource from a single location.
+    - kind: added
+      description: command and args overrides for the main container entrypoint.
+    - kind: added
+      description: minReadySeconds for deployment stability window.
+    - kind: fixed
+      description: ServiceMonitor now includes namespaceSelector so Prometheus running in a different namespace can discover FitPub.
+    - kind: fixed
+      description: automountServiceAccountToken is now set on the pod spec in addition to the ServiceAccount, preventing token mount when an external SA is used.
+    - kind: changed
+      description: commonAnnotations propagated to all chart resources via a shared helper.
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/images: |
+    - name: fitpub
+      image: codeberg.org/fitpub/fitpub:1.1.1
+    - name: volume-permissions
+      image: busybox:1.37
+      whitelisted: true
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/signKey: |
+    fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+    url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+apiVersion: v2
+appVersion: 1.1.1
+description: Helm chart for FitPub - federated fitness tracking platform
+home: https://codeberg.org/fitpub/fitpub
+icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+keywords:
+- - fitness
+- - activitypub
+- - spring-boot
+- - postgresql
+kubeVersion: '>= 1.26.0'
+maintainers:
+- - name: Dmytro Oliinyk
+  url: https://github.com/oliinykdm
+name: fitpub
+sources:
+- - https://codeberg.org/fitpub/fitpub
+type: application
+version: 0.2.6
+
+...
+files:
+  fitpub-0.2.6.tgz: sha256:5f4e6ef2fa9ea6bcc68f8d582bce5751f8dfb7cbd77a1a914e499bfbf761fe24
+-----BEGIN PGP SIGNATURE-----
+
+wsFcBAEBCgAQBQJqOEy0CRBJvZ5epsJDtwAAREAQABcX2THLxrBL/pgTXCdoMqMC
+NzGl+U0q04FVWq3rVo8agZc+kN4nMfhVHXkjfOGYUZLWikL3J/7nYmt01Qa2r01v
+TLy7S3bOyh7CffHpmuNHGprA4fdps0Eaik7qSaFX8n3C5zrQKnjnuadbKRh8mgwu
+PUbjn1FGRp6tfoX2KMYkxf8fjaa1EOKYQrDuLjRbYi0TrLe+VYGWZKUJYZ8IA0LX
+RTpDAa3AQhDDuc0NFm+CwlylQjX+h45yxYTkbL2HSkKvK1Mf0uqpIt3KOgmBPUmN
++C78Evss81acLHMgN9dadJtyBEotdWIPjHOJra3lj9JDpehe7Xq83PNFSikLvLK3
+2GSPIf7NSsVAFCzVHXPrJZsD1oIROCaGJEUmN0WjDyTn73TtSuR5cBqNR8iujLeZ
+Q+w6m6WkJRmc9rwCABmw7Wp4PRLBUO4GQVMy9DtKpjH6wa4N2HMDExGfkAOWq6D6
+p23A1IPf5D8TfgizLpR5CfX9FWN3T5tXtfXw/73cWIJsV3oOAfpXb3BQelMB+vby
+04KRxysipOHHqy5zm06g3JvgRlAYvk36EQ9XsWZQBE1UpKovYivz0jt3beYFwLH4
+Agb4N3lvVTMNlLfArvDUQMUnPD0caFS7wQOaT+ji2wwYu2vSHN8ob2GONjkL4ZK6
+FQR78RpZU4DmI6uPBbkm
+=SCP+
+-----END PGP SIGNATURE-----

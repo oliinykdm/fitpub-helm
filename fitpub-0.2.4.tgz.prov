@@ -1,0 +1,55 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+annotations:
+  artifacthub.io/category: skip-prediction
+  artifacthub.io/changes: |
+    - kind: changed
+      description: Enable Helm chart provenance signing for Artifact Hub.
+    - kind: added
+      description: Publish the chart signing public key through GitHub Pages.
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/signKey: |
+    fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+    url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+apiVersion: v2
+appVersion: 1.1.1
+description: Helm chart for FitPub - federated fitness tracking platform
+home: https://codeberg.org/fitpub/fitpub
+icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+keywords:
+- - fitness
+- - activitypub
+- - spring-boot
+- - postgresql
+kubeVersion: '>= 1.26.0'
+maintainers:
+- - name: Dmytro Oliinyk
+  url: https://github.com/oliinykdm
+name: fitpub
+sources:
+- - https://codeberg.org/fitpub/fitpub
+type: application
+version: 0.2.4
+
+...
+files:
+  fitpub-0.2.4.tgz: sha256:c41fb2e4d4c3f8942cb7656c6ee151bb55e9d4a39f74f9df8924b68f828d779e
+-----BEGIN PGP SIGNATURE-----
+
+wsFcBAEBCgAQBQJqOCtRCRBJvZ5epsJDtwAA6PAQAKeC1Nzx4nFKYKsFJj0iCLnr
+7c3OQVZEocIzhOxe64xwV60Kwq8uXQrFMVQHNGzfWw057z0vAzotEhO+5/Hb9vhP
+56kyx7QzqzkCfMAukT5dCfblG+t2iyz5JXp/QeOBTtmU2qvkxnBHu3rRqoFN19gk
+hwI7zCjfH0KqskYAHEGaTLaKNdDwfXh4iiyve4V1USsZsSHXC9R8RLYoFNkQ1rKU
+GQfbRjoR3Rrvrkbic/XsIkK3cfnfGFS3P6ShiVsms/Snp/6yTV+YMc2tszHT9Kd/
+YOvtyOkm5ah5KSLGvE0IuSfD0djNkoDFGGxvJEA9y+DOzWsgdwolr3uvcc8mzlqJ
+8P4yCxodTtBXPvbG5H7t8j4q5VYhMV6xYQLPhLzQOJwisVwe11JK7B75SpF7U0R4
+KmJ/OVojr+EIxlhTzlbN1tbonWU8xPZRSaGclOPlO9nSkl2SWjfrrgE7MH5Abj1/
+5gr6hLob61W0esKULQ11zhw8jh+ZdsyE5Xqjel4TaYpDSN/96JfNQdbA44/0oIJ2
+PTShXJnpALEJOtm1t4rtMtB2n3fvZPXBf6uiCFMNvmEF45LL2j/BWQOtfC/x60dJ
++mZF3JpOUOYMfKqetWwNAYygDjaV3ioteZ6+zvQyqxbod9w50oUcPYbuHtpj3rUM
+5tArgGTiRX8441V20/6m
+=0+W6
+-----END PGP SIGNATURE-----
