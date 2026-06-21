@@ -11,7 +11,10 @@ config:
   FITPUB_PUSH_ENABLED: "false"
   FITPUB_REGISTRATION_ENABLED: "true"
   LOGGING_LEVEL_ROOT: "INFO"
-  LOGGING_LEVEL_ORG_OPERATON: "DEBUG"
+  LOGGING_LEVEL_NET_JAVAHIPPIE_FITPUB: "DEBUG"
+  # Local federation testing only — never use http/private IPs in production.
+  FITPUB_FEDERATION_PROTOCOL: "http"
+  FITPUB_ALLOW_PRIVATE_IPS: "true"
 
 applicationSecret:
   data:

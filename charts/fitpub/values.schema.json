@@ -120,6 +120,16 @@
           "type": "string",
           "pattern": "^$|^https?://.+[^/]$",
           "description": "Public base URL without trailing slash"
+        },
+        "FITPUB_DOMAIN": {
+          "type": "string",
+          "pattern": "^$|^[^/]+$",
+          "description": "Bare public host with optional port, no scheme or trailing slash"
+        },
+        "FITPUB_FEDERATION_PROTOCOL": {
+          "type": "string",
+          "enum": ["", "http", "https"],
+          "description": "Protocol used for generated federation URLs"
         }
       }
     },
