@@ -78,11 +78,11 @@ Required GitHub Actions secrets:
 
 Helm's `--key` value must be a substring of the GPG UID, not the fingerprint. The fingerprint is used by Artifact Hub in `artifacthub.io/signKey`.
 
-After signing is wired into the release workflow, verify locally:
+After signing is wired into the release workflow, verify locally (replace `<version>` with the current chart version):
 
 ```bash
 helm repo update fitpub
-helm pull fitpub/fitpub --version 0.2.4 --prov
+helm pull fitpub/fitpub --version <version> --prov
 curl -fsSL https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc | gpg --import
-helm verify fitpub-0.2.4.tgz
+helm verify fitpub-<version>.tgz
 ```
