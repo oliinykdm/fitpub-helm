@@ -4,8 +4,8 @@
 [![Runtime Smoke Test](https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml)
 [![Release](https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/fitpub)](https://artifacthub.io/packages/search?repo=fitpub)
-![Chart Version](https://img.shields.io/badge/chart-0.2.4-blue)
-![App Version](https://img.shields.io/badge/app-1.1.1-blue)
+![Chart Version](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Foliinykdm%2Ffitpub-helm%2Fmain%2Fcharts%2Ffitpub%2FChart.yaml&query=%24.version&label=chart&color=blue)
+![App Version](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Foliinykdm%2Ffitpub-helm%2Fmain%2Fcharts%2Ffitpub%2FChart.yaml&query=%24.appVersion&label=app&color=blue)
 ![Kubernetes](https://img.shields.io/badge/kubernetes-%3E%3D1.26-blue)
 ![Helm](https://img.shields.io/badge/helm-%3E%3D3.8-blue)
 
@@ -235,6 +235,62 @@ networkPolicy:
 ```
 
 Adjust this to your actual PostgreSQL, DNS, SMTP and federation egress model.
+
+## Graceful Shutdown
+
+By default Kubernetes removes the pod from the load balancer endpoints and sends `SIGTERM` simultaneously. This creates a brief window where traffic still arrives while the app is already shutting down. Add a `preStop` sleep to drain connections before `SIGTERM`:
+
+```yaml
+lifecycleHooks:
+  preStop:
+    exec:
+      command: ["sh", "-c", "sleep 5"]
+```
+
+Spring Boot also supports graceful shutdown at the application level via `server.shutdown: graceful`. Add it through `extraEnv` if your FitPub version supports it.
+
+## Scheduling And Priority
+
+Assign a PriorityClass to protect the pod from eviction under node resource pressure:
+
+```yaml
+priorityClassName: high-priority
+```
+
+Pin to specific nodes using `nodeSelector`, `tolerations` or fine-grained `affinity` rules. Use `topologySpreadConstraints` when running multiple replicas across failure zones.
+
+## Debugging
+
+Enable `diagnosticMode` to run the container as `sleep infinity` so you can exec in without startup or probe failures blocking access:
+
+```bash
+helm upgrade fitpub fitpub/fitpub \
+  --reuse-values \
+  --set diagnosticMode.enabled=true
+
+kubectl exec -it deployment/fitpub -- sh
+```
+
+Disable it again when done:
+
+```bash
+helm upgrade fitpub fitpub/fitpub \
+  --reuse-values \
+  --set diagnosticMode.enabled=false
+```
+
+## Global Labels And Annotations
+
+Add labels and annotations to every resource created by this chart:
+
+```yaml
+commonLabels:
+  environment: production
+  team: platform
+
+commonAnnotations:
+  reloader.stakater.com/auto: "true"
+```
 
 ## Monitoring
 

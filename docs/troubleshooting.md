@@ -49,6 +49,35 @@ kubectl run fitpub-healthcheck \
 
 If the endpoint is blocked by application security settings, adjust probes or the application configuration before relying on Kubernetes readiness.
 
+Spring Boot Actuator also exposes split endpoints that give Kubernetes finer-grained control:
+
+| Endpoint | Use for |
+|---|---|
+| `/actuator/health/liveness` | `livenessProbe` |
+| `/actuator/health/readiness` | `readinessProbe` |
+
+If those endpoints are available and correctly configured by FitPub (requires `management.endpoint.health.probes.enabled=true`), override the probe paths in values:
+
+```yaml
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: http
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 3
+```
+
+This prevents a temporarily-unhealthy dependency (for example during a DB reconnect) from killing the pod when only readiness should be affected.
+
 ## Broken ActivityPub Or WebFinger URLs
 
 `FITPUB_BASE_URL` must not end with a slash.
