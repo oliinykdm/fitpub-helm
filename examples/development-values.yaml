@@ -1,0 +1,34 @@
+# Development-oriented values for rendering or installing into a throwaway cluster.
+# This still expects an external PostGIS database.
+
+productionChecks:
+  enabled: false
+
+config:
+  FITPUB_DATABASE_URL: "jdbc:postgresql://postgis:5432/fitpub"
+  FITPUB_DOMAIN: "fitpub.local"
+  FITPUB_BASE_URL: "http://fitpub.local"
+  FITPUB_PUSH_ENABLED: "false"
+  FITPUB_REGISTRATION_ENABLED: "true"
+  LOGGING_LEVEL_ROOT: "INFO"
+  LOGGING_LEVEL_ORG_OPERATON: "DEBUG"
+
+applicationSecret:
+  data:
+    FITPUB_DATABASE_USERNAME: "fitpub"
+    FITPUB_DATABASE_PASSWORD: "fitpub"
+    FITPUB_JWT_SECRET: "development-jwt-secret-with-more-than-32-characters"
+    FITPUB_EMAIL_SECRET: "development-email-secret-with-more-than-32-characters"
+
+ingress:
+  enabled: false
+
+persistence:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 768Mi
+  limits:
+    memory: 1536Mi
