@@ -100,3 +100,14 @@ If it still fails, check:
 - repository permissions allow GitHub Actions to write contents;
 - branch protection allows the workflow token to push `gh-pages`;
 - the chart version has not already been released, or `skip_existing` is enabled.
+
+## Artifact Hub Reports Deleted Chart Versions
+
+Artifact Hub reads every version listed in the published Helm `index.yaml`. If a GitHub Release or `.tgz` package is deleted manually but the version remains in `gh-pages/index.yaml`, Artifact Hub will keep trying to download it and report `not found`.
+
+Fix options:
+
+- rerun the `Release Helm Chart` workflow, which prunes missing package URLs from `index.yaml`;
+- or manually remove deleted versions from `gh-pages/index.yaml` and push the branch.
+
+Do not delete release assets without also updating the Helm repository index.
