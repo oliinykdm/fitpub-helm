@@ -5,16 +5,25 @@ metadata:
   labels:
     {{- include "fitpub.labels" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  strategy:
+    {{- toYaml .Values.deploymentStrategy | nindent 4 }}
   selector:
     matchLabels:
       {{- include "fitpub.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- if not .Values.applicationSecret.existingSecret }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- end }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "fitpub.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
@@ -30,21 +39,24 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- if and .Values.persistence.enabled .Values.initContainers.volumePermissions.enabled (not .Values.persistence.existingClaim) }}
       initContainers:
-        {{- if .Values.persistence.enabled }}
         - name: volume-permissions
-          image: busybox:1.37
+          image: "{{ .Values.initContainers.volumePermissions.image.repository }}:{{ .Values.initContainers.volumePermissions.image.tag }}"
+          imagePullPolicy: {{ .Values.initContainers.volumePermissions.image.pullPolicy }}
           command:
             - sh
             - -c
             - |
-              chown -R 1001:1001 /data
+              chown 1001:1001 /data
+              chmod 775 /data
           securityContext:
             runAsUser: 0
           volumeMounts:
             - name: uploads
               mountPath: /data
-        {{- end }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           {{- with .Values.securityContext }}
@@ -58,11 +70,24 @@ spec:
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           envFrom:
+            - configMapRef:
+                name: {{ include "fitpub.configMapName" . }}
             - secretRef:
-                name: {{ include "fitpub.fullname" . }}-config
+                name: {{ include "fitpub.secretName" . }}
+            {{- with .Values.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- if .Values.readinessProbe }}
           readinessProbe:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml .Values.startupProbe | nindent 12 }}
           {{- end }}
           {{- if .Values.livenessProbe }}
           livenessProbe:
@@ -70,23 +95,37 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- if or .Values.persistence.enabled .Values.pages.existingSecret .Values.volumeMounts }}
           volumeMounts:
             {{- if .Values.persistence.enabled }}
             - name: uploads
               mountPath: /app/uploads
             {{- end }}
+            {{- if .Values.pages.existingSecret }}
+            - name: pages
+              mountPath: {{ .Values.pages.mountPath }}
+              readOnly: {{ .Values.pages.readOnly }}
+            {{- end }}
             {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
+          {{- end }}
+      {{- if or .Values.persistence.enabled .Values.pages.existingSecret .Values.volumes }}
       volumes:
         {{- if .Values.persistence.enabled }}
         - name: uploads
           persistentVolumeClaim:
-            claimName: {{ include "fitpub.fullname" . }}-uploads
+            claimName: {{ default (printf "%s-uploads" (include "fitpub.fullname" .)) .Values.persistence.existingClaim }}
+        {{- end }}
+        {{- if .Values.pages.existingSecret }}
+        - name: pages
+          secret:
+            secretName: {{ .Values.pages.existingSecret }}
         {{- end }}
         {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -97,5 +136,9 @@ spec:
       {{- end }}
       {{- with .Values.tolerations }}
       tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
       {{- end }}
