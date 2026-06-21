@@ -45,8 +45,8 @@ jobs:
           printf '%s' "${{ secrets.GPG_PASSPHRASE }}" > "$HOME/.gnupg/passphrase"
           chmod 600 "$HOME/.gnupg/secring.gpg" "$HOME/.gnupg/passphrase"
 
-          if [ "${{ secrets.GPG_KEY_NAME }}" != "E4C86577339895552E1CAB5E49BD9E5EA6C243B7" ]; then
-            echo "GPG_KEY_NAME must match the Chart.yaml artifacthub.io/signKey fingerprint"
+          if [ "${{ secrets.GPG_KEY_NAME }}" != "FitPub Helm Chart Release" ]; then
+            echo "GPG_KEY_NAME must match the Helm signing key UID used in cr.yaml"
             exit 1
           fi
 

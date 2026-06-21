@@ -73,8 +73,10 @@ gpg --armor --export YOUR_KEY_FINGERPRINT > pgp-public-key.asc
 Required GitHub Actions secrets:
 
 - `GPG_KEYRING_BASE64`: base64-encoded private key export
-- `GPG_KEY_NAME`: key fingerprint or key ID used for signing
+- `GPG_KEY_NAME`: `FitPub Helm Chart Release`
 - `GPG_PASSPHRASE`: key passphrase, if the key has one
+
+Helm's `--key` value must be a substring of the GPG UID, not the fingerprint. The fingerprint is used by Artifact Hub in `artifacthub.io/signKey`.
 
 After signing is wired into the release workflow, verify locally:
 
