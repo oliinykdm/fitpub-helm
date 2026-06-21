@@ -1,6 +1,45 @@
 apiVersion: v1
 entries:
   fitpub:
+  - annotations:
+      artifacthub.io/category: social
+      artifacthub.io/changes: |
+        - kind: changed
+          description: Improve production documentation, release metadata and Artifact Hub publishing support.
+        - kind: added
+          description: Add Runtime Smoke Test workflow with kind, PostGIS and health endpoint validation.
+        - kind: added
+          description: Add ServiceMonitor and pod extension points for sidecars and extra init containers.
+        - kind: added
+          description: Add GitOps, troubleshooting and contribution documentation.
+        - kind: added
+          description: Add development values and chart-managed secret examples.
+      artifacthub.io/containsSecurityUpdates: "false"
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/prerelease: "false"
+    apiVersion: v2
+    appVersion: 1.1.1
+    created: "2026-06-21T16:20:33.376201789Z"
+    description: Helm chart for FitPub - federated fitness tracking platform
+    digest: 7adb474aa61d8c0b18ee0f8396c1ea7ebe3a0673f94b8153e03acafc3f9c9ed0
+    home: https://codeberg.org/fitpub/fitpub
+    icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+    keywords:
+    - fitness
+    - activitypub
+    - spring-boot
+    - postgresql
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - name: Dmytro Oliinyk
+      url: https://github.com/oliinykdm
+    name: fitpub
+    sources:
+    - https://codeberg.org/fitpub/fitpub
+    type: application
+    urls:
+    - https://github.com/oliinykdm/fitpub-helm/releases/download/fitpub-0.2.1/fitpub-0.2.1.tgz
+    version: 0.2.1
   - apiVersion: v2
     appVersion: 1.1.1
     created: "2026-06-21T12:28:50.884830586Z"
@@ -24,4 +63,4 @@ entries:
     urls:
     - https://github.com/oliinykdm/fitpub-helm/releases/download/fitpub-0.2.0/fitpub-0.2.0.tgz
     version: 0.2.0
-generated: "2026-06-21T12:28:50.88483811Z"
+generated: "2026-06-21T16:20:33.376213972Z"
