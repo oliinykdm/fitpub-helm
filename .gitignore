@@ -1,0 +1,25 @@
+# === Helm ===
+*.tgz
+index.yaml
+Chart.lock
+charts/*/charts/
+charts/*/*.tgz
+
+# === Dependencies ===
+charts/*/Chart.lock
+
+# === IDE / Editor ===
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Temporary / Build ===
+tmp/
+build/
+dist/
