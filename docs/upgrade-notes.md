@@ -1,5 +1,29 @@
 # Upgrade Notes
 
+## 0.2.7
+
+### New value: `persistence.mountPath`
+
+`persistence.mountPath` (default `/app/uploads`) now controls where the uploads PVC is mounted inside the container. It replaces the previously hardcoded `/app/uploads` path in the Deployment template.
+
+**Action required** only if you set `config.FILE_UPLOAD_DIR` to a non-default path: also set `persistence.mountPath` to the same value, or the chart will now refuse to render with an error explaining the mismatch.
+
+### Validation: `config.FILE_UPLOAD_DIR` must match `persistence.mountPath`
+
+If `persistence.enabled: true` and `config.FILE_UPLOAD_DIR` is set to a different value than `persistence.mountPath`, `helm install` / `helm upgrade` now fails with a descriptive error. Previously, this misconfiguration caused uploads to be written to ephemeral container storage, silently losing all files on pod restart.
+
+### Validation: `config.FITPUB_PAGES_PATH` must match `pages.mountPath`
+
+If `pages.existingSecret` is set and `config.FITPUB_PAGES_PATH` differs from `pages.mountPath`, the chart now fails with a descriptive error. Previously, the pages Secret was mounted at one path while the application read from a different path, resulting in missing pages with no visible error at install time.
+
+### Validation: VAPID keys required when push is enabled (productionChecks)
+
+When `productionChecks.enabled: true` and `config.FITPUB_PUSH_ENABLED: "true"`, the chart now validates that `applicationSecret.data.FITPUB_VAPID_PUBLIC_KEY` is provided (or `applicationSecret.existingSecret` is used). Previously, deploying with push enabled but no VAPID keys was silently accepted, resulting in broken push notifications.
+
+### Validation: ServiceMonitor `scrapeTimeout` must be less than `interval`
+
+If `serviceMonitor.enabled: true` and `scrapeTimeout >= interval`, the chart now fails with a descriptive error. Prometheus rejects this configuration at runtime.
+
 ## 0.2.6
 
 New values added in this release. All existing deployments are unaffected — the new knobs default to the same behavior as before.

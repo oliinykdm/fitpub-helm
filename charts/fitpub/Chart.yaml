@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.2.6
+version: 0.2.7
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -32,6 +32,16 @@ annotations:
     fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
   artifacthub.io/changes: |
+    - kind: added
+      description: persistence.mountPath — configurable uploads volume mount path; must match config.FILE_UPLOAD_DIR to prevent silent data loss on pod restart.
+    - kind: fixed
+      description: Validation now fails if config.FILE_UPLOAD_DIR and persistence.mountPath differ, catching a silent data-loss misconfiguration.
+    - kind: fixed
+      description: Validation now fails if config.FITPUB_PAGES_PATH and pages.mountPath differ, preventing Markdown pages from being invisibly missing at runtime.
+    - kind: fixed
+      description: productionChecks now validates FITPUB_VAPID_PUBLIC_KEY when FITPUB_PUSH_ENABLED=true, preventing a broken push configuration from reaching production.
+    - kind: fixed
+      description: Validation now fails if serviceMonitor.scrapeTimeout is greater than or equal to serviceMonitor.interval, preventing Prometheus scrape errors.
     - kind: added
       description: diagnosticMode — run the container as sleep infinity for safe exec-based debugging without probe interference.
     - kind: added
