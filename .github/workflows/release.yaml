@@ -1,6 +1,7 @@
 name: Release Helm Chart
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -23,9 +24,29 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
+      - name: Ensure GitHub Pages branch exists
+        run: |
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null; then
+            echo "gh-pages branch already exists"
+            exit 0
+          fi
+
+          current_revision="$(git rev-parse HEAD)"
+          git switch --orphan gh-pages
+          git rm -rf . >/dev/null 2>&1 || true
+          cat > index.yaml <<'EOF'
+          apiVersion: v1
+          entries: {}
+          EOF
+          git add index.yaml
+          git commit -m "Initialize Helm chart repository"
+          git push origin gh-pages
+          git checkout "$current_revision"
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
         with:
           charts_dir: charts
+          skip_existing: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
