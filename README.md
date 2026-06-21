@@ -1,6 +1,6 @@
 # Fitpub Helm Chart
 
-[![Lint](https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-and-test.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml)
+[![Lint](https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml)
 
 Helm chart for deploying [Fitpub](https://codeberg.org/fitpub/fitpub) — a federated fitness tracking platform.
 
