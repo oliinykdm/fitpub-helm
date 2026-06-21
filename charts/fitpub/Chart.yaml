@@ -33,50 +33,10 @@ annotations:
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
   artifacthub.io/changes: |
     - kind: fixed
-      description: config — app log level now uses LOGGING_LEVEL_NET_JAVAHIPPIE_FITPUB; the previous LOGGING_LEVEL_ORG_OPERATON targeted a package that does not exist in FitPub and had no effect.
-    - kind: fixed
-      description: config — JWT lifetime now uses FITPUB_SECURITY_JWT_EXPIRATION and upload limits use SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE/MAX_REQUEST_SIZE; the previous FITPUB_JWT_EXPIRATION_MS and FILE_UPLOAD_MAX_SIZE keys are not read by the application.
+      description: Corrected config keys that the app never read - app log level (LOGGING_LEVEL_NET_JAVAHIPPIE_FITPUB), JWT lifetime (FITPUB_SECURITY_JWT_EXPIRATION) and upload size (SPRING_SERVLET_MULTIPART_*).
     - kind: added
-      description: config — FITPUB_FEDERATION_PROTOCOL and FITPUB_ALLOW_PRIVATE_IPS knobs for federation behavior, with validation that the protocol is http or https.
+      description: FITPUB_FEDERATION_PROTOCOL and FITPUB_ALLOW_PRIVATE_IPS config knobs.
     - kind: added
-      description: Validation now fails if config.FITPUB_DOMAIN contains a scheme or a slash; it must be a bare host (with optional port) to keep WebFinger/ActivityPub handles valid.
+      description: Reject a FITPUB_DOMAIN that contains a scheme or trailing slash, and a FITPUB_FEDERATION_PROTOCOL other than http/https.
     - kind: fixed
-      description: NOTES.txt — the write-test command and PVC path note now use persistence.mountPath instead of the hardcoded /app/uploads; the command was broken for users who customised the mount path.
-    - kind: fixed
-      description: Validation now fails if dnsPolicy is set to None without dnsConfig.nameservers; Kubernetes admission rejects such pods at apply time, making the error hard to trace.
-    - kind: fixed
-      description: PDB — maxUnavailable:0 and minAvailable:0 no longer trigger a false "not set" validation error; both values are now handled correctly in validation and rendering.
-    - kind: fixed
-      description: HPA — validation now fails if both targetCPUUtilizationPercentage and targetMemoryUtilizationPercentage are absent or zero, preventing an empty metrics list that Kubernetes rejects.
-    - kind: changed
-      description: release workflow — added timeout-minutes:30 so a hung chart-releaser or gh-pages push cannot occupy the runner for up to six hours.
-    - kind: added
-      description: persistence.mountPath — configurable uploads volume mount path; must match config.FILE_UPLOAD_DIR to prevent silent data loss on pod restart.
-    - kind: fixed
-      description: Validation now fails if config.FILE_UPLOAD_DIR and persistence.mountPath differ, catching a silent data-loss misconfiguration.
-    - kind: fixed
-      description: Validation now fails if config.FITPUB_PAGES_PATH and pages.mountPath differ, preventing Markdown pages from being invisibly missing at runtime.
-    - kind: fixed
-      description: productionChecks now validates FITPUB_VAPID_PUBLIC_KEY when FITPUB_PUSH_ENABLED=true, preventing a broken push configuration from reaching production.
-    - kind: fixed
-      description: Validation now fails if serviceMonitor.scrapeTimeout is greater than or equal to serviceMonitor.interval, preventing Prometheus scrape errors.
-    - kind: added
-      description: diagnosticMode — run the container as sleep infinity for safe exec-based debugging without probe interference.
-    - kind: added
-      description: lifecycleHooks — configurable preStop/postStart hooks for graceful shutdown and load balancer drain.
-    - kind: added
-      description: priorityClassName, schedulerName, runtimeClassName — scheduling knobs for production cluster policies.
-    - kind: added
-      description: hostAliases, dnsPolicy, dnsConfig — DNS customization for federation testing and private resolvers.
-    - kind: added
-      description: commonLabels and commonAnnotations — apply labels and annotations to every chart resource from a single location.
-    - kind: added
-      description: command and args overrides for the main container entrypoint.
-    - kind: added
-      description: minReadySeconds for deployment stability window.
-    - kind: fixed
-      description: ServiceMonitor now includes namespaceSelector so Prometheus running in a different namespace can discover FitPub.
-    - kind: fixed
-      description: automountServiceAccountToken is now set on the pod spec in addition to the ServiceAccount, preventing token mount when an external SA is used.
-    - kind: changed
-      description: commonAnnotations propagated to all chart resources via a shared helper.
+      description: NOTES.txt write-test command now uses persistence.mountPath instead of a hardcoded /app/uploads.

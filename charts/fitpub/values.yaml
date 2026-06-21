@@ -1,41 +1,25 @@
-# =============================================================================
-# Fitpub Helm Chart - Default Values
-# =============================================================================
+# Default values for the fitpub chart.
+# See README.md and docs/ for the longer explanations.
 
 replicaCount: 1
-
 revisionHistoryLimit: 10
 
-# Minimum seconds a newly created pod must be ready before it counts as
-# available. Only relevant when using RollingUpdate strategy.
+# Only matters with the RollingUpdate strategy.
 minReadySeconds: 0
 
+# RWO volume + single replica -> Recreate, otherwise the new pod can't mount.
 deploymentStrategy:
   type: Recreate
 
-# Labels added to every resource created by this chart. Useful for cost
-# allocation, environment tagging or platform-wide label policies.
+# Applied to every object the chart renders.
 commonLabels: {}
-# commonLabels:
 #   environment: production
 #   team: platform
-
-# Annotations added to every resource created by this chart.
 commonAnnotations: {}
-# commonAnnotations:
 #   reloader.stakater.com/auto: "true"
 
-# ---------------------------------------------------------------------------
-# Diagnostic mode
-# ---------------------------------------------------------------------------
-# When enabled, overrides the container command with `sleep infinity` so you
-# can exec into the pod and inspect the runtime environment without startup
-# or probe failures interfering.
-#
-#   helm upgrade fitpub fitpub/fitpub \
-#     --reuse-values \
-#     --set diagnosticMode.enabled=true
-#
+# Swap the container command for `sleep infinity` so a crashlooping pod can be
+# exec'd into. Toggle with --set diagnosticMode.enabled=true --reuse-values.
 diagnosticMode:
   enabled: false
   command:
@@ -44,10 +28,9 @@ diagnosticMode:
     - infinity
 
 image:
-  # Container image for Fitpub
   repository: codeberg.org/fitpub/fitpub
   pullPolicy: IfNotPresent
-  # Overrides the image tag (defaults to Chart appVersion)
+  # Defaults to .Chart.AppVersion when left empty.
   tag: ""
 
 imagePullSecrets: []
@@ -57,8 +40,7 @@ fullnameOverride: ""
 
 serviceAccount:
   create: true
-  # FitPub does not call the Kubernetes API; disable token automount to reduce
-  # the attack surface if the pod is ever compromised.
+  # FitPub never talks to the API server, so don't mount a token.
   automount: false
   annotations: {}
   name: ""
@@ -80,8 +62,7 @@ securityContext:
   capabilities:
     drop:
       - ALL
-  # FitPub writes uploads, logs, temp files and caches. Enabling this requires
-  # writable mounts for every write path used by the application and JVM.
+  # Can't be true: the app writes uploads, logs and JVM temp files to disk.
   readOnlyRootFilesystem: false
 
 initContainers:
@@ -116,89 +97,58 @@ resources:
   limits:
     memory: 2048Mi
 
-# =============================================================================
-# Persistent Storage
-# =============================================================================
 persistence:
   enabled: true
-  # Storage class for the uploads PVC.
-  #   ""    — omit storageClassName; cluster uses its default StorageClass
-  #   "-"   — set storageClassName: ""; disables dynamic provisioning, binds to
-  #           a pre-existing PV without a StorageClass
-  #   "x"   — use the named StorageClass explicitly
+  # "" -> default StorageClass, "-" -> no class (pre-bound PV), "name" -> that class.
   storageClass: ""
   accessMode: ReadWriteOnce
   size: 1Gi
-  # Add helm.sh/resource-policy: keep to prevent the PVC (and your uploads)
-  # from being deleted on `helm uninstall`.
+  # Set helm.sh/resource-policy: keep here to survive `helm uninstall`.
   annotations: {}
   existingClaim: ""
-  # Path inside the container where the uploads PVC is mounted.
-  # Must match config.FILE_UPLOAD_DIR — changing one without the other causes
-  # uploads to be written to ephemeral storage and lost on pod restart.
+  # Keep in sync with config.FILE_UPLOAD_DIR (validated below).
   mountPath: /app/uploads
 
+# Static Markdown pages (terms.md, imprint.md, optional about.md) from a Secret.
 pages:
-  # Mount Markdown legal/about pages from an existing Secret.
-  # The Secret should contain files such as terms.md, imprint.md and optional about.md.
   existingSecret: ""
   mountPath: /app/pages
   readOnly: true
 
-# =============================================================================
-# Application Configuration
-# =============================================================================
-# Non-secret values in this section are injected through a ConfigMap.
+# Non-secret env, rendered into a ConfigMap and loaded via envFrom.
 config:
-  # ---------------------------------------------------------------------------
   # Database
-  # ---------------------------------------------------------------------------
   FITPUB_DATABASE_URL: ""
   SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
   SPRING_JPA_SHOW_SQL: "false"
   SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "false"
   SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: "org.hibernate.dialect.PostgreSQLDialect"
 
-  # ---------------------------------------------------------------------------
-  # Application Settings
-  # ---------------------------------------------------------------------------
+  # App
   SPRING_PROFILES_ACTIVE: "prod"
   FITPUB_PORT: "8080"
   FITPUB_DOMAIN: ""
   FITPUB_BASE_URL: ""
   FITPUB_SITE_BANNER_TEXT: ""
 
-  # ---------------------------------------------------------------------------
-  # Security & Federation
-  # ---------------------------------------------------------------------------
-  # JWT lifetime in milliseconds. Binds to fitpub.security.jwt.expiration.
-  # (The FITPUB_JWT_EXPIRATION_MS name used by some compose setups is not read
-  # by the application.)
+  # Security & federation
   FITPUB_SECURITY_JWT_EXPIRATION: "86400000"
   FITPUB_ACTIVITYPUB_ENABLED: "true"
-  # Protocol used when generating federated/ActivityPub URLs. Keep "https" in
-  # production; "http" is only for local federation testing.
+  # http is for local federation testing only.
   FITPUB_FEDERATION_PROTOCOL: "https"
-  # Allow federation requests to private/loopback IP ranges. Keep "false" in
-  # production — enabling it opens an SSRF path to internal services.
+  # true allows federation calls to private IPs (SSRF risk) - dev only.
   FITPUB_ALLOW_PRIVATE_IPS: "false"
 
-  # ---------------------------------------------------------------------------
-  # Database Migrations (Flyway)
-  # ---------------------------------------------------------------------------
+  # Flyway
   SPRING_FLYWAY_ENABLED: "true"
   SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
   SPRING_FLYWAY_VALIDATE_ON_MIGRATE: "true"
 
-  # ---------------------------------------------------------------------------
-  # Push Notifications (VAPID)
-  # ---------------------------------------------------------------------------
+  # Web push (VAPID keys go in applicationSecret)
   FITPUB_PUSH_ENABLED: "true"
   FITPUB_VAPID_SUBJECT: ""
 
-  # ---------------------------------------------------------------------------
-  # Email Settings
-  # ---------------------------------------------------------------------------
+  # Mail
   FITPUB_MAIL_HOST: ""
   FITPUB_MAIL_PORT: "587"
   FITPUB_MAIL_SMTP_AUTH: "true"
@@ -207,28 +157,16 @@ config:
   FITPUB_MAIL_FROM_ADDRESS: ""
   FITPUB_MAIL_FROM_NAME: "FitPub"
 
-  # ---------------------------------------------------------------------------
-  # File Uploads
-  # ---------------------------------------------------------------------------
-  # Upload limits are the standard Spring Boot multipart properties. Keep
-  # max-request-size >= max-file-size. (FILE_UPLOAD_MAX_SIZE, used by some
-  # compose setups, is not read by the application.)
+  # Uploads - standard Spring multipart limits, keep request >= file.
   SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: "50MB"
   SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: "50MB"
   FILE_UPLOAD_DIR: "/app/uploads"
   FITPUB_PAGES_PATH: "/app/pages"
 
-  # ---------------------------------------------------------------------------
-  # User Registration
-  # ---------------------------------------------------------------------------
   FITPUB_REGISTRATION_ENABLED: "true"
 
-  # ---------------------------------------------------------------------------
-  # Logging
-  # ---------------------------------------------------------------------------
+  # Logging - app code lives under net.javahippie.fitpub.
   LOGGING_LEVEL_ROOT: "INFO"
-  # FitPub's own code lives under net.javahippie.fitpub. Set this to DEBUG to
-  # troubleshoot application behavior.
   LOGGING_LEVEL_NET_JAVAHIPPIE_FITPUB: "INFO"
   LOGGING_LEVEL_ORG_SPRINGFRAMEWORK: "INFO"
   LOGGING_LEVEL_ORG_HIBERNATE: "WARN"
@@ -237,8 +175,8 @@ config:
   FITPUB_LOG_MAX_FILE_SIZE: "100MB"
   FITPUB_LOG_MAX_HISTORY: "7"
 
+# Either point existingSecret at a pre-created Secret, or fill in data below.
 applicationSecret:
-  # Use an existing Secret with keys matching the environment variable names below.
   existingSecret: ""
   data:
     FITPUB_DATABASE_USERNAME: ""
@@ -251,23 +189,12 @@ applicationSecret:
     FITPUB_MAIL_USERNAME: ""
     FITPUB_MAIL_PASSWORD: ""
 
-# Override the default container entrypoint. Useful for custom JVM flags or
-# init wrapper scripts. Leave empty to use the image default.
+# Override entrypoint/args only if you know why (e.g. custom JVM flags).
 command: []
-# command:
-#   - java
-
-# Override the default container arguments. Leave empty to use image defaults.
 args: []
-# args:
-#   - -XX:MaxRAMPercentage=75
-#   - -jar
-#   - /app/fitpub.jar
 
-# Lifecycle hooks for the main container. The recommended preStop hook adds a
-# small sleep so the load balancer can drain connections before SIGTERM.
+# preStop sleep gives the LB time to drain before SIGTERM, etc.
 lifecycleHooks: {}
-# lifecycleHooks:
 #   preStop:
 #     exec:
 #       command: ["sh", "-c", "sleep 5"]
@@ -277,23 +204,13 @@ extraEnvFrom: []
 extraInitContainers: []
 sidecars: []
 
+# Off by default so `helm lint`/template work without real secrets.
+# Turn on in prod values to fail fast on missing required settings.
 productionChecks:
-  # Keep disabled for chart linting and local rendering without real secrets.
-  # Enable in production values to fail fast on missing required configuration.
   enabled: false
 
-# =============================================================================
-# Health Probes
-# =============================================================================
-# startupProbe gates both readiness and liveness: neither probe starts until
-# startupProbe succeeds. Do not add initialDelaySeconds to readiness/liveness
-# when startupProbe is defined — it only adds unnecessary extra delay on top.
-#
-# Spring Boot Actuator exposes fine-grained endpoints:
-#   /actuator/health/liveness  — suitable for livenessProbe
-#   /actuator/health/readiness — suitable for readinessProbe
-# Override path here if your FitPub version exposes those endpoints and you
-# want separate liveness vs. readiness semantics.
+# startupProbe guards the JVM warmup; readiness/liveness start only after it
+# passes, so don't add initialDelaySeconds to those two.
 readinessProbe:
   httpGet:
     path: /actuator/health
@@ -306,7 +223,7 @@ startupProbe:
   httpGet:
     path: /actuator/health
     port: http
-  # Allow up to 15 + 12×10 = 135 s for JVM startup before declaring failure.
+  # ~135s budget for startup (15 + 12*10).
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -316,14 +233,12 @@ livenessProbe:
   httpGet:
     path: /actuator/health
     port: http
-  # No initialDelaySeconds: startupProbe already guards the startup window.
   periodSeconds: 15
   timeoutSeconds: 5
   failureThreshold: 3
 
+# Off by default - uploads/background work aren't verified for multi-pod yet.
 autoscaling:
-  # FitPub is single-replica by default because uploads and background work need
-  # explicit validation before running multiple pods.
   enabled: false
   minReplicas: 1
   maxReplicas: 10
@@ -332,23 +247,18 @@ autoscaling:
 
 podDisruptionBudget:
   enabled: false
-  # Use maxUnavailable for single-replica deployments to allow voluntary
-  # evictions (node drain). minAvailable: 1 with replicaCount: 1 blocks all
-  # drains and is an operational anti-pattern.
-  # Exactly one of minAvailable or maxUnavailable must be set.
+  # maxUnavailable suits single replica; minAvailable:1 would block node drains.
+  # Set exactly one of the two.
   minAvailable: ""
   maxUnavailable: 1
 
+# Off by default: FitPub needs egress to PostGIS, SMTP and federated hosts.
 networkPolicy:
-  # Disabled by default because FitPub needs egress to PostGIS, SMTP and
-  # federated/external HTTP services. Enable only with rules matching your cluster.
   enabled: false
   ingress:
     enabled: true
     extraRules: []
   egress:
-    # FitPub needs egress to PostgreSQL, SMTP and federated/external HTTP services.
-    # Keep unrestricted unless your cluster has explicit egress policy requirements.
     allowAll: true
     extraRules: []
 
@@ -358,46 +268,28 @@ serviceMonitor:
   annotations: {}
   interval: 30s
   scrapeTimeout: 10s
-  # The prod profile only exposes health,info,metrics on the actuator. To scrape
-  # this path you must also expose the Prometheus endpoint, e.g. set in config:
-  #   MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
-  # and ensure the micrometer-registry-prometheus dependency is present.
+  # The prod profile exposes only health,info,metrics. To use this path also add
+  # prometheus to MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE and ship the
+  # micrometer-registry-prometheus dependency.
   path: /actuator/prometheus
   scheme: http
 
 terminationGracePeriodSeconds: 60
 
-# Assign a PriorityClass to prevent the pod from being evicted under node
-# resource pressure. Requires a PriorityClass resource to exist in the cluster.
 priorityClassName: ""
-
-# Use a non-default scheduler (e.g. a batch or GPU scheduler). Leave empty for
-# the default Kubernetes scheduler.
 schedulerName: ""
-
-# Use a specific container runtime class (e.g. kata, gvisor) for sandboxed
-# execution. Leave empty for the node default.
 runtimeClassName: ""
 
-# Add entries to the pod's /etc/hosts. Useful for local DNS overrides or
-# testing federation with a self-hosted instance.
 hostAliases: []
-# hostAliases:
 #   - ip: "192.168.1.10"
 #     hostnames:
 #       - "other-fitpub.internal"
 
-# Override the pod's DNS policy. Valid values: ClusterFirst, ClusterFirstWithHostNet,
-# Default, None. Leave empty for the cluster default (ClusterFirst).
+# ClusterFirst | ClusterFirstWithHostNet | Default | None ("" = cluster default).
 dnsPolicy: ""
-
-# Additional DNS configuration. Useful with dnsPolicy: None for custom resolvers.
 dnsConfig: {}
-# dnsConfig:
 #   nameservers:
 #     - 1.1.1.1
-#   searches:
-#     - ns1.svc.cluster.local
 
 nodeSelector: {}
 tolerations: []
