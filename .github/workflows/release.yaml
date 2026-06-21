@@ -8,6 +8,8 @@ on:
     paths:
       - 'charts/**'
       - 'artifacthub-repo.yml'
+      - 'cr.yaml'
+      - 'pgp-public-key.asc'
       - '.github/scripts/prune-helm-index.rb'
       - '.github/workflows/release.yaml'
 
@@ -30,6 +32,24 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
+      - name: Prepare GPG signing key
+        run: |
+          test -n "${{ secrets.GPG_KEYRING_BASE64 }}"
+          test -n "${{ secrets.GPG_KEY_NAME }}"
+          test -n "${{ secrets.GPG_PASSPHRASE }}"
+
+          mkdir -p "$HOME/.gnupg"
+          chmod 700 "$HOME/.gnupg"
+
+          echo "${{ secrets.GPG_KEYRING_BASE64 }}" | base64 --decode > "$HOME/.gnupg/secring.gpg"
+          printf '%s' "${{ secrets.GPG_PASSPHRASE }}" > "$HOME/.gnupg/passphrase"
+          chmod 600 "$HOME/.gnupg/secring.gpg" "$HOME/.gnupg/passphrase"
+
+          if [ "${{ secrets.GPG_KEY_NAME }}" != "E4C86577339895552E1CAB5E49BD9E5EA6C243B7" ]; then
+            echo "GPG_KEY_NAME must match the Chart.yaml artifacthub.io/signKey fingerprint"
+            exit 1
+          fi
+
       - name: Ensure GitHub Pages branch exists
         run: |
           if git ls-remote --exit-code --heads origin gh-pages >/dev/null; then
@@ -51,6 +71,7 @@ jobs:
         uses: helm/chart-releaser-action@v1.6.0
         with:
           charts_dir: charts
+          config: cr.yaml
           skip_existing: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
@@ -66,15 +87,16 @@ jobs:
           git fetch origin gh-pages
           git worktree add "$worktree" origin/gh-pages
           cp artifacthub-repo.yml "$worktree/artifacthub-repo.yml"
+          cp pgp-public-key.asc "$worktree/pgp-public-key.asc"
           touch "$worktree/.nojekyll"
 
           cd "$worktree"
-          if [ -z "$(git status --porcelain -- artifacthub-repo.yml .nojekyll)" ]; then
+          if [ -z "$(git status --porcelain -- artifacthub-repo.yml pgp-public-key.asc .nojekyll)" ]; then
             echo "Artifact Hub metadata is already up to date"
             exit 0
           fi
 
-          git add artifacthub-repo.yml .nojekyll
+          git add artifacthub-repo.yml pgp-public-key.asc .nojekyll
           git commit -m "Update Helm repository metadata"
           git push origin HEAD:gh-pages
 

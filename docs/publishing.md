@@ -38,16 +38,16 @@ Signed Helm chart publishing requires:
 - `artifacthub.io/signKey` in `Chart.yaml`;
 - the public GPG key served from the Helm repository.
 
-The `Chart.yaml` annotation should look like:
+The chart uses this signing key metadata:
 
 ```yaml
 annotations:
   artifacthub.io/signKey: |
-    fingerprint: YOUR_GPG_KEY_FINGERPRINT
+    fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
 ```
 
-Do not add this annotation until the public key is published and release signing is enabled, otherwise Artifact Hub will show incomplete signing metadata.
+The release workflow signs chart packages using `cr.yaml` and publishes `pgp-public-key.asc` to the Helm repository.
 
 ## Typical Setup
 
@@ -70,7 +70,7 @@ Export the public key for GitHub Pages:
 gpg --armor --export YOUR_KEY_FINGERPRINT > pgp-public-key.asc
 ```
 
-Recommended GitHub Actions secrets:
+Required GitHub Actions secrets:
 
 - `GPG_KEYRING_BASE64`: base64-encoded private key export
 - `GPG_KEY_NAME`: key fingerprint or key ID used for signing
@@ -80,7 +80,7 @@ After signing is wired into the release workflow, verify locally:
 
 ```bash
 helm repo update fitpub
-helm pull fitpub/fitpub --version 0.2.2 --prov
+helm pull fitpub/fitpub --version 0.2.4 --prov
 curl -fsSL https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc | gpg --import
-helm verify fitpub-0.2.2.tgz
+helm verify fitpub-0.2.4.tgz
 ```

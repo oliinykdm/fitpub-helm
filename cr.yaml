@@ -1,0 +1,4 @@
+sign: true
+key: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+keyring: /home/runner/.gnupg/secring.gpg
+passphrase-file: /home/runner/.gnupg/passphrase
