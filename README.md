@@ -4,7 +4,7 @@
 [![Runtime Smoke Test](https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml)
 [![Release](https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/fitpub)](https://artifacthub.io/packages/search?repo=fitpub)
-![Chart Version](https://img.shields.io/badge/chart-0.2.2-blue)
+![Chart Version](https://img.shields.io/badge/chart-0.2.3-blue)
 ![App Version](https://img.shields.io/badge/app-1.1.1-blue)
 ![Kubernetes](https://img.shields.io/badge/kubernetes-%3E%3D1.26-blue)
 ![Helm](https://img.shields.io/badge/helm-%3E%3D3.8-blue)
@@ -271,37 +271,6 @@ This chart intentionally uses an external PostGIS database, a `Deployment` with 
 
 Flux and Argo CD examples are available in [docs/gitops.md](docs/gitops.md). Production GitOps setups should manage secrets through SOPS, External Secrets Operator, Sealed Secrets or a similar workflow.
 
-## Artifact Hub
-
-Before adding the chart to Artifact Hub, make sure GitHub Pages is enabled:
-
-- Source: `Deploy from a branch`
-- Branch: `gh-pages`
-- Folder: `/root`
-
-This URL must return Helm repository YAML:
-
-```text
-https://oliinykdm.github.io/fitpub-helm/index.yaml
-```
-
-The repository includes `artifacthub-repo.yml` for Artifact Hub ownership metadata. Before verifying ownership, replace the placeholders:
-
-```yaml
-repositoryID: f297969d-75c8-453d-b40e-ed8edf0dfdcc
-owners:
-  - name: Dmytro Oliinyk
-    email: dima@oliinyk.com
-```
-
-Artifact Hub provides `repositoryID` after adding the Helm repository:
-
-```text
-https://oliinykdm.github.io/fitpub-helm
-```
-
-The release workflow copies `artifacthub-repo.yml` to the published `gh-pages` branch so Artifact Hub can read it next to `index.yaml`.
-
 ## Troubleshooting
 
 See [docs/troubleshooting.md](docs/troubleshooting.md) for common Kubernetes deployment problems: PostGIS issues, missing secrets, failing health probes, PVC permissions and federation URL mistakes.
@@ -326,6 +295,7 @@ See [docs/troubleshooting.md](docs/troubleshooting.md) for common Kubernetes dep
 - Upgrade notes: [docs/upgrade-notes.md](docs/upgrade-notes.md)
 - Design notes: [docs/design.md](docs/design.md)
 - GitOps examples: [docs/gitops.md](docs/gitops.md)
+- Publishing notes: [docs/publishing.md](docs/publishing.md)
 - Troubleshooting: [docs/troubleshooting.md](docs/troubleshooting.md)
 
 ## Contributing

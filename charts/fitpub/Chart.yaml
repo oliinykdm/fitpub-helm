@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.2.2
+version: 0.2.3
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -24,6 +24,6 @@ annotations:
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/changes: |
     - kind: changed
-      description: Use a valid Artifact Hub category annotation.
+      description: Add chart package README for Artifact Hub package details.
     - kind: changed
-      description: Prepare chart metadata for Artifact Hub ingestion.
+      description: Move owner-focused publishing notes out of the public README.
