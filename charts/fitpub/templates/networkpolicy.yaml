@@ -5,6 +5,11 @@ metadata:
   name: {{ include "fitpub.fullname" . }}
   labels:
     {{- include "fitpub.labels" . | nindent 4 }}
+  {{- $ann := include "fitpub.annotations" (dict "annotations" (dict) "context" $) }}
+  {{- if $ann }}
+  annotations:
+    {{- $ann | nindent 4 }}
+  {{- end }}
 spec:
   podSelector:
     matchLabels:
