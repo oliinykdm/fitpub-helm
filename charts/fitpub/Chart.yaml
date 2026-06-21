@@ -1,6 +1,6 @@
 apiVersion: v2
 name: fitpub
-description: Helm chart for Fitpub - federated fitness tracking platform
+description: Helm chart for FitPub - federated fitness tracking platform
 type: application
 version: 0.2.0
 appVersion: "1.1.1"
@@ -17,3 +17,17 @@ keywords:
 maintainers:
   - name: Dmytro Oliinyk
     url: https://github.com/oliinykdm
+annotations:
+  artifacthub.io/category: social
+  artifacthub.io/license: AGPL-3.0-or-later
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/changes: |
+    - kind: changed
+      description: Split application configuration into ConfigMap and Secret values.
+    - kind: added
+      description: Add Ingress, HPA, PDB, NetworkPolicy and ServiceAccount templates.
+    - kind: added
+      description: Add production checks for required FitPub settings and secrets.
+    - kind: added
+      description: Add support for mounting Markdown pages from an existing Secret.
