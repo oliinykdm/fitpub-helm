@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.2.5
+version: 0.2.6
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -32,15 +32,23 @@ annotations:
     fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
   artifacthub.io/changes: |
+    - kind: added
+      description: diagnosticMode — run the container as sleep infinity for safe exec-based debugging without probe interference.
+    - kind: added
+      description: lifecycleHooks — configurable preStop/postStart hooks for graceful shutdown and load balancer drain.
+    - kind: added
+      description: priorityClassName, schedulerName, runtimeClassName — scheduling knobs for production cluster policies.
+    - kind: added
+      description: hostAliases, dnsPolicy, dnsConfig — DNS customization for federation testing and private resolvers.
+    - kind: added
+      description: commonLabels and commonAnnotations — apply labels and annotations to every chart resource from a single location.
+    - kind: added
+      description: command and args overrides for the main container entrypoint.
+    - kind: added
+      description: minReadySeconds for deployment stability window.
     - kind: fixed
-      description: Init container now reads runAsUser/fsGroup from podSecurityContext instead of hardcoding 1001.
+      description: ServiceMonitor now includes namespaceSelector so Prometheus running in a different namespace can discover FitPub.
     - kind: fixed
-      description: Secret no longer renders empty-string values; empty credentials no longer override optional features.
+      description: automountServiceAccountToken is now set on the pod spec in addition to the ServiceAccount, preventing token mount when an external SA is used.
     - kind: changed
-      description: serviceAccount.automount now defaults to false; FitPub does not need Kubernetes API access.
-    - kind: changed
-      description: Probe initialDelaySeconds removed from readinessProbe and livenessProbe; startupProbe already gates the startup window.
-    - kind: changed
-      description: podDisruptionBudget now supports maxUnavailable in addition to minAvailable; default changed to maxUnavailable=1.
-    - kind: fixed
-      description: Init container security context now includes allowPrivilegeEscalation=false and minimal capability set.
+      description: commonAnnotations propagated to all chart resources via a shared helper.
