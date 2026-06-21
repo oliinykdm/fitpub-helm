@@ -1,0 +1,35 @@
+# Values used by the runtime smoke-test workflow.
+# This is intentionally not a production example.
+
+productionChecks:
+  enabled: true
+
+image:
+  tag: "1.1.1"
+
+config:
+  FITPUB_DATABASE_URL: "jdbc:postgresql://postgis:5432/fitpub"
+  FITPUB_DOMAIN: "fitpub.local"
+  FITPUB_BASE_URL: "http://fitpub.local"
+  FITPUB_PUSH_ENABLED: "false"
+  FITPUB_MAIL_HOST: ""
+  FITPUB_MAIL_FROM_ADDRESS: ""
+
+applicationSecret:
+  existingSecret: "fitpub-secret"
+
+ingress:
+  enabled: false
+
+persistence:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 768Mi
+  limits:
+    memory: 1536Mi
