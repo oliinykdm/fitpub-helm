@@ -1,8 +1,14 @@
+# Default values for fitpub.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
 replicaCount: 1
 
 image:
+  # Fitpub container image
   repository: codeberg.org/fitpub/fitpub
   pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart's appVersion.
   tag: ""
 
 imagePullSecrets: []
@@ -11,7 +17,9 @@ nameOverride: ""
 fullnameOverride: ""
 
 serviceAccount:
+  # Specifies whether a service account should be created
   create: true
+  # Automatically mount a ServiceAccount's API credentials
   automount: true
   annotations: {}
   name: ""
@@ -21,6 +29,8 @@ podLabels: {}
 
 podSecurityContext: {}
 
+# Security context for the main container.
+# Fitpub runs as user/group 1001 by default.
 securityContext:
   runAsNonRoot: true
   runAsUser: 1001
@@ -45,11 +55,59 @@ resources:
   limits:
     memory: 2048Mi
 
+# Persistent storage for user uploads (/app/uploads)
 persistence:
   enabled: true
   storageClass: ""
   accessMode: ReadWriteOnce
   size: 1Gi
+
+# Application configuration.
+# All values from this section will be injected into the container as environment variables.
+config:
+  # --- Database ---
+  FITPUB_DATABASE_URL: ""
+  FITPUB_DATABASE_USERNAME: ""
+  FITPUB_DATABASE_PASSWORD: ""
+
+  # --- Application ---
+  SPRING_PROFILES_ACTIVE: "prod"
+  FITPUB_PORT: "8080"
+  FITPUB_DOMAIN: ""
+  FITPUB_BASE_URL: ""
+
+  # --- Security ---
+  FITPUB_JWT_SECRET: ""
+  FITPUB_JWT_EXPIRATION_MS: "86400000"
+
+  # --- Flyway (database migrations) ---
+  SPRING_FLYWAY_ENABLED: "true"
+  SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+  SPRING_FLYWAY_VALIDATE_ON_MIGRATE: "true"
+
+  # --- Push Notifications (VAPID) ---
+  FITPUB_PUSH_ENABLED: "true"
+  FITPUB_VAPID_PUBLIC_KEY: ""
+  FITPUB_VAPID_PRIVATE_KEY: ""
+  FITPUB_VAPID_SUBJECT: ""
+
+  # --- Email ---
+  FITPUB_MAIL_HOST: ""
+  FITPUB_MAIL_PORT: "587"
+  FITPUB_MAIL_SMTP_AUTH: "true"
+  FITPUB_MAIL_STARTTLS_ENABLE: "true"
+  FITPUB_MAIL_STARTTLS_REQUIRED: "true"
+  FITPUB_MAIL_USERNAME: ""
+  FITPUB_MAIL_PASSWORD: ""
+  FITPUB_MAIL_FROM_ADDRESS: ""
+
+  # --- File Uploads ---
+  FILE_UPLOAD_MAX_SIZE: "50MB"
+  FILE_UPLOAD_DIR: "/app/uploads"
+
+  # --- Registration ---
+  FITPUB_REGISTRATION_ENABLED: "true"
+  FITPUB_REGISTRATION_PASSWORD: ""
 
 readinessProbe:
   httpGet:
@@ -60,61 +118,6 @@ readinessProbe:
   timeoutSeconds: 5
   failureThreshold: 3
 
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 80
-
-config:
-  # === Database ===
-  FITPUB_DATABASE_URL: "jdbc:postgresql://postgres:5432/fitpub"
-  FITPUB_DATABASE_USERNAME: "fitpub"
-  FITPUB_DATABASE_PASSWORD: "change-me"
-
-  # === Application ===
-  SPRING_PROFILES_ACTIVE: "prod"
-  FITPUB_PORT: "8080"
-  FITPUB_DOMAIN: "example.fit"
-  FITPUB_BASE_URL: "https://example.fit"
-
-  # === Security ===
-  FITPUB_JWT_SECRET: "change-me-super-secret"
-  FITPUB_JWT_EXPIRATION_MS: "86400000"
-
-  # === Flyway ===
-  SPRING_FLYWAY_ENABLED: "true"
-  SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
-  SPRING_FLYWAY_VALIDATE_ON_MIGRATE: "true"
-
-  # === Push Notifications (VAPID) ===
-  FITPUB_PUSH_ENABLED: "true"
-  FITPUB_VAPID_PUBLIC_KEY: "change-me"
-  FITPUB_VAPID_PRIVATE_KEY: "change-me"
-  FITPUB_VAPID_SUBJECT: "https://example.fit/"
-
-  # === Email ===
-  FITPUB_EMAIL_SECRET: "change-me"
-  FITPUB_MAIL_HOST: "smtp.example.com"
-  FITPUB_MAIL_PORT: "587"
-  FITPUB_MAIL_SMTP_AUTH: "true"
-  FITPUB_MAIL_STARTTLS_ENABLE: "true"
-  FITPUB_MAIL_STARTTLS_REQUIRED: "true"
-  FITPUB_MAIL_USERNAME: "user@example.com"
-  FITPUB_MAIL_PASSWORD: "change-me"
-  FITPUB_MAIL_FROM_ADDRESS: "noreply@example.fit"
-
-  # === ActivityPub ===
-  FITPUB_ACTIVITYPUB_ENABLED: "true"
-
-  # === Registration ===
-  FITPUB_REGISTRATION_ENABLED: "true"
-  FITPUB_REGISTRATION_PASSWORD: "change-me"
-
-  # === File Upload ===
-  FILE_UPLOAD_MAX_SIZE: "50MB"
-  FILE_UPLOAD_DIR: "/app/uploads"
-
 livenessProbe:
   httpGet:
     path: /actuator/health
@@ -123,3 +126,9 @@ livenessProbe:
   periodSeconds: 15
   timeoutSeconds: 5
   failureThreshold: 3
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
