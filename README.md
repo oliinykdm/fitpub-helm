@@ -1,6 +1,7 @@
 # FitPub Helm Chart
 
 [![Lint and Test](https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml)
+[![Runtime Smoke Test](https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml)
 [![Release](https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml)
 ![Chart Version](https://img.shields.io/badge/chart-0.2.0-blue)
 ![App Version](https://img.shields.io/badge/app-1.1.1-blue)
@@ -17,7 +18,7 @@ Helm chart for deploying [FitPub](https://codeberg.org/fitpub/fitpub), a federat
 - Render tests: default values and `examples/production-values.yaml`
 - Kubernetes API validation: kind cluster with `kubectl apply --dry-run=server`
 - Release packaging: chart-releaser publishes packages and `index.yaml` to GitHub Pages
-- Runtime install test: not enabled yet; it requires PostGIS and application startup checks
+- Runtime install test: manual and weekly workflow with kind, PostGIS, `helm install --wait` and `/actuator/health`
 - Production status: ready for controlled testing, not yet broadly battle-tested
 
 If the release badge is red after a failed first publish, rerun the `Release Helm Chart` workflow manually after `gh-pages` initialization fixes are merged.
@@ -110,6 +111,7 @@ Additional examples:
 
 - [examples/production-values.yaml](examples/production-values.yaml): production-style values with an externally managed Secret
 - [examples/chart-managed-secret-values.yaml](examples/chart-managed-secret-values.yaml): controlled testing values where Helm creates the Secret
+- [examples/runtime-smoke-values.yaml](examples/runtime-smoke-values.yaml): CI-only values used by the runtime smoke test
 
 ## Ingress
 
@@ -227,6 +229,10 @@ Read [docs/upgrade-notes.md](docs/upgrade-notes.md) before upgrading across char
 
 This chart intentionally uses an external PostGIS database, a `Deployment` with a dedicated uploads PVC and a single-replica default. See [docs/design.md](docs/design.md) for the reasoning and current CI guarantees.
 
+## Troubleshooting
+
+See [docs/troubleshooting.md](docs/troubleshooting.md) for common Kubernetes deployment problems: PostGIS issues, missing secrets, failing health probes, PVC permissions and federation URL mistakes.
+
 ## Important Production Checklist
 
 - Use external PostgreSQL with PostGIS.
@@ -246,6 +252,7 @@ This chart intentionally uses an external PostGIS database, a `Deployment` with 
 - This chart repository: https://github.com/oliinykdm/fitpub-helm
 - Upgrade notes: [docs/upgrade-notes.md](docs/upgrade-notes.md)
 - Design notes: [docs/design.md](docs/design.md)
+- Troubleshooting: [docs/troubleshooting.md](docs/troubleshooting.md)
 
 ## Contributing
 

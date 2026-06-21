@@ -10,6 +10,7 @@ on:
       - 'docs/**'
       - 'README.md'
       - '.github/workflows/helm-lint-and-test.yaml'
+      - '.github/workflows/runtime-smoke-test.yaml'
   pull_request:
     branches: [ main, master ]
     paths:
@@ -18,6 +19,7 @@ on:
       - 'docs/**'
       - 'README.md'
       - '.github/workflows/helm-lint-and-test.yaml'
+      - '.github/workflows/runtime-smoke-test.yaml'
 
 jobs:
   lint-test:
