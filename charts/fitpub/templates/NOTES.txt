@@ -2,10 +2,11 @@ Thank you for installing {{ .Chart.Name }}.
 
 Your release is named {{ .Release.Name }}.
 
-To learn more about the release, try:
+Release status:
 
-  $ helm status {{ .Release.Name }}
-  $ helm get all {{ .Release.Name }}
+  helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
+  kubectl rollout status deployment/{{ include "fitpub.fullname" . }} -n {{ .Release.Namespace }}
+  kubectl get pods -l app.kubernetes.io/instance={{ .Release.Name }} -n {{ .Release.Namespace }}
 
 {{- if .Values.ingress.enabled }}
 
@@ -32,7 +33,7 @@ You can watch the status by running:
 The application is exposed via ClusterIP.
 You can port-forward to access it locally:
 
-  kubectl port-forward svc/{{ include "fitpub.fullname" . }} 8080:{{ .Values.service.port }}
+  kubectl port-forward svc/{{ include "fitpub.fullname" . }} 8080:{{ .Values.service.port }} -n {{ .Release.Namespace }}
 
 Then open http://127.0.0.1:8080 in your browser.
 
@@ -44,9 +45,26 @@ Important:
 - FitPub requires an external PostgreSQL database with PostGIS enabled
 - FITPUB_BASE_URL must be the canonical public URL without a trailing slash
 - A PersistentVolumeClaim is created for `/app/uploads` by default
+- ConfigMap: {{ include "fitpub.configMapName" . }}
+- Secret: {{ include "fitpub.secretName" . }}
 {{- if not .Values.productionChecks.enabled }}
 - Consider enabling `productionChecks.enabled=true` in production values to fail fast on missing required settings
 {{- end }}
 {{- if gt (int .Values.replicaCount) 1 }}
 - Multiple replicas should be used only after validating FitPub background jobs, federation processing and shared storage behavior
 {{- end }}
+
+Useful checks:
+
+  kubectl logs deployment/{{ include "fitpub.fullname" . }} -n {{ .Release.Namespace }}
+  kubectl exec deployment/{{ include "fitpub.fullname" . }} -n {{ .Release.Namespace }} -- sh -c 'touch /app/uploads/.write-test && rm /app/uploads/.write-test'
+
+Health endpoint from inside the cluster:
+
+  kubectl run fitpub-healthcheck --image=curlimages/curl --restart=Never --rm -i -n {{ .Release.Namespace }} --command -- curl -fsS http://{{ include "fitpub.fullname" . }}:{{ .Values.service.port }}/actuator/health
+
+Next steps:
+- Verify the external PostGIS database and Flyway migrations
+- Put FitPub behind HTTPS before public federation use
+- Back up PostGIS and the uploads PVC
+- Read docs/troubleshooting.md if the pod does not become ready
