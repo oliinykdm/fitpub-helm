@@ -17,7 +17,7 @@ commonLabels: {}
 commonAnnotations: {}
 #   reloader.stakater.com/auto: "true"
 
-# sleep infinity instead of the app — useful when you need to exec into a broken pod.
+# sleep infinity instead of the app - useful when you need to exec into a broken pod.
 # helm upgrade ... --set diagnosticMode.enabled=true --reuse-values
 diagnosticMode:
   enabled: false
@@ -61,7 +61,7 @@ securityContext:
   capabilities:
     drop:
       - ALL
-  # /tmp and /app/logs are mounted as emptyDir below; /app/uploads is the PVC.
+  # /tmp and /app/logs are mounted as emptyDir below. /app/uploads is the PVC.
   readOnlyRootFilesystem: true
 
 # Writable emptyDir mounts so readOnlyRootFilesystem can stay on.
@@ -108,7 +108,7 @@ resources:
   # memory limit. Keep requests.memory close to limits.memory so the scheduler
   # reserves enough RAM for heap plus metaspace/native overhead. Lower values
   # only for throwaway clusters (see examples/development-values.yaml).
-  # cpu limit caps GC/Flyway bursts; Java 25 honours the cgroup quota.
+  # cpu limit caps GC/Flyway bursts. Java 25 honours the cgroup quota.
   requests:
     cpu: 250m
     memory: 3072Mi
@@ -179,7 +179,7 @@ config:
   FITPUB_PUSH_ENABLED: "false"
   FITPUB_VAPID_SUBJECT: ""
 
-  # Mail — leave empty until FITPUB_MAIL_HOST is set; otherwise Spring Boot defaults
+  # Mail - leave empty until FITPUB_MAIL_HOST is set, otherwise Spring Boot defaults
   # apply (localhost:25 without auth). Set port/auth/starttls together with the host.
   FITPUB_MAIL_HOST: ""
   FITPUB_MAIL_PORT: ""
@@ -203,7 +203,7 @@ config:
   FITPUB_WEATHER_ENABLED: ""
 
   # Logging overrides the prod Spring profile defaults (root WARN in the app).
-  # Tune here for platform visibility; remove keys to fall back to profile defaults.
+  # Tune here for platform visibility. Remove keys to fall back to profile defaults.
   LOGGING_LEVEL_ROOT: "INFO"
   LOGGING_LEVEL_NET_JAVAHIPPIE_FITPUB: "INFO"
   LOGGING_LEVEL_ORG_SPRINGFRAMEWORK: "INFO"
@@ -247,7 +247,7 @@ sidecars: []
 productionChecks:
   enabled: false
 
-# /actuator/health needs auth in fitpub 1.1.1; /login is permitAll and returns 200.
+# /actuator/health needs auth in fitpub 1.1.1. /login is permitAll and returns 200.
 readinessProbe:
   httpGet:
     path: /login
@@ -260,7 +260,7 @@ startupProbe:
   httpGet:
     path: /login
     port: http
-  # ~195s budget for startup (15 + 18*10) — Flyway + JVM on small nodes.
+  # ~195s budget for startup (15 + 18*10) - Flyway + JVM on small nodes.
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
@@ -274,7 +274,7 @@ livenessProbe:
   timeoutSeconds: 5
   failureThreshold: 3
 
-# Scaling >1 needs persistence.accessMode=ReadWriteMany; RWO blocks it (chart enforces).
+# Scaling >1 needs persistence.accessMode=ReadWriteMany. RWO blocks it (chart enforces).
 # Schedulers are concurrency-safe (DB row-claim + idempotent cleanups).
 autoscaling:
   enabled: false
@@ -291,7 +291,7 @@ podDisruptionBudget:
   maxUnavailable: 1
 
 # Off by default: FitPub needs egress to PostGIS, SMTP and federated hosts.
-# Do not set ingress.enabled=false without ingress.extraRules — that denies all
+# Do not set ingress.enabled=false without ingress.extraRules - that denies all
 # inbound traffic when networkPolicy.enabled=true.
 networkPolicy:
   enabled: false

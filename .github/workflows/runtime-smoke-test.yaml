@@ -72,7 +72,7 @@ jobs:
             -f examples/runtime-smoke-values.yaml \
             --wait \
             --timeout 10m; then
-            echo "Helm install did not become ready — collecting diagnostics:"
+            echo "Helm install did not become ready - collecting diagnostics:"
             kubectl get pods -o wide
             kubectl describe deployment/fitpub || true
             kubectl describe pod -l app.kubernetes.io/instance=fitpub || true
@@ -167,7 +167,7 @@ jobs:
             -f examples/networkpolicy-smoke-values.yaml \
             --wait \
             --timeout 10m; then
-            echo "Helm install did not become ready — collecting diagnostics:"
+            echo "Helm install did not become ready - collecting diagnostics:"
             kubectl get pods -o wide
             kubectl get networkpolicy || true
             kubectl describe deployment/fitpub || true
