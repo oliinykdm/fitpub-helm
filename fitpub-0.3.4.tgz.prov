@@ -1,0 +1,67 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+annotations:
+  artifacthub.io/category: skip-prediction
+  artifacthub.io/changes: |
+    - kind: changed
+      description: Default probes use GET /login (HTTP 200) for reliable startup on FitPub 1.1.x where actuator health requires authentication.
+    - kind: changed
+      description: Default ServiceMonitor path is /actuator/metrics (prometheus endpoint is not in the app image).
+    - kind: changed
+      description: Fail render when networkPolicy blocks all egress without extraRules.
+    - kind: removed
+      description: Drop inert config.FITPUB_ACTIVITYPUB_ENABLED (not read by the application).
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/images: |
+    - name: fitpub
+      image: codeberg.org/fitpub/fitpub:1.1.1
+    - name: volume-permissions
+      image: busybox:1.37
+      whitelisted: true
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/signKey: |
+    fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+    url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+apiVersion: v2
+appVersion: 1.1.1
+description: Helm chart for FitPub - federated fitness tracking platform
+home: https://codeberg.org/fitpub/fitpub
+icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+keywords:
+- - fitness
+- - activitypub
+- - spring-boot
+- - postgresql
+kubeVersion: '>= 1.26.0'
+maintainers:
+- - name: Dmytro Oliinyk
+  url: https://github.com/oliinykdm
+name: fitpub
+sources:
+- - https://codeberg.org/fitpub/fitpub
+type: application
+version: 0.3.4
+
+...
+files:
+  fitpub-0.3.4.tgz: sha256:7b417e02e5230ff9aab9598a302c02c2ea7233b2cc06ab9ed9f5b34ef015c6eb
+
+-----BEGIN PGP SIGNATURE-----
+
+wsG5BAEBCgBtBYJqORzuCRBJvZ5epsJDt0UUAAAAAAAcACBzYWx0QG5vdGF0aW9u
+cy5vcGVucGdwanMub3Jn/HyuUdKlwk4jTyQjce1+lkgiYwJa3bp+vRDsViq7KOcW
+IQTkyGV3M5iVVS4cq15JvZ5epsJDtwAAIy4QAJAOYm2jTEogyx9VrZgpBbM+tsMp
+CwSxKlrb+QkGmFfKVOzYI+nWnZhBaabuD2LA4ydncIqMkWEZ6efwkG+NT5lneTFk
+YKbblx8t5fUOJl+Uf9VK/mtN/gxecpn3DOL+VJmxPEFFu2dG7B2z4MccTUAM4pRp
+SHij7APJAfEy83HXwerNRpdi4Fr3flbX939kvrTgKFXA/24bBDYLvV10IFoTugub
+A9oG6S8VSYRi0aDdGEjMXTyMiaf3tXp8ObEbysTxOvJENTo+le1Fe2vApmadN7Oi
+0lkl4I/u605upBJDVWjjhpVlLIEEKy94b+pmLnr7PZfF9FO/5BiE0JZuoQZ99RSJ
+rLUeeweLpW2fpAU6EZzlpjQQzpRx/+7W9l9C6ZXTro4AOTAxfos/zjDLAL8Ve7yP
+QDuty7IRWb2rtB9HncNrlnfMUl7YsWaG32AP7PvrfbOisoOzUPvVBLQytxCbUhLe
+ishuutjpBVRxztjNCYlS0FK+jV3RVB3aibT9DCD3O/0krs+5V+R3AepOMMzC1GV9
+Ntszy4Sv5r8hmKLTfQuasI0OMpg026s73T4Dipz5UXq81QQzRKNL7VS8KvIA2oz2
+faUuUbjm9jTB+AHlkAA10neXTP5USNt2+iEoUEGRc+CwPl+DqjK71cs9W/DcF3ly
+6CpXJk/97t4+t+YM
+-----END PGP SIGNATURE-----

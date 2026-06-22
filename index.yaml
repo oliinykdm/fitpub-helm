@@ -5,6 +5,52 @@ entries:
       artifacthub.io/category: skip-prediction
       artifacthub.io/changes: |
         - kind: changed
+          description: Default probes use GET /login (HTTP 200) for reliable startup on FitPub 1.1.x where actuator health requires authentication.
+        - kind: changed
+          description: Default ServiceMonitor path is /actuator/metrics (prometheus endpoint is not in the app image).
+        - kind: changed
+          description: Fail render when networkPolicy blocks all egress without extraRules.
+        - kind: removed
+          description: Drop inert config.FITPUB_ACTIVITYPUB_ENABLED (not read by the application).
+      artifacthub.io/containsSecurityUpdates: "false"
+      artifacthub.io/images: |
+        - name: fitpub
+          image: codeberg.org/fitpub/fitpub:1.1.1
+        - name: volume-permissions
+          image: busybox:1.37
+          whitelisted: true
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/prerelease: "false"
+      artifacthub.io/signKey: |
+        fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+        url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+    apiVersion: v2
+    appVersion: 1.1.1
+    created: "2026-06-22T11:30:54.493297239Z"
+    description: Helm chart for FitPub - federated fitness tracking platform
+    digest: 7b417e02e5230ff9aab9598a302c02c2ea7233b2cc06ab9ed9f5b34ef015c6eb
+    home: https://codeberg.org/fitpub/fitpub
+    icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+    keywords:
+    - fitness
+    - activitypub
+    - spring-boot
+    - postgresql
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - name: Dmytro Oliinyk
+      url: https://github.com/oliinykdm
+    name: fitpub
+    sources:
+    - https://codeberg.org/fitpub/fitpub
+    type: application
+    urls:
+    - https://oliinykdm.github.io/fitpub-helm/fitpub-0.3.4.tgz
+    version: 0.3.4
+  - annotations:
+      artifacthub.io/category: skip-prediction
+      artifacthub.io/changes: |
+        - kind: changed
           description: Disable push notifications by default until VAPID settings are configured.
         - kind: changed
           description: Validate VAPID subject and chart-managed VAPID keys when push is enabled.
@@ -447,4 +493,4 @@ entries:
     urls:
     - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.2.tgz
     version: 0.2.2
-generated: "2026-06-22T08:57:56.580563354Z"
+generated: "2026-06-22T11:30:54.49101125Z"
