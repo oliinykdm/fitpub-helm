@@ -56,6 +56,9 @@ jobs:
       - name: Render production example
         run: helm template fitpub ./charts/fitpub -f examples/production-values.yaml
 
+      - name: Render networkpolicy smoke example
+        run: helm template fitpub ./charts/fitpub -f examples/networkpolicy-smoke-values.yaml
+
       - name: Create kind cluster
         uses: helm/kind-action@v1.14.0
 

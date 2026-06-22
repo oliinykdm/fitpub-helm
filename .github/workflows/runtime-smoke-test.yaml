@@ -64,25 +64,25 @@ jobs:
 
       - name: Verify FitPub pod readiness and probe success
         run: |
-          kubectl get pods -l app.kubernetes.io/name=fitpub -o wide
+          kubectl get pods -l app.kubernetes.io/instance=fitpub -o wide
           kubectl rollout status deployment/fitpub --timeout=600s
           kubectl wait --for=condition=ready pod \
-            -l app.kubernetes.io/name=fitpub \
+            -l app.kubernetes.io/instance=fitpub \
             --timeout=600s
 
-          ready="$(kubectl get pod -l app.kubernetes.io/name=fitpub \
+          ready="$(kubectl get pod -l app.kubernetes.io/instance=fitpub \
             -o jsonpath='{.items[0].status.conditions[?(@.type=="Ready")].status}')"
           if [ "$ready" != "True" ]; then
             echo "Expected pod Ready=True, got: $ready"
-            kubectl describe pod -l app.kubernetes.io/name=fitpub
+            kubectl describe pod -l app.kubernetes.io/instance=fitpub
             exit 1
           fi
 
-          restarts="$(kubectl get pod -l app.kubernetes.io/name=fitpub \
+          restarts="$(kubectl get pod -l app.kubernetes.io/instance=fitpub \
             -o jsonpath='{.items[0].status.containerStatuses[0].restartCount}')"
           if [ "$restarts" != "0" ]; then
             echo "Pod restarted during startup (restartCount=$restarts)"
-            kubectl logs -l app.kubernetes.io/name=fitpub --tail=200
+            kubectl logs -l app.kubernetes.io/instance=fitpub --tail=200
             exit 1
           fi
 
@@ -100,7 +100,67 @@ jobs:
         run: |
           kubectl get all
           kubectl describe deployment/fitpub || true
-          kubectl describe pod -l app.kubernetes.io/name=fitpub || true
-          kubectl logs -l app.kubernetes.io/name=fitpub --all-containers=true --tail=200 || true
+          kubectl describe pod -l app.kubernetes.io/instance=fitpub || true
+          kubectl logs -l app.kubernetes.io/instance=fitpub --all-containers=true --tail=200 || true
           kubectl describe deployment/postgis || true
           kubectl logs -l app=postgis --all-containers=true --tail=200 || true
+
+  kind-networkpolicy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1.14.0
+
+      - name: Install PostGIS
+        run: |
+          kubectl apply -f examples/postgis-dev.yaml
+          kubectl rollout status deployment/postgis --timeout=180s
+          kubectl wait --for=condition=available deployment/postgis --timeout=180s
+
+      - name: Create FitPub secret
+        run: |
+          kubectl create secret generic fitpub-secret \
+            --from-literal=FITPUB_DATABASE_USERNAME=fitpub \
+            --from-literal=FITPUB_DATABASE_PASSWORD=fitpub-smoke-test-db-password \
+            --from-literal=FITPUB_JWT_SECRET=test-jwt-secret-with-more-than-32-characters \
+            --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters
+
+      - name: Install FitPub with restricted NetworkPolicy
+        run: |
+          helm upgrade --install fitpub ./charts/fitpub \
+            -f examples/networkpolicy-smoke-values.yaml \
+            --wait \
+            --timeout 10m
+
+      - name: Verify FitPub pod readiness under NetworkPolicy
+        run: |
+          kubectl get networkpolicy -l app.kubernetes.io/instance=fitpub
+          kubectl rollout status deployment/fitpub --timeout=600s
+          kubectl wait --for=condition=ready pod \
+            -l app.kubernetes.io/instance=fitpub \
+            --timeout=600s
+
+      - name: Check FitPub serves /login inside the cluster
+        run: |
+          kubectl run fitpub-login-check-np \
+            --image=curlimages/curl:8.11.1 \
+            --restart=Never \
+            --rm \
+            -i \
+            --command -- curl -fsS -o /dev/null -w 'HTTP:%{http_code}\n' http://fitpub:8080/login
+
+      - name: Dump diagnostics on failure
+        if: failure()
+        run: |
+          kubectl get all
+          kubectl get networkpolicy
+          kubectl describe deployment/fitpub || true
+          kubectl describe pod -l app.kubernetes.io/instance=fitpub || true
+          kubectl logs -l app.kubernetes.io/instance=fitpub --all-containers=true --tail=200 || true

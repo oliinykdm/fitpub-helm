@@ -13,13 +13,14 @@ helm lint ./charts/fitpub
 helm template fitpub ./charts/fitpub
 helm template fitpub ./charts/fitpub -f examples/production-values.yaml
 helm template fitpub ./charts/fitpub -f examples/development-values.yaml
+helm template fitpub ./charts/fitpub -f examples/networkpolicy-smoke-values.yaml
 ```
 
-Optional: reproduce the CI kind runtime test locally (requires a reachable cluster and
+Optional: reproduce the CI kind runtime tests locally (requires a reachable cluster and
 image pull access):
 
 ```bash
-# Same shape as .github/workflows/runtime-smoke-test.yaml
+# Same shape as .github/workflows/runtime-smoke-test.yaml (kind-runtime job)
 kubectl apply -f examples/postgis-dev.yaml
 kubectl rollout status deployment/postgis --timeout=180s
 kubectl create secret generic fitpub-secret \
@@ -30,7 +31,14 @@ kubectl create secret generic fitpub-secret \
 helm upgrade --install fitpub ./charts/fitpub \
   -f examples/runtime-smoke-values.yaml \
   --wait --timeout 10m
-kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=fitpub --timeout=600s
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=fitpub --timeout=600s
+
+# NetworkPolicy smoke (kind-networkpolicy job)
+helm uninstall fitpub || true
+helm upgrade --install fitpub ./charts/fitpub \
+  -f examples/networkpolicy-smoke-values.yaml \
+  --wait --timeout 10m
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=fitpub --timeout=600s
 ```
 
 ## Chart Design Principles
