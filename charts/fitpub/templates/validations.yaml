@@ -26,6 +26,10 @@
 {{- fail (printf "config.FITPUB_PAGES_PATH (%s) must match pages.mountPath (%s); a mismatch means the app looks for Markdown pages in the wrong directory" .Values.config.FITPUB_PAGES_PATH .Values.pages.mountPath) -}}
 {{- end -}}
 
+{{- if and .Values.config.FITPUB_DATABASE_URL (not (hasPrefix "jdbc:postgresql:" (.Values.config.FITPUB_DATABASE_URL | toString))) -}}
+{{- fail (printf "config.FITPUB_DATABASE_URL (%s) must be a JDBC PostgreSQL URL, e.g. jdbc:postgresql://host:5432/fitpub. FitPub also needs the PostGIS extension enabled on that database." .Values.config.FITPUB_DATABASE_URL) -}}
+{{- end -}}
+
 {{- if and .Values.autoscaling.enabled (not .Values.autoscaling.targetCPUUtilizationPercentage) (not .Values.autoscaling.targetMemoryUtilizationPercentage) -}}
 {{- fail "autoscaling: at least one of targetCPUUtilizationPercentage or targetMemoryUtilizationPercentage must be set when autoscaling.enabled=true; the HPA metrics list would be empty" -}}
 {{- end -}}
@@ -59,6 +63,33 @@
 {{- $hasPubKey := or (index $.Values.applicationSecret.data "FITPUB_VAPID_PUBLIC_KEY") ($.Values.applicationSecret.existingSecret) -}}
 {{- if not $hasPubKey -}}
 {{- fail "config.FITPUB_PUSH_ENABLED is true but applicationSecret.data.FITPUB_VAPID_PUBLIC_KEY is not set; provide VAPID keys or disable push with config.FITPUB_PUSH_ENABLED=false" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Secret sanity checks that mirror the application's own startup validation, so a
+weak or placeholder secret fails at `helm install` time with a clear message
+instead of a pod CrashLoopBackOff. Only runs for inline secrets.
+*/}}
+{{- if not .Values.applicationSecret.existingSecret -}}
+{{- $placeholders := list "changeme" "change-this-secret-key-in-production-must-be-at-least-32-characters-long" "change-this-email-secret-in-production-must-be-at-least-32-characters-long" -}}
+{{- $jwt := .Values.applicationSecret.data.FITPUB_JWT_SECRET | default "" | toString -}}
+{{- if $jwt -}}
+{{- if lt (len $jwt) 32 -}}
+{{- fail (printf "applicationSecret.data.FITPUB_JWT_SECRET is %d characters; FitPub requires at least 32 (HS256 needs a 256-bit key). Generate one with: openssl rand -base64 48" (len $jwt)) -}}
+{{- end -}}
+{{- if has $jwt $placeholders -}}
+{{- fail "applicationSecret.data.FITPUB_JWT_SECRET is a known placeholder value; the application refuses to start with it. Generate a real one with: openssl rand -base64 48" -}}
+{{- end -}}
+{{- end -}}
+{{- $email := .Values.applicationSecret.data.FITPUB_EMAIL_SECRET | default "" | toString -}}
+{{- if $email -}}
+{{- if lt (len $email) 32 -}}
+{{- fail (printf "applicationSecret.data.FITPUB_EMAIL_SECRET is %d characters; FitPub requires at least 32. Generate one with: openssl rand -base64 48" (len $email)) -}}
+{{- end -}}
+{{- if has $email $placeholders -}}
+{{- fail "applicationSecret.data.FITPUB_EMAIL_SECRET is a known placeholder value; the application refuses to start with it. Generate a real one with: openssl rand -base64 48" -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}

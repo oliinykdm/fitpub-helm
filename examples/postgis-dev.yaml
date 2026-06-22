@@ -1,0 +1,68 @@
+# Throwaway PostGIS database for local testing ONLY. Do not use in production:
+# it stores data in an emptyDir (lost on pod restart) and uses trivial credentials.
+#
+#   kubectl apply -n fitpub -f examples/postgis-dev.yaml
+#
+# Credentials and database name match examples/development-values.yaml, and the
+# Service name "postgis" matches FITPUB_DATABASE_URL there. The bootstrap user is
+# a superuser, so the V1__enable_postgis migration (CREATE EXTENSION postgis) works.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgis
+  labels:
+    app: postgis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgis
+  template:
+    metadata:
+      labels:
+        app: postgis
+    spec:
+      containers:
+        - name: postgis
+          image: postgis/postgis:16-3.4
+          env:
+            - name: POSTGRES_DB
+              value: fitpub
+            - name: POSTGRES_USER
+              value: fitpub
+            - name: POSTGRES_PASSWORD
+              value: fitpub
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "fitpub", "-d", "fitpub"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgis
+  labels:
+    app: postgis
+spec:
+  selector:
+    app: postgis
+  ports:
+    - port: 5432
+      targetPort: 5432

@@ -35,6 +35,19 @@ If the release badge is red after a failed first publish, rerun the `Release Hel
 - Extension points for extra env, envFrom, volumes, volume mounts, init containers and sidecars
 - Support for an external PostgreSQL database with PostGIS
 
+## Quick start (local)
+
+Want to try it on a local cluster (kind/minikube/Docker Desktop) without wiring up
+a database first? From the repository root:
+
+```bash
+scripts/local-quickstart.sh
+```
+
+This deploys a throwaway PostGIS, installs the chart, waits until it is healthy and
+prints how to reach it. See [docs/quickstart.md](docs/quickstart.md) for the manual
+steps and a troubleshooting table.
+
 ## Prerequisites
 
 - Kubernetes 1.26+

@@ -63,10 +63,17 @@ Health endpoint from inside the cluster:
 
   kubectl run fitpub-healthcheck --image=curlimages/curl --restart=Never --rm -i -n {{ .Release.Namespace }} --command -- curl -fsS http://{{ include "fitpub.fullname" . }}:{{ .Values.service.port }}/actuator/health
 
+If the pod does not become Ready, the cause is almost always the database:
+either it is unreachable, or it is plain PostgreSQL without the PostGIS extension
+(the V1__enable_postgis migration then fails). Check with:
+
+  kubectl logs deployment/{{ include "fitpub.fullname" . }} -n {{ .Release.Namespace }}
+
 Next steps:
 - Verify the external PostGIS database and Flyway migrations
 - Put FitPub behind HTTPS before public federation use
 - Back up PostGIS and the uploads PVC
+- Trying this locally? See docs/quickstart.md for a one-command setup
 - Read docs/troubleshooting.md if the pod does not become ready
 
 Debugging:

@@ -6,8 +6,9 @@ productionChecks:
 
 config:
   FITPUB_DATABASE_URL: "jdbc:postgresql://postgis:5432/fitpub"
-  FITPUB_DOMAIN: "fitpub.local"
-  FITPUB_BASE_URL: "http://fitpub.local"
+  # localhost:8080 matches the port-forward in docs/quickstart.md so generated links work.
+  FITPUB_DOMAIN: "localhost:8080"
+  FITPUB_BASE_URL: "http://localhost:8080"
   FITPUB_PUSH_ENABLED: "false"
   FITPUB_REGISTRATION_ENABLED: "true"
   LOGGING_LEVEL_ROOT: "INFO"
