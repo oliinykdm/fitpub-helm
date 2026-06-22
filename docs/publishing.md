@@ -33,7 +33,7 @@ Artifact Hub shows a chart as signed when the Helm package has a provenance file
 Signed Helm chart publishing requires:
 
 - a GPG private key available to the release workflow;
-- `helm package --sign` or chart-releaser signing configuration;
+- `helm package --sign` with the release signing key;
 - a published `.tgz.prov` file next to the chart package;
 - `artifacthub.io/signKey` in `Chart.yaml`;
 - the public GPG key served from the Helm repository.
@@ -47,7 +47,7 @@ annotations:
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
 ```
 
-The release workflow signs chart packages using `cr.yaml` and publishes `pgp-public-key.asc` to the Helm repository.
+The release workflow signs chart packages with `helm package --sign` and publishes `pgp-public-key.asc` to the Helm repository.
 
 ## Typical Setup
 

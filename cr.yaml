@@ -1,4 +1,0 @@
-sign: true
-key: FitPub Helm Chart Release
-keyring: /home/runner/.gnupg/secring.gpg
-passphrase-file: /home/runner/.gnupg/passphrase

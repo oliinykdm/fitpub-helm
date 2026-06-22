@@ -8,9 +8,7 @@ on:
     paths:
       - 'charts/**'
       - 'artifacthub-repo.yml'
-      - 'cr.yaml'
       - 'pgp-public-key.asc'
-      - '.github/scripts/prune-helm-index.rb'
       - '.github/workflows/release.yaml'
 
 jobs:
@@ -33,10 +31,12 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
       - name: Prepare GPG signing key
         run: |
           test -n "${{ secrets.GPG_KEYRING_BASE64 }}"
-          test -n "${{ secrets.GPG_KEY_NAME }}"
           test -n "${{ secrets.GPG_PASSPHRASE }}"
 
           mkdir -p "$HOME/.gnupg"
@@ -46,15 +46,9 @@ jobs:
           printf '%s' "${{ secrets.GPG_PASSPHRASE }}" > "$HOME/.gnupg/passphrase"
           chmod 600 "$HOME/.gnupg/secring.gpg" "$HOME/.gnupg/passphrase"
 
-          if [ "${{ secrets.GPG_KEY_NAME }}" != "FitPub Helm Chart Release" ]; then
-            echo "GPG_KEY_NAME must match the Helm signing key UID used in cr.yaml"
-            exit 1
-          fi
-
       - name: Ensure GitHub Pages branch exists
         run: |
           if git ls-remote --exit-code --heads origin gh-pages >/dev/null; then
-            echo "gh-pages branch already exists"
             exit 0
           fi
 
@@ -68,53 +62,43 @@ jobs:
           git push origin gh-pages
           git checkout "$current_revision"
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
-        with:
-          charts_dir: charts
-          config: cr.yaml
-          skip_existing: true
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-
-      - name: Publish Artifact Hub metadata
+      - name: Package and sign charts
         run: |
-          if [ ! -f artifacthub-repo.yml ]; then
-            echo "artifacthub-repo.yml not found, skipping"
-            exit 0
-          fi
+          rm -rf .deploy && mkdir -p .deploy
+          for chart in charts/*/; do
+            helm package "$chart" \
+              --sign \
+              --key "FitPub Helm Chart Release" \
+              --keyring "$HOME/.gnupg/secring.gpg" \
+              --passphrase-file "$HOME/.gnupg/passphrase" \
+              --destination .deploy
+          done
+
+      - name: Publish to GitHub Pages
+        run: |
+          repo_url="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}"
 
           worktree="$(mktemp -d)"
           git fetch origin gh-pages
           git worktree add "$worktree" origin/gh-pages
+
+          # Re-index only the freshly built packages and merge them into the
+          # published index so existing release dates are left untouched.
+          helm repo index .deploy --url "$repo_url" --merge "$worktree/index.yaml"
+
+          cp .deploy/*.tgz "$worktree"/
+          cp .deploy/*.tgz.prov "$worktree"/ 2>/dev/null || true
+          cp .deploy/index.yaml "$worktree/index.yaml"
           cp artifacthub-repo.yml "$worktree/artifacthub-repo.yml"
           cp pgp-public-key.asc "$worktree/pgp-public-key.asc"
           touch "$worktree/.nojekyll"
 
           cd "$worktree"
-          if [ -z "$(git status --porcelain -- artifacthub-repo.yml pgp-public-key.asc .nojekyll)" ]; then
-            echo "Artifact Hub metadata is already up to date"
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Nothing new to publish"
             exit 0
           fi
 
-          git add artifacthub-repo.yml pgp-public-key.asc .nojekyll
-          git commit -m "Update Helm repository metadata"
-          git push origin HEAD:gh-pages
-
-      - name: Prune missing chart packages from index
-        run: |
-          worktree="$(mktemp -d)"
-          git fetch origin gh-pages
-          git worktree add "$worktree" origin/gh-pages
-
-          ruby .github/scripts/prune-helm-index.rb "$worktree/index.yaml"
-
-          cd "$worktree"
-          if [ -z "$(git status --porcelain -- index.yaml)" ]; then
-            echo "index.yaml does not contain stale chart package entries"
-            exit 0
-          fi
-
-          git add index.yaml
-          git commit -m "Prune missing chart packages from index"
+          git add -A
+          git commit -m "Publish chart packages to GitHub Pages"
           git push origin HEAD:gh-pages

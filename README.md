@@ -18,7 +18,7 @@ Helm chart for deploying [FitPub](https://codeberg.org/fitpub/fitpub), a federat
 - Helm lint: enabled in CI with `ct lint`
 - Render tests: default values and `examples/production-values.yaml`
 - Kubernetes API validation: kind cluster with `kubectl apply --dry-run=server`
-- Release packaging: chart-releaser publishes packages and `index.yaml` to GitHub Pages
+- Release packaging: signed packages and `index.yaml` are published to GitHub Pages
 - Runtime install test: manual and weekly workflow with kind, PostGIS, `helm install --wait` and `/actuator/health`
 - Production status: ready for controlled testing, not yet broadly battle-tested
 
