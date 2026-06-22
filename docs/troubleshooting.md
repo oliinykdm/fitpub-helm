@@ -49,19 +49,22 @@ kubectl run fitpub-healthcheck \
 
 If the endpoint is blocked by application security settings, adjust probes or the application configuration before relying on Kubernetes readiness.
 
-Spring Boot Actuator also exposes split endpoints that give Kubernetes finer-grained control:
+Spring Boot Actuator exposes split health groups that give Kubernetes finer-grained control, and the chart uses them by default:
 
-| Endpoint | Use for |
-|---|---|
-| `/actuator/health/liveness` | `livenessProbe` |
-| `/actuator/health/readiness` | `readinessProbe` |
+| Endpoint | Used by | Default path |
+|---|---|---|
+| `/actuator/health` (aggregate) | `startupProbe` | yes |
+| `/actuator/health/readiness` | `readinessProbe` | yes |
+| `/actuator/health/liveness` | `livenessProbe` | yes |
 
-If those endpoints are available and correctly configured by FitPub (requires `management.endpoint.health.probes.enabled=true`), override the probe paths in values:
+The readiness/liveness split means a transient PostGIS outage drops the pod out of readiness (no traffic) without restarting it, while the aggregate startup probe still holds the pod back until the database is reachable on first boot.
+
+Spring Boot auto-enables these groups (`management.endpoint.health.probes.enabled=true`) whenever it detects a Kubernetes environment, which is always the case here. If you run an image where they are unavailable, point all three probes back at the aggregate endpoint:
 
 ```yaml
 readinessProbe:
   httpGet:
-    path: /actuator/health/readiness
+    path: /actuator/health
     port: http
   periodSeconds: 10
   timeoutSeconds: 5
@@ -69,7 +72,7 @@ readinessProbe:
 
 livenessProbe:
   httpGet:
-    path: /actuator/health/liveness
+    path: /actuator/health
     port: http
   periodSeconds: 15
   timeoutSeconds: 5

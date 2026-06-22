@@ -15,7 +15,7 @@
 {{- end -}}
 
 {{- if and .Values.config.FITPUB_PORT (ne (.Values.config.FITPUB_PORT | toString) (.Values.service.port | toString)) -}}
-{{- fail (printf "config.FITPUB_PORT (%s) must match service.port (%v); the app listens on FITPUB_PORT but health probes and the Service use service.port" .Values.config.FITPUB_PORT .Values.service.port) -}}
+{{- fail (printf "config.FITPUB_PORT (%v) must match service.port (%v); the app listens on FITPUB_PORT but health probes and the Service use service.port" .Values.config.FITPUB_PORT .Values.service.port) -}}
 {{- end -}}
 
 {{- if and .Values.persistence.enabled .Values.config.FILE_UPLOAD_DIR (ne .Values.config.FILE_UPLOAD_DIR .Values.persistence.mountPath) -}}
@@ -32,6 +32,18 @@
 
 {{- if and .Values.autoscaling.enabled (not .Values.autoscaling.targetCPUUtilizationPercentage) (not .Values.autoscaling.targetMemoryUtilizationPercentage) -}}
 {{- fail "autoscaling: at least one of targetCPUUtilizationPercentage or targetMemoryUtilizationPercentage must be set when autoscaling.enabled=true; the HPA metrics list would be empty" -}}
+{{- end -}}
+
+{{- /*
+Running more than one pod against a ReadWriteOnce upload volume cannot work: the
+second pod fails to mount. Block the obvious footguns (replicaCount>1 or an HPA
+that can scale past 1) unless the volume is shared or an external claim is used.
+*/ -}}
+{{- if and .Values.persistence.enabled (not .Values.persistence.existingClaim) (eq .Values.persistence.accessMode "ReadWriteOnce") -}}
+{{- $wantsMulti := or (gt (int .Values.replicaCount) 1) (and .Values.autoscaling.enabled (gt (int .Values.autoscaling.maxReplicas) 1)) -}}
+{{- if $wantsMulti -}}
+{{- fail "Multiple pods cannot share a ReadWriteOnce upload volume; set persistence.accessMode=ReadWriteMany (with a supporting StorageClass) or persistence.existingClaim, or keep replicaCount=1 with autoscaling.maxReplicas<=1" -}}
+{{- end -}}
 {{- end -}}
 
 {{- if and .Values.serviceMonitor.enabled -}}

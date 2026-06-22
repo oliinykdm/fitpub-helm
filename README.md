@@ -42,7 +42,7 @@
 - PersistentVolumeClaim for user uploads at `/app/uploads`
 - Optional Secret mount for Markdown legal/about pages at `/app/pages`
 - ConfigMap/Secret split for non-secret and secret environment variables
-- Readiness, startup and liveness probes on `/actuator/health`
+- Startup probe on `/actuator/health` (aggregate) with readiness/liveness on the split `/actuator/health/{readiness,liveness}` groups, so a transient DB outage drops the pod from readiness instead of restarting it
 - Optional Ingress, HPA, PDB, NetworkPolicy and ServiceMonitor templates
 - Extension points for extra env, envFrom, volumes, volume mounts, init containers and sidecars
 - Support for an external PostgreSQL database with PostGIS

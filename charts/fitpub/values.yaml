@@ -209,11 +209,16 @@ sidecars: []
 productionChecks:
   enabled: false
 
-# startupProbe guards the JVM warmup; readiness/liveness start only after it
+# Probes use Spring Boot's liveness/readiness health groups
+# (/actuator/health/{liveness,readiness}), which Spring Boot auto-enables when it
+# detects Kubernetes. Liveness must NOT include the DB check: a transient PostGIS
+# outage should drop the pod out of readiness (no traffic), not restart it.
+# startupProbe uses the aggregate /actuator/health so the pod only becomes ready
+# once dependencies (incl. the DB) are up; readiness/liveness start only after it
 # passes, so don't add initialDelaySeconds to those two.
 readinessProbe:
   httpGet:
-    path: /actuator/health
+    path: /actuator/health/readiness
     port: http
   periodSeconds: 10
   timeoutSeconds: 5
@@ -231,7 +236,7 @@ startupProbe:
 
 livenessProbe:
   httpGet:
-    path: /actuator/health
+    path: /actuator/health/liveness
     port: http
   periodSeconds: 15
   timeoutSeconds: 5
