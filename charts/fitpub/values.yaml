@@ -108,8 +108,7 @@ resources:
   # memory limit. Keep requests.memory close to limits.memory so the scheduler
   # reserves enough RAM for heap plus metaspace/native overhead. Lower values
   # only for throwaway clusters (see examples/development-values.yaml).
-  # cpu limit: Java 25 respects cgroup CPU quota via UseContainerSupport; 1500m
-  # gives headroom above the 250m request while protecting neighbours from GC bursts.
+  # cpu limit caps GC/Flyway bursts; Java 25 honours the cgroup quota.
   requests:
     cpu: 250m
     memory: 3072Mi
@@ -248,7 +247,7 @@ sidecars: []
 productionChecks:
   enabled: false
 
-# Probes use /login, not /actuator/health. Verified in fitpub 1.1.1
+# /actuator/health needs auth in fitpub 1.1.1; /login is permitAll and returns 200.
 readinessProbe:
   httpGet:
     path: /login
@@ -275,7 +274,8 @@ livenessProbe:
   timeoutSeconds: 5
   failureThreshold: 3
 
-# Multi-pod isn't tested yet — see docs/design.md.
+# Scaling >1 needs persistence.accessMode=ReadWriteMany; RWO blocks it (chart enforces).
+# Schedulers are concurrency-safe (DB row-claim + idempotent cleanups).
 autoscaling:
   enabled: false
   minReplicas: 1
@@ -285,11 +285,10 @@ autoscaling:
 
 podDisruptionBudget:
   enabled: true
-  # minAvailable:1 blocks node drains until the pod is rescheduled — safe for any
-  # replica count. Prefer maxUnavailable:1 only if you have ≥2 replicas and want
-  # rolling node maintenance without blocking drains.
-  minAvailable: 1
-  maxUnavailable: ""
+  # maxUnavailable:1 lets node drains proceed at any replica count. minAvailable:1
+  # would deadlock drains on a single replica (0 disruptions allowed). maxUnavailable wins if both set.
+  minAvailable: ""
+  maxUnavailable: 1
 
 # Off by default: FitPub needs egress to PostGIS, SMTP and federated hosts.
 # Do not set ingress.enabled=false without ingress.extraRules — that denies all
@@ -298,16 +297,31 @@ networkPolicy:
   enabled: false
   ingress:
     enabled: true
-    # from: restricts which sources can reach the app port. Empty list = any source
-    # (equivalent to no NetworkPolicy for ingress). For production, restrict to the
-    # ingress-controller namespace:
+    # Sources allowed to reach the app port. Empty = any. Restrict in prod, e.g.
     #   from:
     #     - namespaceSelector:
-    #         matchLabels:
-    #           kubernetes.io/metadata.name: ingress-nginx
+    #         matchLabels: { kubernetes.io/metadata.name: ingress-nginx }
     from: []
     extraRules: []
   egress:
+    # allowAll suits federation (unpredictable remote hosts, OSM tiles, weather).
+    # For a locked-down setup set allowAll: false and supply extraRules, e.g.
+    #   allowAll: false
+    #   extraRules:
+    #     - to:                                   # DNS (kube-dns)
+    #         - namespaceSelector:
+    #             matchLabels: { kubernetes.io/metadata.name: kube-system }
+    #       ports:
+    #         - { protocol: UDP, port: 53 }
+    #         - { protocol: TCP, port: 53 }
+    #     - to:                                   # PostgreSQL/PostGIS
+    #         - namespaceSelector:
+    #             matchLabels: { kubernetes.io/metadata.name: database }
+    #       ports:
+    #         - { protocol: TCP, port: 5432 }
+    #     - ports:                                # federation + SMTP submission
+    #         - { protocol: TCP, port: 443 }
+    #         - { protocol: TCP, port: 587 }
     allowAll: true
     extraRules: []
 
@@ -317,13 +331,12 @@ serviceMonitor:
   annotations: {}
   interval: 30s
   scrapeTimeout: 10s
-  # Requires micrometer-registry-prometheus on the classpath. FitPub 1.1.x
-  # blocks unauthenticated actuator access — configure basicAuth below or wait
-  # for an app image that permits /actuator/prometheus without credentials.
-  path: /actuator/prometheus
+  # fitpub 1.1.1 ships no prometheus registry and gates /actuator/** behind auth,
+  # so scraping needs an app-side change (registry + permitAll). basicAuth is wired
+  # for when that lands. /actuator/metrics is a JSON index, not exposition format.
+  path: /actuator/metrics
   scheme: http
-  # basicAuth: scrape credentials for Prometheus (Prometheus Operator Secret ref).
-  # The referenced Secret must exist in the same namespace as the ServiceMonitor.
+  # Secret must live in the ServiceMonitor namespace.
   # basicAuth:
   #   username:
   #     name: fitpub-actuator-auth
@@ -353,14 +366,12 @@ dnsConfig: {}
 nodeSelector: {}
 tolerations: []
 affinity: {}
-# Spread pods across zones/nodes when replicaCount > 1.
-# Example for zone-aware HA (uncomment and adjust maxSkew as needed):
-# topologySpreadConstraints:
+# Zone/node spread for replicaCount > 1, e.g.
 #   - maxSkew: 1
 #     topologyKey: topology.kubernetes.io/zone
 #     whenUnsatisfiable: DoNotSchedule
 #     labelSelector:
-#       matchLabels: {}  # filled by the deployment template from selectorLabels
+#       matchLabels: { app.kubernetes.io/name: fitpub }
 topologySpreadConstraints: []
 volumes: []
 volumeMounts: []
