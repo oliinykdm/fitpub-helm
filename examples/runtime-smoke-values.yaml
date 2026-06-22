@@ -1,5 +1,8 @@
 # Values used by the runtime smoke-test workflow.
 # This is intentionally not a production example.
+#
+# FITPUB_DATABASE_PASSWORD in the CI secret must match POSTGRES_PASSWORD in
+# examples/postgis-dev.yaml (currently "fitpub").
 
 productionChecks:
   enabled: true

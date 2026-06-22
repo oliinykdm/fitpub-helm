@@ -51,16 +51,34 @@ jobs:
         run: |
           kubectl create secret generic fitpub-secret \
             --from-literal=FITPUB_DATABASE_USERNAME=fitpub \
-            --from-literal=FITPUB_DATABASE_PASSWORD=fitpub-smoke-test-db-password \
+            --from-literal=FITPUB_DATABASE_PASSWORD=fitpub \
             --from-literal=FITPUB_JWT_SECRET=test-jwt-secret-with-more-than-32-characters \
             --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters
 
+      - name: Verify PostGIS accepts smoke-test credentials
+        run: |
+          kubectl run postgis-credential-check \
+            --image=postgres:16-alpine \
+            --restart=Never \
+            --rm \
+            -i \
+            --env=PGPASSWORD=fitpub \
+            --command -- psql -h postgis -U fitpub -d fitpub -c 'SELECT 1'
+
       - name: Install FitPub chart and wait for rollout
         run: |
-          helm upgrade --install fitpub ./charts/fitpub \
+          set -euo pipefail
+          if ! helm upgrade --install fitpub ./charts/fitpub \
             -f examples/runtime-smoke-values.yaml \
             --wait \
-            --timeout 10m
+            --timeout 10m; then
+            echo "Helm install did not become ready — collecting diagnostics:"
+            kubectl get pods -o wide
+            kubectl describe deployment/fitpub || true
+            kubectl describe pod -l app.kubernetes.io/instance=fitpub || true
+            kubectl logs -l app.kubernetes.io/instance=fitpub --tail=200 || true
+            exit 1
+          fi
 
       - name: Verify FitPub pod readiness and probe success
         run: |
@@ -128,16 +146,35 @@ jobs:
         run: |
           kubectl create secret generic fitpub-secret \
             --from-literal=FITPUB_DATABASE_USERNAME=fitpub \
-            --from-literal=FITPUB_DATABASE_PASSWORD=fitpub-smoke-test-db-password \
+            --from-literal=FITPUB_DATABASE_PASSWORD=fitpub \
             --from-literal=FITPUB_JWT_SECRET=test-jwt-secret-with-more-than-32-characters \
             --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters
 
+      - name: Verify PostGIS accepts smoke-test credentials
+        run: |
+          kubectl run postgis-credential-check \
+            --image=postgres:16-alpine \
+            --restart=Never \
+            --rm \
+            -i \
+            --env=PGPASSWORD=fitpub \
+            --command -- psql -h postgis -U fitpub -d fitpub -c 'SELECT 1'
+
       - name: Install FitPub with restricted NetworkPolicy
         run: |
-          helm upgrade --install fitpub ./charts/fitpub \
+          set -euo pipefail
+          if ! helm upgrade --install fitpub ./charts/fitpub \
             -f examples/networkpolicy-smoke-values.yaml \
             --wait \
-            --timeout 10m
+            --timeout 10m; then
+            echo "Helm install did not become ready — collecting diagnostics:"
+            kubectl get pods -o wide
+            kubectl get networkpolicy || true
+            kubectl describe deployment/fitpub || true
+            kubectl describe pod -l app.kubernetes.io/instance=fitpub || true
+            kubectl logs -l app.kubernetes.io/instance=fitpub --tail=200 || true
+            exit 1
+          fi
 
       - name: Verify FitPub pod readiness under NetworkPolicy
         run: |

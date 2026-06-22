@@ -25,7 +25,7 @@ kubectl apply -f examples/postgis-dev.yaml
 kubectl rollout status deployment/postgis --timeout=180s
 kubectl create secret generic fitpub-secret \
   --from-literal=FITPUB_DATABASE_USERNAME=fitpub \
-  --from-literal=FITPUB_DATABASE_PASSWORD=fitpub-smoke-test-db-password \
+  --from-literal=FITPUB_DATABASE_PASSWORD=fitpub \
   --from-literal=FITPUB_JWT_SECRET=test-jwt-secret-with-more-than-32-characters \
   --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters
 helm upgrade --install fitpub ./charts/fitpub \

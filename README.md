@@ -310,7 +310,22 @@ networkPolicy:
         ports:
           - protocol: TCP
             port: 5432
-      - ports:
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+            podSelector:
+              matchLabels:
+                k8s-app: kube-dns
+        ports:
+          - protocol: UDP
+            port: 53
+          - protocol: TCP
+            port: 53
+      - to:
+          - ipBlock:
+              cidr: 10.96.0.0/12
+        ports:
           - protocol: UDP
             port: 53
           - protocol: TCP
