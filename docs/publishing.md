@@ -30,13 +30,13 @@ The repository root `README.md` is for repository-level documentation.
 
 Artifact Hub shows a chart as signed when the Helm package has a provenance file and the chart metadata points to the public signing key.
 
-Signed Helm chart publishing requires:
+Signed Helm chart publishing needs:
 
-- a GPG private key available to the release workflow;
-- `helm package --sign` with the release signing key;
-- a published `.tgz.prov` file next to the chart package;
-- `artifacthub.io/signKey` in `Chart.yaml`;
-- the public GPG key served from the Helm repository.
+- a GPG private key available to the release workflow
+- `helm package --sign` with the release signing key
+- a published `.tgz.prov` file next to the chart package
+- `artifacthub.io/signKey` in `Chart.yaml`
+- the public GPG key served from the Helm repository
 
 The chart uses this signing key metadata:
 

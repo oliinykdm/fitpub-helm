@@ -2,7 +2,7 @@
 
 ![FitPub Helm Chart](https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/docs/banner.png)
 
-FitPub is a federated fitness tracking platform. This chart deploys the FitPub application on Kubernetes and expects an external PostgreSQL database with PostGIS enabled.
+FitPub is a federated fitness tracking platform. This chart runs it on Kubernetes. You bring an external PostgreSQL database with PostGIS - the chart wires up everything else.
 
 ## Install
 
@@ -51,33 +51,33 @@ If `FITPUB_PUSH_ENABLED` is set to `"true"`, also provide VAPID public/private k
 
 ## Production Notes
 
-- Use PostgreSQL with PostGIS, not plain PostgreSQL.
-- Keep `FITPUB_BASE_URL` canonical and without a trailing slash.
-- Keep push notifications disabled until VAPID keys and `FITPUB_VAPID_SUBJECT` are configured.
-- Keep `replicaCount: 1` until uploads, background jobs and federation processing have been validated for multiple pods.
-- Back up the external PostGIS database and the uploads PVC.
-- Use an externally managed Secret for production credentials.
+- PostgreSQL **with PostGIS**, not plain PostgreSQL
+- `FITPUB_BASE_URL` canonical, no trailing slash
+- Push notifications off until VAPID keys and `FITPUB_VAPID_SUBJECT` are set
+- One replica unless uploads use `ReadWriteMany` storage (RWO can only mount on one pod)
+- Back up the PostGIS database and the uploads PVC
+- Use an externally managed Secret for production credentials
 
 ## Features
 
-- non-root runtime security context for UID/GID `1001`
+- non-root UID/GID `1001`, restricted Pod Security Standard compliant out of the box
+- `readOnlyRootFilesystem` on by default, with emptyDir for `/tmp` and `/app/logs`
 - ConfigMap/Secret split for application environment variables
 - startup/readiness/liveness probes on `GET /login` (FitPub 1.1.1 compatible)
-- default resources sized for Java 25 (`3072Mi` request / `3072Mi` limit)
-- optional Hikari pool, ActivityPub inbox, mail protocol and feature-toggle config keys
-- optional Ingress, HPA, PDB, NetworkPolicy and ServiceMonitor resources
+- CPU/memory limits sized for Java 25, plus a PDB and a preStop drain hook by default
+- optional Hikari pool, ActivityPub inbox, mail and feature-toggle config keys
+- optional Ingress, HPA, NetworkPolicy and ServiceMonitor
 - optional Markdown page mount from an existing Secret
 - extension points for extra env, envFrom, volumes, init containers and sidecars
 
-Full documentation is available in the chart repository:
+Full docs in the repo:
 
 ```text
 https://github.com/oliinykdm/fitpub-helm
 ```
 
-**Mail:** leave mail-related `config` keys empty until `FITPUB_MAIL_HOST` is set; then configure port/auth/starttls together (see `examples/production-values.yaml`).
+**Mail:** leave the mail `config` keys empty until you set `FITPUB_MAIL_HOST`, then set port/auth/starttls together (see `examples/production-values.yaml`).
 
-**Logs:** the `prod` profile writes rotated files under `/app/logs`. Mount a volume or use a log collector — not persisted by default.
+**Logs:** the `prod` profile writes rotated files to `/app/logs`, mounted as emptyDir. They survive container restarts but not rescheduling - collect them if you want history.
 
-**ServiceMonitor:** FitPub 1.1.x requires authentication for `/actuator/metrics`.
-Enable scraping only when actuator endpoints are public or scrape auth is configured.
+**ServiceMonitor:** FitPub 1.1.x gates `/actuator/metrics` behind auth, so leave scraping off until actuator access is public or you wire up scrape auth.

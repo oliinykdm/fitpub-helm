@@ -25,40 +25,43 @@
   <img src="https://img.shields.io/badge/helm-%3E%3D3.8-blue" alt="Helm">
 </p>
 
-> **Status:** (Unofficial!) production-oriented chart in active development. Review values carefully before exposing a public instance. Work in progress. 
+> **Status:** unofficial, production-oriented, and still moving. Read the values before you point it at a public instance. You have been warned.
 
-## Validation Status
+## What CI checks
 
-- Helm lint: enabled in CI with `ct lint`
-- Render tests: default values, `examples/production-values.yaml`, and `examples/networkpolicy-smoke-values.yaml`
-- Kubernetes API validation: kind cluster with `kubectl apply --dry-run=server`
-- **Kind runtime test** (badge *Kind Runtime Test*): on every PR/push to `main` and weekly — kind cluster, PostGIS, `helm install --wait`, pod Ready, startup/readiness probes green, in-cluster `GET /login` HTTP 200 (FitPub **1.1.1**); a second job verifies `networkpolicy-smoke-values.yaml` with restricted egress
-- Release packaging: signed packages and `index.yaml` are published to GitHub Pages
-- Production status: ready for controlled testing, not yet broadly battle-tested
+- `ct lint` on every change
+- Render tests against default values, `examples/production-values.yaml`, and `examples/networkpolicy-smoke-values.yaml`
+- Kubernetes API validation in kind with `kubectl apply --dry-run=server`
+- **Kind runtime test** (the *Kind Runtime Test* badge): on every PR, every push to `main`, and once a week. Spins up kind + PostGIS, runs `helm install --wait`, waits for the pod to go Ready, and curls `GET /login` for an HTTP 200 (FitPub **1.1.1**). A second job does the same under restricted NetworkPolicy egress.
+- Releases ship signed packages and an `index.yaml` to GitHub Pages
+
+So: linted, rendered, and actually booted against a real database. Not the same as years of public traffic, but a lot better than "works on my machine".
 
 ## Features
 
-- Deployment running as the non-root FitPub user (`1001`)
-- PersistentVolumeClaim for user uploads at `/app/uploads`
+- Runs as the non-root FitPub user (`1001`), restricted Pod Security Standard compliant out of the box
+- `readOnlyRootFilesystem` on by default, with `/tmp` and `/app/logs` backed by emptyDir
+- PersistentVolumeClaim for uploads at `/app/uploads`
 - Optional Secret mount for Markdown legal/about pages at `/app/pages`
-- ConfigMap/Secret split for non-secret and secret environment variables
-- Probes on `GET /login` (HTTP 200) for reliable startup with FitPub **1.1.1** (actuator health requires authentication in 1.1.x); see [docs/troubleshooting.md](docs/troubleshooting.md)
-- Optional Ingress, HPA, PDB, NetworkPolicy and ServiceMonitor templates
-- Extension points for extra env, envFrom, volumes, volume mounts, init containers and sidecars
-- Support for an external PostgreSQL database with PostGIS
+- ConfigMap/Secret split for plain and secret environment variables
+- Probes on `GET /login` (actuator health needs auth on 1.1.x, see [docs/troubleshooting.md](docs/troubleshooting.md))
+- CPU/memory limits, a PodDisruptionBudget, and a preStop drain hook on by default
+- Optional Ingress, HPA, NetworkPolicy and ServiceMonitor
+- Extension points for extra env, envFrom, volumes, mounts, init containers and sidecars
+- Brings its own app, but not its database - you supply PostgreSQL with PostGIS
 
 ## Quick start (local)
 
-Want to try it on a local cluster (kind/minikube/Docker Desktop) without wiring up
-a database first? From the repository root:
+Just want to see it run on kind/minikube/Docker Desktop without standing up a
+database first? From the repo root:
 
 ```bash
 scripts/local-quickstart.sh
 ```
 
-This deploys a throwaway PostGIS, installs the chart, waits until it is healthy and
-prints how to reach it. See [docs/quickstart.md](docs/quickstart.md) for the manual
-steps and a troubleshooting table.
+It throws up a disposable PostGIS, installs the chart, waits for it to go healthy,
+and tells you how to reach it. The manual steps and a troubleshooting table live in
+[docs/quickstart.md](docs/quickstart.md).
 
 ## Prerequisites
 
@@ -98,7 +101,7 @@ without manual wiring, use `scripts/local-quickstart.sh` instead.
 
 Non-secret settings go into `config` and are rendered into a ConfigMap. Secrets go into `applicationSecret.data` or, preferably for production, into an existing Kubernetes Secret referenced by `applicationSecret.existingSecret`.
 
-Minimum production values (use an external Secret — do not commit real credentials to Git):
+Minimum production values (use an external Secret - do not commit real credentials to Git):
 
 ```yaml
 productionChecks:
@@ -110,7 +113,7 @@ config:
   # Must not end with a slash.
   FITPUB_BASE_URL: "https://your-domain.com"
   FITPUB_PUSH_ENABLED: "false"
-  # When enabling mail, set FITPUB_MAIL_HOST together with port/auth/starttls — see production-values.yaml.
+  # When enabling mail, set FITPUB_MAIL_HOST together with port/auth/starttls - see production-values.yaml.
   FITPUB_MAIL_HOST: "smtp.example.com"
   FITPUB_MAIL_PORT: "587"
   FITPUB_MAIL_SMTP_AUTH: "true"
@@ -121,7 +124,7 @@ applicationSecret:
   existingSecret: fitpub-secret
 ```
 
-Create the Secret before install (inline `applicationSecret.data` is for controlled testing only — see [examples/chart-managed-secret-values.yaml](examples/chart-managed-secret-values.yaml)):
+Create the Secret before install (inline `applicationSecret.data` is for controlled testing only - see [examples/chart-managed-secret-values.yaml](examples/chart-managed-secret-values.yaml)):
 
 ```bash
 kubectl create secret generic fitpub-secret -n fitpub \
@@ -133,14 +136,9 @@ kubectl create secret generic fitpub-secret -n fitpub \
   --from-literal=FITPUB_MAIL_PASSWORD="smtp-password"
 ```
 
-The mail user/password are needed because the example above sets `FITPUB_MAIL_SMTP_AUTH: "true"`.
+The mail user/password are only there because the example sets `FITPUB_MAIL_SMTP_AUTH: "true"`.
 
-```yaml
-applicationSecret:
-  existingSecret: fitpub-secret
-```
-
-Enable `productionChecks.enabled=true` in production values. It fails rendering early when required public settings, chart-managed secrets, or incomplete push notification settings are missing.
+`productionChecks.enabled=true` fails the render early when a required public setting, a chart-managed secret, or part of the push-notification config is missing. Cheaper than a CrashLoopBackOff.
 
 Optional tuning keys (Hikari pool, ActivityPub inbox processing, `FITPUB_MAIL_PROTOCOL`, `FITPUB_OSM_TILES_ENABLED`, `FITPUB_WEATHER_ENABLED`, and others) are listed in [values.yaml](charts/fitpub/values.yaml). Leave them empty to use application defaults.
 
@@ -244,34 +242,37 @@ Back up the uploads PVC and the external PostGIS database regularly.
 
 ## Application Logs
 
-In the `prod` Spring profile, FitPub writes rotated file logs under `/app/logs/` inside the container. This chart does **not** mount a volume there by default — logs are lost when the pod is replaced. For production, either:
+In the `prod` profile FitPub writes rotated file logs to `/app/logs/`. The chart
+mounts that path as an emptyDir, so the read-only root filesystem stays happy and
+logs survive container restarts - but not pod rescheduling. emptyDir is scratch
+space, not a shoebox under the bed.
 
-- rely on your cluster log collector (stdout is mostly WARN+; file logs hold more detail), or
-- mount `/app/logs` via `volumes` / `volumeMounts`, or
-- ship file logs with a sidecar agent.
-
-Example emptyDir mount (logs survive container restarts within the same pod, but not pod rescheduling):
+For anything you want to keep, lean on your cluster log collector (stdout carries
+the same lines) or ship `/app/logs` with a sidecar. To grow or shrink the buffer:
 
 ```yaml
-volumes:
-  - name: logs
-    emptyDir: {}
-volumeMounts:
-  - name: logs
-    mountPath: /app/logs
+ephemeralVolumes:
+  logs:
+    sizeLimit: 512Mi
 ```
 
 ## Replicas And Scaling
 
-The default is `replicaCount: 1` with a `Recreate` deployment strategy. This is intentional: FitPub has local uploads and application-level background work, so multi-replica operation should be validated before enabling HPA.
+Default is `replicaCount: 1` with a `Recreate` strategy. Not because the app falls
+over with more pods - the background schedulers claim work with row locks and the
+cleanups are idempotent, so they are safe to run concurrently. The real blocker is
+the uploads volume: `ReadWriteOnce` can only mount on one pod at a time.
 
-If you enable `autoscaling`, make sure your storage, background jobs, federation processing and database connection pool are ready for multiple pods.
+To actually scale out, give uploads a `ReadWriteMany` storage class and then enable
+`autoscaling`. The chart refuses `replicaCount > 1` on RWO storage so you find out
+at install time, not at 3am.
 
 ## Memory And JVM
 
-The FitPub container image runs Java 25 with `-XX:MaxRAMPercentage=75` against the
-cgroup memory **limit**. Default chart resources set request and limit to the same
-value so the scheduler reserves enough RAM for heap plus native overhead:
+The image runs Java 25 with `-XX:MaxRAMPercentage=75` against the cgroup memory
+**limit**. The chart pins request and limit to the same value so the scheduler
+reserves enough for heap plus native overhead, and adds a CPU limit to keep GC and
+Flyway bursts from stealing a whole core:
 
 ```yaml
 resources:
@@ -279,11 +280,12 @@ resources:
     cpu: 250m
     memory: 3072Mi
   limits:
+    cpu: 1500m
     memory: 3072Mi
 ```
 
-If you see OOMKilled pods or slow Flyway startup on small nodes, raise
-`resources.limits.memory` or lower the heap fraction:
+OOMKilled pods or sluggish Flyway on tiny nodes? Raise `resources.limits.memory`
+or hand the JVM a smaller slice:
 
 ```yaml
 extraEnv:
@@ -293,13 +295,23 @@ extraEnv:
 
 ## NetworkPolicy
 
-`networkPolicy.enabled` is disabled by default. FitPub needs egress to PostgreSQL, SMTP and federated/external HTTP services. If your cluster enforces egress policies, start with explicit rules for those dependencies.
+Off by default. FitPub needs egress to PostgreSQL, SMTP and a long tail of
+federated/external HTTP hosts, so a half-configured policy mostly just breaks
+things. Turn it on once you are ready to list those dependencies.
 
-Assumes a conntrack-stateful policy engine (Calico, Cilium, etc.). A non-stateful one may drop reply traffic (e.g. DNS answers) under a restricted ingress rule.
+Two things worth knowing before you enable it:
 
-Keep `networkPolicy.ingress.enabled=true` (the default) unless you add
-`networkPolicy.ingress.extraRules`. Disabling ingress without extra rules denies
-all inbound traffic to FitPub.
+- It assumes a conntrack-stateful engine (Calico, Cilium, and friends). A
+  non-stateful one can drop reply traffic like DNS answers.
+- Some enforcers are picky about DNS even when you "allow all" egress. We caught
+  kindnet (kind, recent builds) dropping UDP 53 to the cluster DNS under a bare
+  allow-all rule, which surfaces as `UnknownHostException` on the database host.
+  If DNS breaks, allow it explicitly - to kube-system on UDP/TCP 53 - and confirm
+  egress works on your CNI before trusting it in prod.
+
+Keep `networkPolicy.ingress.enabled=true` unless you add
+`networkPolicy.ingress.extraRules`. Turning ingress off with no rules locks
+everyone out, FitPub included.
 
 Example shape for restricted egress:
 
@@ -328,7 +340,7 @@ networkPolicy:
             port: 53
           - protocol: TCP
             port: 53
-      # ClusterIP DNS (some CNIs match policy before DNAT) — UDP and TCP 53.
+      # ClusterIP DNS (some CNIs match policy before DNAT) - UDP and TCP 53.
       - to:
           - ipBlock:
               cidr: 10.96.0.0/12
@@ -351,16 +363,18 @@ Adjust this to your actual PostgreSQL, DNS, SMTP, HTTPS federation and peer egre
 
 ## Graceful Shutdown
 
-Kubernetes sends `SIGTERM` and removes the pod from endpoints at the same time, so add a `preStop` sleep if you see connection errors during rollouts:
+Kubernetes sends `SIGTERM` and yanks the pod from endpoints at the same moment, which
+can leave a few in-flight requests hitting a dying pod. The chart already ships a
+5-second `preStop` sleep to cover that window. Bump it if your ingress drains slowly:
 
 ```yaml
 lifecycleHooks:
   preStop:
     exec:
-      command: ["sh", "-c", "sleep 5"]
+      command: ["sh", "-c", "sleep 10"]
 ```
 
-Scheduling knobs (`priorityClassName`, `nodeSelector`, `tolerations`, `affinity`, `topologySpreadConstraints`) are passed through as-is — see `values.yaml`.
+Scheduling knobs (`priorityClassName`, `nodeSelector`, `tolerations`, `affinity`, `topologySpreadConstraints`) pass straight through - see `values.yaml`.
 
 ## Debugging
 
@@ -397,7 +411,7 @@ commonAnnotations:
 
 ## Monitoring
 
-If your cluster runs Prometheus Operator, enable `ServiceMonitor`:
+Running Prometheus Operator? There is a `ServiceMonitor`:
 
 ```yaml
 serviceMonitor:
@@ -406,33 +420,33 @@ serviceMonitor:
     release: kube-prometheus-stack
 ```
 
-The default scrape path is `/actuator/metrics` (exposed in the prod Spring profile).
-The FitPub **1.1.1** image does not ship `/actuator/prometheus`.
-
-**Authentication:** Spring Security requires authentication for all actuator
-endpoints on FitPub 1.1.x, including `/actuator/metrics`. Unauthenticated
-Prometheus scrapes receive HTTP **302/403** and look empty. Enable ServiceMonitor
-only after the app image permits unauthenticated actuator access, or configure
-scrape authentication / a metrics sidecar. Probes intentionally use `GET /login`
-instead — see [docs/troubleshooting.md](docs/troubleshooting.md).
+Fair warning, it does not do much on FitPub **1.1.1** yet. The image ships no
+`/actuator/prometheus`, and Spring Security gates every actuator endpoint behind
+auth, so an anonymous scrape just gets a 302 and an empty target. The wiring is
+here for when the app grows a public metrics endpoint - until then, leave it off
+and do not read an empty target as "FitPub is down". The probes use `GET /login`
+for exactly that reason. More in [docs/troubleshooting.md](docs/troubleshooting.md).
 
 ## Security Notes
 
-The chart drops Linux capabilities, disables privilege escalation and runs FitPub as UID/GID `1001`. `readOnlyRootFilesystem` is disabled by default because FitPub writes uploads, logs, temp files and caches; enabling it requires additional writable mounts for every write path.
+The chart drops all Linux capabilities, disables privilege escalation, runs as
+UID/GID `1001`, and mounts the root filesystem read-only. FitPub still needs to
+write uploads, logs and temp files, so those paths get their own mounts: the
+uploads PVC, plus emptyDir for `/tmp` and `/app/logs`. Everything else is locked.
 
 ### Pod Security Standards (`restricted`)
 
-The FitPub container passes the `restricted` profile. The `volume-permissions` init
-container does not — it runs as root to fix uploads ownership. On `restricted`
-clusters, disable it and let `fsGroup` handle ownership:
+It passes `restricted` as shipped, no extra knobs required. The `volume-permissions`
+init container is the one thing that would break it - it runs as root to chown the
+uploads volume - so it is **off by default**. `fsGroup` handles ownership without it.
+
+Only turn it back on for storage that ignores `fsGroup` (some NFS or hostPath setups):
 
 ```yaml
 initContainers:
   volumePermissions:
-    enabled: false
+    enabled: true
 ```
-
-Keep it enabled only on storage that ignores `fsGroup` (some NFS/hostPath setups).
 
 ## Upgrade
 
@@ -459,27 +473,26 @@ Flux and Argo CD examples are available in [docs/gitops.md](docs/gitops.md). Pro
 
 See [docs/troubleshooting.md](docs/troubleshooting.md) for common Kubernetes deployment problems: PostGIS issues, missing secrets, failing health probes, PVC permissions and federation URL mistakes.
 
-## Important Production Checklist
+## Production Checklist
 
-- Use external PostgreSQL with PostGIS.
-- Enable `productionChecks.enabled=true`.
-- Set `SPRING_PROFILES_ACTIVE=prod`.
-- Set strong values for `FITPUB_DATABASE_PASSWORD`, `FITPUB_JWT_SECRET` and `FITPUB_EMAIL_SECRET`.
-- When using `applicationSecret.existingSecret`, verify the Secret contains all required keys before install.
-- Size memory for Java 25 (defaults: 3072Mi request / 3072Mi limit).
-- Keep `FITPUB_PUSH_ENABLED=false` unless VAPID public/private keys and `FITPUB_VAPID_SUBJECT` are configured.
-- Keep `FITPUB_BASE_URL` public, canonical and without a trailing slash.
-- Put FitPub behind HTTPS.
-- Back up PostgreSQL and `/app/uploads`.
-- Plan for `/app/logs` (file logs in prod are not persisted unless you mount a volume or collect them).
-- Validate probes against your deployed security configuration (`GET /login` on 1.1.1 does not verify database connectivity after startup).
-- Do not enable `serviceMonitor` until actuator scraping is authenticated or public in your app version.
-- Keep `replicaCount: 1` until multi-pod behavior has been tested.
+The short version of everything above, for the copy-paste-into-a-ticket crowd:
 
-The chart originated from the Kubernetes manifests discussion in [FitPub issue #301](https://codeberg.org/fitpub/fitpub/issues/301).
+- PostgreSQL **with PostGIS**, not plain PostgreSQL
+- `productionChecks.enabled=true` so bad values fail at install, not at 3am
+- Strong `FITPUB_DATABASE_PASSWORD`, `FITPUB_JWT_SECRET`, `FITPUB_EMAIL_SECRET` (`openssl rand -base64 48` is your friend)
+- Using `applicationSecret.existingSecret`? Check it has every required key before install - the chart cannot peek inside it
+- `FITPUB_BASE_URL` public, canonical, no trailing slash
+- FitPub behind HTTPS
+- Back up PostgreSQL and `/app/uploads` (the parts you cannot regenerate)
+- Ship `/app/logs` somewhere if you want history - emptyDir does not survive rescheduling
+- `FITPUB_PUSH_ENABLED=false` unless VAPID keys and `FITPUB_VAPID_SUBJECT` are set
+- Leave `serviceMonitor` off until actuator scraping is authenticated or public in your image
+- Want more than one replica? Switch uploads to `ReadWriteMany` first
+
+This chart grew out of the Kubernetes manifests discussion in [FitPub issue #301](https://codeberg.org/fitpub/fitpub/issues/301).
 
 ## Contributing
 
-This chart is currently maintained in a personal repository. Once it reaches a stable state, it can be proposed to the upstream FitPub project on Codeberg.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow and chart design principles.
+For now this lives in a personal repo. If it settles into something stable, it can be
+proposed upstream to FitPub on Codeberg. See [CONTRIBUTING.md](CONTRIBUTING.md) for the
+workflow and design principles.

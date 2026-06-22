@@ -1,12 +1,57 @@
 # Upgrade Notes
 
+## 0.4.0
+
+The "make it production-grade by default" release. Most of these flip a default that
+used to be opt-in, so read before you `helm upgrade`.
+
+### `readOnlyRootFilesystem` is now on by default
+
+The container root filesystem is mounted read-only. FitPub still writes uploads,
+logs and temp files, so the chart now also mounts emptyDir at `/tmp` (OSM tile cache
+and image generation) and `/app/logs` (logback). Tune them under `ephemeralVolumes`.
+
+**Action required:** none for a stock install. If you added custom code paths that
+write outside `/app/uploads`, `/tmp` or `/app/logs`, give them a writable mount or
+set `securityContext.readOnlyRootFilesystem: false`.
+
+### `volume-permissions` init container is now off by default
+
+`fsGroup` with `fsGroupChangePolicy: OnRootMismatch` already fixes upload ownership
+without a root init container, which also keeps the pod inside the `restricted` Pod
+Security Standard. Re-enable it (`initContainers.volumePermissions.enabled: true`)
+only for storage classes that ignore `fsGroup`.
+
+### PodDisruptionBudget, CPU limit and preStop hook on by default
+
+- `podDisruptionBudget.enabled: true` with `maxUnavailable: 1`. That value keeps node
+  drains working at any replica count - `minAvailable: 1` on a single replica would
+  block drains forever, which is a fun thing to discover during a cluster upgrade.
+- `resources.limits.cpu: 1500m` caps GC and Flyway bursts.
+- A 5-second `preStop` sleep covers the SIGTERM/endpoint-removal race during rollouts.
+
+**Action required:** none, but if you set your own PDB values they still win.
+
+### ServiceMonitor path back to `/actuator/metrics`
+
+`/actuator/prometheus` does not exist in the 1.1.1 image (no Prometheus registry),
+so the default path is `/actuator/metrics` again, with optional `serviceMonitor.basicAuth`.
+Scraping still needs an app-side change before it returns anything useful.
+
+### NetworkPolicy: ingress `from` selector
+
+`networkPolicy.ingress.from` lets you restrict who can reach the app port instead of
+allowing every source. Heads up: some enforcers (kindnet, recent builds) drop DNS
+under an allow-all egress rule, which shows up as `UnknownHostException`. Allow DNS
+to kube-system explicitly and verify on your CNI. See the NetworkPolicy section in README.
+
 ## 0.3.8
 
 ### `config`/`applicationSecret.data`: boolean `false` and `0` are no longer dropped
 
 These maps were rendered with a truthiness test, so `false` or `0` silently
 disappeared and the app fell back to its own default. They are now rendered as long
-as they are non-empty; empty strings and `null` are still skipped.
+as they are non-empty. Empty strings and `null` are still skipped.
 
 **Action required:** none if you used strings. If you "unset" a key with `false`/`0`,
 use an empty string or drop the key instead.
@@ -30,7 +75,7 @@ combined with port `587` and forced auth could make FitPub talk to `localhost:58
 instead of the application default `localhost:25`.
 
 **Action required:** if you relied on chart defaults for SMTP, add mail settings to
-your values when `FITPUB_MAIL_HOST` is set — see
+your values when `FITPUB_MAIL_HOST` is set - see
 [`examples/production-values.yaml`](../examples/production-values.yaml).
 
 ### Optional config keys for pool, federation and feature toggles
@@ -66,12 +111,12 @@ Java 25 uses `-XX:MaxRAMPercentage=75` against the **limit**, so a lower request
 (2048Mi in 0.3.5) could schedule the pod on a node without enough RAM for the
 calculated heap plus native overhead.
 
-**Action required** only if you tuned requests down manually — raise them again or
+**Action required** only if you tuned requests down manually - raise them again or
 lower `MaxRAMPercentage` via `JAVA_TOOL_OPTIONS`.
 
 ### ConfigMap omits empty `config` values
 
-Non-empty `config` keys are rendered into the ConfigMap; empty strings are skipped.
+Non-empty `config` keys are rendered into the ConfigMap, empty strings are skipped.
 This lets Spring Boot fall back to application defaults (for example `FITPUB_MAIL_HOST`
 defaults to `localhost` when unset). Explicit non-empty values in your values file
 behave as before.
@@ -103,7 +148,7 @@ Default `resources.requests.memory` is now **2048Mi** (CPU request **250m**) and
 `-XX:MaxRAMPercentage=75`, so a 2048Mi limit leaves too little headroom for heap
 plus metaspace and native memory on Java 25.
 
-Throwaway clusters can keep lower values — see `examples/development-values.yaml`
+Throwaway clusters can keep lower values - see `examples/development-values.yaml`
 and `examples/runtime-smoke-values.yaml`.
 
 ### Stronger inline secret validation
@@ -115,10 +160,10 @@ chart now also rejects trivial `FITPUB_DATABASE_PASSWORD` values (shorter than
 JWT and email secrets now fail on common placeholder substrings such as
 `replace-me` / `replace-with`, not only on an exact known-value list.
 
-**Action required** if you copied placeholder passwords from older examples —
+**Action required** if you copied placeholder passwords from older examples -
 generate real values (`openssl rand -base64 24` for the database password).
 
-### HPA — zero utilization targets
+### HPA - zero utilization targets
 
 HPA metric rendering and validation now treat `0` as an explicitly set CPU or
 memory target (same `toString` approach as the PDB fix in 0.2.8).
@@ -146,7 +191,7 @@ readiness and liveness. This matches FitPub **1.1.1** behaviour and makes
 `helm install --wait` reliable.
 
 When you deploy a FitPub release that permits unauthenticated
-`/actuator/health/**`, override probes back to the split actuator paths — see
+`/actuator/health/**`, override probes back to the split actuator paths - see
 [docs/troubleshooting.md](troubleshooting.md).
 
 ### ServiceMonitor default path → `/actuator/metrics`
@@ -211,7 +256,7 @@ against your current cluster, and `scripts/local-teardown.sh` removes it again. 
 new `examples/postgis-dev.yaml` is the database it deploys, and
 [`docs/quickstart.md`](quickstart.md) documents both the one-command and manual
 paths plus a symptom/cause/fix troubleshooting table. Nothing here changes how the
-chart renders; it is purely additive.
+chart renders, it is purely additive.
 
 ### Preflight validation of secrets and database URL
 
@@ -221,12 +266,12 @@ previously only surfaced as a pod CrashLoopBackOff:
 - `applicationSecret.data.FITPUB_JWT_SECRET` / `FITPUB_EMAIL_SECRET` shorter than
   32 characters, or left at a known placeholder value, are rejected with a hint to
   run `openssl rand -base64 48`. These mirror the application's own startup checks.
-  Only inline secrets are validated; `applicationSecret.existingSecret` is left to
+  Only inline secrets are validated. `applicationSecret.existingSecret` is left to
   the operator.
 - `config.FITPUB_DATABASE_URL`, when set, must start with `jdbc:postgresql://`.
 
 **Action required** only if you were (knowingly) running with a sub-32-character
-inline secret — generate a proper one. Existing valid configurations are unaffected.
+inline secret - generate a proper one. Existing valid configurations are unaffected.
 
 ### development-values.yaml uses localhost:8080
 
@@ -246,7 +291,7 @@ Three keys in `config` did not map to any property the application reads and hav
 | `FITPUB_JWT_EXPIRATION_MS` | `FITPUB_SECURITY_JWT_EXPIRATION` (binds to `fitpub.security.jwt.expiration`) |
 | `FILE_UPLOAD_MAX_SIZE` | `SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE` / `SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE` |
 
-**Action required** only if you set any of the old keys in your own values — rename them, otherwise the change is transparent.
+**Action required** only if you set any of the old keys in your own values - rename them, otherwise the change is transparent.
 
 ### New config knobs: `FITPUB_FEDERATION_PROTOCOL`, `FITPUB_ALLOW_PRIVATE_IPS`
 
@@ -256,7 +301,7 @@ Three keys in `config` did not map to any property the application reads and hav
 
 `FITPUB_DOMAIN` must be a host with an optional port (`example.fit` or `example.fit:8443`), never a URL. Setting a scheme or a trailing slash now fails rendering, because it produces broken WebFinger/ActivityPub handles such as `acct:user@https://example.fit`.
 
-### NOTES.txt — write-test command used hardcoded path
+### NOTES.txt - write-test command used hardcoded path
 
 The `kubectl exec` write-test command shown after `helm install` used the hardcoded path `/app/uploads` instead of the configured `persistence.mountPath`. If you set a custom mount path, the command shown in NOTES would silently try to write to the wrong directory. The command now always reflects the configured value.
 
@@ -266,17 +311,17 @@ If `dnsPolicy` is set to `None` without providing `dnsConfig.nameservers`, `helm
 
 ## 0.2.8
 
-### PDB — `minAvailable: 0` and `maxUnavailable: 0` now work correctly
+### PDB - `minAvailable: 0` and `maxUnavailable: 0` now work correctly
 
-Go templates treat `0` as falsy. Previously, setting `podDisruptionBudget.maxUnavailable: 0` (meaning "no pod may be voluntarily evicted") triggered a false "one of minAvailable or maxUnavailable must be set" error at render time. Setting `minAvailable: 0` would silently fall through to the `else` branch and render `maxUnavailable: 1` instead — the PDB spec the user expected was never created.
+Go templates treat `0` as falsy. Previously, setting `podDisruptionBudget.maxUnavailable: 0` (meaning "no pod may be voluntarily evicted") triggered a false "one of minAvailable or maxUnavailable must be set" error at render time. Setting `minAvailable: 0` would silently fall through to the `else` branch and render `maxUnavailable: 1` instead - the PDB spec the user expected was never created.
 
 Both the validation logic and the spec rendering now use `toString` comparison against `""` so that zero is treated as an explicitly set value.
 
-### HPA — validation for empty metrics list
+### HPA - validation for empty metrics list
 
 If both `autoscaling.targetCPUUtilizationPercentage` and `autoscaling.targetMemoryUtilizationPercentage` are absent, empty, or zero when `autoscaling.enabled: true`, `helm install`/`helm upgrade` now fails with a descriptive error. Previously this would render an HPA with `metrics: null`, which Kubernetes rejects at apply time with a non-obvious error.
 
-### release workflow — `timeout-minutes: 30`
+### release workflow - `timeout-minutes: 30`
 
 The release CI job now has a 30-minute timeout, preventing a hung release job from holding the runner for up to six hours.
 
@@ -306,17 +351,17 @@ If `serviceMonitor.enabled: true` and `scrapeTimeout >= interval`, the chart now
 
 ## 0.2.6
 
-New values added in this release. All existing deployments are unaffected — the new knobs default to the same behavior as before.
+New values added in this release. All existing deployments are unaffected - the new knobs default to the same behavior as before.
 
 ### New features
 
-- `diagnosticMode` — set `diagnosticMode.enabled=true` to override the container command with `sleep infinity` for interactive debugging.
-- `lifecycleHooks` — configure `preStop` / `postStart` hooks. See the Graceful Shutdown section in README for a recommended `preStop` example.
-- `command` / `args` — override the container entrypoint without touching the Deployment template.
-- `priorityClassName`, `schedulerName`, `runtimeClassName` — scheduling and runtime customization.
-- `hostAliases`, `dnsPolicy`, `dnsConfig` — DNS overrides, useful for testing federation with self-hosted instances.
-- `commonLabels`, `commonAnnotations` — applied to every resource created by this chart.
-- `minReadySeconds` — stability window before a new pod is considered available.
+- `diagnosticMode` - set `diagnosticMode.enabled=true` to override the container command with `sleep infinity` for interactive debugging.
+- `lifecycleHooks` - configure `preStop` / `postStart` hooks. See the Graceful Shutdown section in README for a recommended `preStop` example.
+- `command` / `args` - override the container entrypoint without touching the Deployment template.
+- `priorityClassName`, `schedulerName`, `runtimeClassName` - scheduling and runtime customization.
+- `hostAliases`, `dnsPolicy`, `dnsConfig` - DNS overrides, useful for testing federation with self-hosted instances.
+- `commonLabels`, `commonAnnotations` - applied to every resource created by this chart.
+- `minReadySeconds` - stability window before a new pod is considered available.
 
 ### ServiceMonitor namespaceSelector
 
@@ -341,7 +386,7 @@ serviceAccount:
 
 ### Health probe initialDelaySeconds removed from readiness and liveness
 
-`readinessProbe.initialDelaySeconds` and `livenessProbe.initialDelaySeconds` have been removed from the default values. `startupProbe` already gates the startup window — adding extra delay on top was causing pods to remain unready or unmonitored for up to 90 seconds after the JVM had already reported healthy.
+`readinessProbe.initialDelaySeconds` and `livenessProbe.initialDelaySeconds` have been removed from the default values. `startupProbe` already gates the startup window - adding extra delay on top was causing pods to remain unready or unmonitored for up to 90 seconds after the JVM had already reported healthy.
 
 If you override probes in your values, remove `initialDelaySeconds` from `readinessProbe` and `livenessProbe` to benefit from faster readiness after startup.
 

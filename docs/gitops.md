@@ -30,7 +30,7 @@ spec:
   chart:
     spec:
       chart: fitpub
-      version: 0.3.x
+      version: 0.4.x
       sourceRef:
         kind: HelmRepository
         name: fitpub
@@ -68,7 +68,7 @@ spec:
   source:
     repoURL: https://oliinykdm.github.io/fitpub-helm
     chart: fitpub
-    targetRevision: 0.3.x
+    targetRevision: 0.4.x
     helm:
       values: |
         productionChecks:
@@ -101,7 +101,7 @@ spec:
 
 ## Secret Management
 
-Do not store production secrets directly in Git. Use your platform's preferred secret workflow, for example:
+Plaintext secrets in Git age like milk. Use your platform's secret workflow instead, for example:
 
 - External Secrets Operator
 - Sealed Secrets

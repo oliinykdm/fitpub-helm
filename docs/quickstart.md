@@ -1,8 +1,8 @@
 # Quick Start (local)
 
-Get FitPub running on a local Kubernetes cluster in a few minutes. This path is
-for trying the chart out — it uses a throwaway PostGIS database with trivial
-credentials and no persistence. For real deployments see
+FitPub on a local cluster in a few minutes. This is the kick-the-tires path - a
+throwaway PostGIS with trivial credentials and no persistence, so do not point your
+real data at it. For the real thing see
 [`examples/production-values.yaml`](../examples/production-values.yaml) and the
 [publishing](publishing.md) / [upgrade](upgrade-notes.md) docs.
 
@@ -15,7 +15,7 @@ credentials and no persistence. For real deployments see
 - [`kubectl`](https://kubernetes.io/docs/tasks/tools/) and [`helm`](https://helm.sh/docs/intro/install/) 3.8+
 - ~2 GiB of free memory for the cluster (dev values request 1536Mi for FitPub)
 
-> FitPub needs PostgreSQL **with the PostGIS extension** — a plain PostgreSQL
+> FitPub needs PostgreSQL **with the PostGIS extension** - a plain PostgreSQL
 > database is not enough. The quickstart uses the `postgis/postgis` image so this
 > is handled for you.
 
@@ -76,7 +76,7 @@ kubectl -n fitpub port-forward svc/fitpub 8080:8080
 kubectl -n fitpub get pods -l app.kubernetes.io/instance=fitpub
 
 # Login page should return HTTP 200 once the web stack is up (matches chart probes on FitPub 1.1.1).
-# The FitPub image is a minimal JRE — use a throwaway curl pod, not kubectl exec curl.
+# The FitPub image is a minimal JRE - use a throwaway curl pod, not kubectl exec curl.
 kubectl -n fitpub run fitpub-login-check \
   --image=curlimages/curl \
   --restart=Never \

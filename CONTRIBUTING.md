@@ -43,19 +43,19 @@ kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=fitpub --ti
 
 ## Chart Design Principles
 
-- FitPub uses an external PostgreSQL database with PostGIS.
-- The default deployment is single-replica.
-- Production secrets should normally be managed outside Helm.
-- New values should be documented in `values.yaml`, covered by `values.schema.json` when practical and mentioned in README/docs if user-facing.
-- Avoid adding dependencies unless they are clearly optional and production-safe.
+- FitPub uses an external PostgreSQL database with PostGIS
+- The default deployment is single-replica
+- Production secrets normally live outside Helm
+- New values get documented in `values.yaml`, covered by `values.schema.json` where practical, and mentioned in README/docs if they are user-facing
+- Do not add dependencies unless they are clearly optional and production-safe
 
 ## Pull Requests
 
 For chart changes, include:
 
-- a summary of the behavior change;
-- rendered/tested values' scenario;
-- any upgrade notes;
-- whether the chart version needs to be bumped.
+- what behavior changed
+- which values scenario you rendered/tested
+- any upgrade notes
+- whether the chart version needs a bump
 
-For release changes, verify the release workflow still supports the first publish to `gh-pages`.
+For release changes, double-check the release workflow still handles the first publish to `gh-pages`.

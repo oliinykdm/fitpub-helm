@@ -12,13 +12,13 @@ Check application logs first:
 kubectl logs -l app.kubernetes.io/instance=fitpub
 ```
 
-Common causes:
+Usual suspects:
 
-- database URL, username or password is wrong;
-- PostgreSQL does not have PostGIS available;
-- `FITPUB_JWT_SECRET` or `FITPUB_EMAIL_SECRET` is missing;
-- Flyway migration failed;
-- the uploads directory is not writable by UID/GID `1001`.
+- wrong database URL, username or password
+- PostgreSQL without PostGIS
+- missing `FITPUB_JWT_SECRET` or `FITPUB_EMAIL_SECRET`
+- a failed Flyway migration
+- uploads directory not writable by UID/GID `1001`
 
 ## Database Or PostGIS Errors
 
@@ -67,19 +67,19 @@ connection:
 kubectl logs -l app.kubernetes.io/instance=fitpub
 ```
 
-Common causes:
+Usual suspects:
 
-- database URL, username or password is wrong;
-- PostgreSQL does not have PostGIS available;
-- Flyway migration failed;
-- the uploads directory is not writable by UID/GID `1001`;
-- startup budget exhausted on a slow node (increase `startupProbe.failureThreshold`).
+- wrong database URL, username or password
+- PostgreSQL without PostGIS
+- a failed Flyway migration
+- uploads directory not writable by UID/GID `1001`
+- startup budget blown on a slow node (raise `startupProbe.failureThreshold`)
 
 ### Actuator probes (after a future FitPub release)
 
 FitPub **1.1.1** requires authentication for `/actuator/health/**`. Unauthenticated
 kubelet probes receive **HTTP 302** or **403**, and Kubernetes treats **302 as
-success** — so actuator probes are unreliable on 1.1.1.
+success** - so actuator probes are unreliable on 1.1.1.
 
 When you deploy a FitPub image that permits unauthenticated `/actuator/health/**`,
 override probes for DB-aware readiness:
@@ -120,15 +120,21 @@ access or you configure scrape authentication.
 
 Do not enable `serviceMonitor.enabled` expecting useful metrics on 1.1.1 without
 one of those workarounds. Do not treat an empty Prometheus target as proof that
-FitPub is unhealthy — chart probes intentionally use `GET /login` instead. See
+FitPub is unhealthy - chart probes intentionally use `GET /login` instead. See
 the Monitoring section in README.md.
 
 ## NetworkPolicy Blocks Traffic
 
-If FitPub stops receiving traffic after enabling `networkPolicy`, check that
-ingress is allowed. Setting `networkPolicy.ingress.enabled=false` without
-`networkPolicy.ingress.extraRules` denies **all** inbound connections. The chart
-now fails at render time for that combination.
+If FitPub goes quiet after you enable `networkPolicy`, start with ingress. Setting
+`networkPolicy.ingress.enabled=false` with no `networkPolicy.ingress.extraRules`
+denies **all** inbound traffic - the chart fails at render time for that combo, so
+you should never hit it by accident.
+
+If the pod instead crashes with `UnknownHostException` on the database host, it is
+egress DNS. Some enforcers drop UDP 53 to the cluster DNS even under an allow-all
+egress rule - we watched kindnet do exactly that on a recent build. Allow DNS
+explicitly (to kube-system on UDP/TCP 53, see the NetworkPolicy section in
+[README.md](../README.md)) and confirm it works on your CNI before trusting it.
 
 ## Broken ActivityPub Or WebFinger URLs
 
@@ -152,9 +158,11 @@ A trailing slash can produce URLs with double slashes, which can break federatio
 
 ## Uploads Are Not Writable
 
-FitPub runs as UID/GID `1001`. For chart-managed PVCs, the `volume-permissions` init container and pod `fsGroup` handle ownership.
+FitPub runs as UID/GID `1001`, and the pod `fsGroup` takes care of volume ownership
+on most storage classes. (The `volume-permissions` init container exists for the
+oddballs that ignore `fsGroup`, but it is off by default.)
 
-If you use `persistence.existingClaim`, verify the mounted volume is writable:
+Using `persistence.existingClaim`? Check the volume is actually writable:
 
 ```bash
 kubectl exec deployment/fitpub -n fitpub -- \
@@ -177,18 +185,18 @@ kubectl rollout restart deployment/fitpub -n fitpub
 
 ## Application Logs
 
-The `prod` Spring profile writes rotated logs to `/app/logs/` inside the container.
-This chart does not mount that path by default — logs are lost when the pod is
-replaced. Use a cluster log collector, mount a volume via `volumes`/`volumeMounts`,
-or a sidecar. See the **Application Logs** section in [README.md](../README.md).
+The `prod` profile writes rotated logs to `/app/logs/`, which the chart mounts as
+emptyDir. They survive container restarts but vanish when the pod is rescheduled.
+For anything you need to keep, use a cluster log collector (stdout has the same
+lines) or a sidecar. See **Application Logs** in [README.md](../README.md).
 
 ## Release Badge Is Red
 
-The badge reflects the last `Release Helm Chart` run. If a release fails, check that:
+The badge reflects the last `Release Helm Chart` run. When a release fails, check that:
 
-- GitHub Actions is allowed to write repository contents (`contents: write`);
-- the workflow token can push to `gh-pages`;
-- the GPG signing secrets (`GPG_KEYRING_BASE64`, `GPG_PASSPHRASE`) are set, since packaging signs the chart.
+- GitHub Actions can write repository contents (`contents: write`)
+- the workflow token can push to `gh-pages`
+- the GPG signing secrets (`GPG_KEYRING_BASE64`, `GPG_PASSPHRASE`) are set, since packaging signs the chart
 
 ## Artifact Hub Reports Deleted Chart Versions
 

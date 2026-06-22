@@ -67,7 +67,7 @@ Important:
 - Consider enabling `productionChecks.enabled=true` in production values to fail fast on missing or inconsistent settings
 {{- end }}
 {{- if gt (int .Values.replicaCount) 1 }}
-- Multiple replicas should be used only after validating FitPub background jobs, federation processing and shared storage behavior
+- Running multiple replicas: make sure uploads use ReadWriteMany storage, otherwise the extra pods cannot mount the volume
 {{- end }}
 
 Useful checks:
@@ -79,9 +79,9 @@ Login probe check from inside the cluster (matches chart defaults for FitPub 1.1
 
   kubectl run fitpub-login-check --image=curlimages/curl --restart=Never --rm -i -n {{ .Release.Namespace }} --command -- curl -fsS -o /dev/null -w 'HTTP:%{http_code}\n' http://{{ include "fitpub.fullname" . }}:{{ .Values.service.port }}/login
 
-If the pod does not become Ready, the cause is almost always the database:
-either it is unreachable, or it is plain PostgreSQL without the PostGIS extension
-(the V1__enable_postgis migration then fails). Check with:
+Pod not going Ready? Nine times out of ten it is the database: either FitPub
+cannot reach it, or it is plain PostgreSQL without PostGIS (the V1__enable_postgis
+migration then faceplants). Check with:
 
   kubectl logs deployment/{{ include "fitpub.fullname" . }} -n {{ .Release.Namespace }}
 
