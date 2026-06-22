@@ -20,6 +20,7 @@ jobs:
       cancel-in-progress: false
     permissions:
       contents: write
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -72,6 +73,15 @@ jobs:
               --keyring "$HOME/.gnupg/secring.gpg" \
               --passphrase-file "$HOME/.gnupg/passphrase" \
               --destination .deploy
+          done
+
+      - name: Publish to GHCR (OCI)
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" \
+            | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+          owner="$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          for pkg in .deploy/*.tgz; do
+            helm push "$pkg" "oci://ghcr.io/${owner}/charts"
           done
 
       - name: Publish to GitHub Pages
