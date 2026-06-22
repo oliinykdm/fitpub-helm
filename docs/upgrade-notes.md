@@ -1,5 +1,25 @@
 # Upgrade Notes
 
+## 0.3.8
+
+### `config`/`applicationSecret.data`: boolean `false` and `0` are no longer dropped
+
+These maps were rendered with a truthiness test, so `false` or `0` silently
+disappeared and the app fell back to its own default. They are now rendered as long
+as they are non-empty; empty strings and `null` are still skipped.
+
+**Action required:** none if you used strings. If you "unset" a key with `false`/`0`,
+use an empty string or drop the key instead.
+
+### Doc fixes
+
+- README restricted-egress example: ClusterIP DNS now allows TCP 53, and SMTP `587`
+  is a separate rule instead of being attached to the DNS rule.
+- `examples/production-values.yaml`/README now add `FITPUB_MAIL_USERNAME` and
+  `FITPUB_MAIL_PASSWORD` to the Secret, since the examples set `FITPUB_MAIL_SMTP_AUTH=true`.
+- Documented that `volume-permissions` runs as root and must be disabled under the
+  `restricted` Pod Security Standard (rely on `fsGroup`).
+
 ## 0.3.7
 
 ### Mail defaults no longer forced without a host
