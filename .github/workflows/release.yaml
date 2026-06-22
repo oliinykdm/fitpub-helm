@@ -102,3 +102,17 @@ jobs:
           git add -A
           git commit -m "Publish chart packages to GitHub Pages"
           git push origin HEAD:gh-pages
+
+      - name: Tag released versions
+        run: |
+          for chart in charts/*/; do
+            name="$(helm show chart "$chart" | awk '/^name:/{print $2}')"
+            version="$(helm show chart "$chart" | awk '/^version:/{print $2}')"
+            tag="${name}-${version}"
+            if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+              echo "Tag ${tag} already exists, skipping"
+              continue
+            fi
+            git tag "${tag}" "${GITHUB_SHA}"
+            git push origin "${tag}"
+          done
