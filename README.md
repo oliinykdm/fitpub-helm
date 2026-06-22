@@ -22,8 +22,6 @@ Helm chart for deploying [FitPub](https://codeberg.org/fitpub/fitpub), a federat
 - Runtime install test: manual and weekly workflow with kind, PostGIS, `helm install --wait` and `/actuator/health`
 - Production status: ready for controlled testing, not yet broadly battle-tested
 
-If the release badge is red after a failed first publish, rerun the `Release Helm Chart` workflow manually after `gh-pages` initialization fixes are merged.
-
 ## Features
 
 - Deployment running as the non-root FitPub user (`1001`)
@@ -115,8 +113,6 @@ kubectl create secret generic fitpub-secret \
 applicationSecret:
   existingSecret: fitpub-secret
 ```
-
-`FITPUB_BASE_URL` must not include a trailing slash. For ActivityPub/WebFinger compatibility, use `https://example.com`, not `https://example.com/`.
 
 Enable `productionChecks.enabled=true` in production values. It fails rendering early when required public settings or chart-managed secrets are missing.
 
@@ -251,7 +247,7 @@ Adjust this to your actual PostgreSQL, DNS, SMTP and federation egress model.
 
 ## Graceful Shutdown
 
-By default Kubernetes removes the pod from the load balancer endpoints and sends `SIGTERM` simultaneously. This creates a brief window where traffic still arrives while the app is already shutting down. Add a `preStop` sleep to drain connections before `SIGTERM`:
+Kubernetes sends `SIGTERM` and removes the pod from endpoints at the same time, so add a `preStop` sleep if you see connection errors during rollouts:
 
 ```yaml
 lifecycleHooks:
@@ -260,17 +256,7 @@ lifecycleHooks:
       command: ["sh", "-c", "sleep 5"]
 ```
 
-Spring Boot also supports graceful shutdown at the application level via `server.shutdown: graceful`. Add it through `extraEnv` if your FitPub version supports it.
-
-## Scheduling And Priority
-
-Assign a PriorityClass to protect the pod from eviction under node resource pressure:
-
-```yaml
-priorityClassName: high-priority
-```
-
-Pin to specific nodes using `nodeSelector`, `tolerations` or fine-grained `affinity` rules. Use `topologySpreadConstraints` when running multiple replicas across failure zones.
+Scheduling knobs (`priorityClassName`, `nodeSelector`, `tolerations`, `affinity`, `topologySpreadConstraints`) are passed through as-is — see `values.yaml`.
 
 ## Debugging
 
@@ -356,16 +342,7 @@ See [docs/troubleshooting.md](docs/troubleshooting.md) for common Kubernetes dep
 - Validate probes against your deployed security configuration.
 - Keep `replicaCount: 1` until multi-pod behavior has been tested.
 
-## Related Links
-
-- FitPub project: https://codeberg.org/fitpub/fitpub
-- Original Kubernetes manifests discussion: https://codeberg.org/fitpub/fitpub/issues/301
-- This chart repository: https://github.com/oliinykdm/fitpub-helm
-- Upgrade notes: [docs/upgrade-notes.md](docs/upgrade-notes.md)
-- Design notes: [docs/design.md](docs/design.md)
-- GitOps examples: [docs/gitops.md](docs/gitops.md)
-- Publishing notes: [docs/publishing.md](docs/publishing.md)
-- Troubleshooting: [docs/troubleshooting.md](docs/troubleshooting.md)
+The chart originated from the Kubernetes manifests discussion in [FitPub issue #301](https://codeberg.org/fitpub/fitpub/issues/301).
 
 ## Contributing
 

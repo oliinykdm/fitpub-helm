@@ -76,7 +76,7 @@ If both `autoscaling.targetCPUUtilizationPercentage` and `autoscaling.targetMemo
 
 ### release workflow — `timeout-minutes: 30`
 
-The release CI job now has a 30-minute timeout, preventing a hung `chart-releaser` or GitHub Pages push from holding the runner for up to six hours.
+The release CI job now has a 30-minute timeout, preventing a hung release job from holding the runner for up to six hours.
 
 ## 0.2.7
 

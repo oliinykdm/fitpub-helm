@@ -122,21 +122,14 @@ kubectl rollout restart deployment/fitpub
 
 ## Release Badge Is Red
 
-The release badge reflects the last completed `Release Helm Chart` workflow run. If the first release failed before `gh-pages` existed, merge the workflow fix and rerun the workflow manually.
+The badge reflects the last `Release Helm Chart` run. If a release fails, check that:
 
-If it still fails, check:
-
-- repository permissions allow GitHub Actions to write contents;
-- branch protection allows the workflow token to push `gh-pages`;
-- the chart version has not already been released, or `skip_existing` is enabled.
+- GitHub Actions is allowed to write repository contents (`contents: write`);
+- the workflow token can push to `gh-pages`;
+- the GPG signing secrets (`GPG_KEYRING_BASE64`, `GPG_PASSPHRASE`) are set, since packaging signs the chart.
 
 ## Artifact Hub Reports Deleted Chart Versions
 
-Artifact Hub reads every version listed in the published Helm `index.yaml`. If a GitHub Release or `.tgz` package is deleted manually but the version remains in `gh-pages/index.yaml`, Artifact Hub will keep trying to download it and report `not found`.
+Artifact Hub reads every version listed in the published `index.yaml`. The chart packages live on `gh-pages`, so if you delete a `.tgz` there but leave its entry in `index.yaml`, Artifact Hub will keep trying to download it and report `not found`.
 
-Fix options:
-
-- rerun the `Release Helm Chart` workflow, which prunes missing package URLs from `index.yaml`;
-- or manually remove deleted versions from `gh-pages/index.yaml` and push the branch.
-
-Do not delete release assets without also updating the Helm repository index.
+Remove the affected version from `gh-pages/index.yaml` and push the branch, or restore the package. Never drop a `.tgz` without updating the index.
