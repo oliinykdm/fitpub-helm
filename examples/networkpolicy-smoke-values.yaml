@@ -52,7 +52,7 @@ networkPolicy:
             port: 53
           - protocol: TCP
             port: 53
-      # ClusterIP DNS (kind and most clusters use 10.96.0.0/12; policy is evaluated
+      # ClusterIP DNS (kind and most clusters use 10.96.0.0/12, and policy is evaluated
       # before service DNAT on several CNIs including kindnet).
       - to:
           - ipBlock:
