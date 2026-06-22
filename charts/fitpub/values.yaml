@@ -293,6 +293,14 @@ networkPolicy:
   enabled: false
   ingress:
     enabled: true
+    # from: restricts which sources can reach the app port. Empty list = any source
+    # (equivalent to no NetworkPolicy for ingress). For production, restrict to the
+    # ingress-controller namespace:
+    #   from:
+    #     - namespaceSelector:
+    #         matchLabels:
+    #           kubernetes.io/metadata.name: ingress-nginx
+    from: []
     extraRules: []
   egress:
     allowAll: true
