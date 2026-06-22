@@ -1,5 +1,80 @@
 # Upgrade Notes
 
+## 0.3.6
+
+### Memory request aligned with limit
+
+Default `resources.requests.memory` is now **3072Mi**, matching `resources.limits.memory`.
+Java 25 uses `-XX:MaxRAMPercentage=75` against the **limit**, so a lower request
+(2048Mi in 0.3.5) could schedule the pod on a node without enough RAM for the
+calculated heap plus native overhead.
+
+**Action required** only if you tuned requests down manually — raise them again or
+lower `MaxRAMPercentage` via `JAVA_TOOL_OPTIONS`.
+
+### ConfigMap omits empty `config` values
+
+Non-empty `config` keys are rendered into the ConfigMap; empty strings are skipped.
+This lets Spring Boot fall back to application defaults (for example `FITPUB_MAIL_HOST`
+defaults to `localhost` when unset). Explicit non-empty values in your values file
+behave as before.
+
+### NetworkPolicy ingress validation
+
+`helm install`/`helm upgrade` now fails when `networkPolicy.enabled=true`,
+`networkPolicy.ingress.enabled=false`, and `networkPolicy.ingress.extraRules` is
+empty. That combination denies all inbound traffic to FitPub.
+
+### Dev and smoke example resources
+
+`examples/development-values.yaml` and `examples/runtime-smoke-values.yaml` now
+use **1536Mi** request/limit and `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=60` for
+kind/minikube-sized nodes.
+
+### Documentation fixes
+
+Quickstart verification uses a `curlimages/curl` pod (the FitPub **1.1.1** JRE
+image does not ship `curl`). Troubleshooting commands use label selectors instead
+of assuming the Deployment is always named `fitpub`.
+
+## 0.3.5
+
+### Default memory raised for Java 25
+
+Default `resources.requests.memory` is now **2048Mi** (CPU request **250m**) and
+`resources.limits.memory` is **3072Mi**. The FitPub image sets
+`-XX:MaxRAMPercentage=75`, so a 2048Mi limit leaves too little headroom for heap
+plus metaspace and native memory on Java 25.
+
+Throwaway clusters can keep lower values — see `examples/development-values.yaml`
+and `examples/runtime-smoke-values.yaml`.
+
+### Stronger inline secret validation
+
+When `productionChecks.enabled=true` and Helm manages the Secret inline, the
+chart now also rejects trivial `FITPUB_DATABASE_PASSWORD` values (shorter than
+12 characters or obvious placeholders such as `fitpub`, `replace-me`, `password`).
+
+JWT and email secrets now fail on common placeholder substrings such as
+`replace-me` / `replace-with`, not only on an exact known-value list.
+
+**Action required** if you copied placeholder passwords from older examples —
+generate real values (`openssl rand -base64 24` for the database password).
+
+### HPA — zero utilization targets
+
+HPA metric rendering and validation now treat `0` as an explicitly set CPU or
+memory target (same `toString` approach as the PDB fix in 0.2.8).
+
+### Install notes and documentation
+
+- `NOTES.txt` warns when `FITPUB_DATABASE_URL` is empty or when
+  `productionChecks` is enabled with `applicationSecret.existingSecret`.
+- README NetworkPolicy example includes HTTPS **443** egress for federation.
+- ServiceMonitor docs now state that FitPub 1.1.x requires authentication for
+  `/actuator/metrics` unless the app image changes.
+- `icon.png` is published at the repository root for Artifact Hub.
+
 ## 0.3.4
 
 ### Default probes → `GET /login`
@@ -37,8 +112,9 @@ This key was not read by the FitPub application (ActivityPub cannot be toggled v
 that environment variable). Remove it from your values if you copied it from older
 chart defaults.
 
-Quickstart verification uses `curl` against `/login` (the application image ships
-curl, not wget).
+Quickstart verification uses `curl` against `/login` from a throwaway
+`curlimages/curl` pod (the FitPub application image is a minimal JRE and does not
+ship `curl` or `wget`).
 
 ## 0.3.3
 
