@@ -39,9 +39,9 @@ spec:
     productionChecks:
       enabled: true
     config:
-      FITPUB_DATABASE_URL: jdbc:postgresql://postgres.example.com:5432/fitpub
-      FITPUB_DOMAIN: fitpub.example.com
-      FITPUB_BASE_URL: https://fitpub.example.com
+      FITPUB_DATABASE_URL: "jdbc:postgresql://postgres.example.com:5432/fitpub"
+      FITPUB_DOMAIN: "fitpub.example.com"
+      FITPUB_BASE_URL: "https://fitpub.example.com"
       FITPUB_PUSH_ENABLED: "false"
     applicationSecret:
       existingSecret: fitpub-secret
@@ -74,9 +74,9 @@ spec:
         productionChecks:
           enabled: true
         config:
-          FITPUB_DATABASE_URL: jdbc:postgresql://postgres.example.com:5432/fitpub
-          FITPUB_DOMAIN: fitpub.example.com
-          FITPUB_BASE_URL: https://fitpub.example.com
+          FITPUB_DATABASE_URL: "jdbc:postgresql://postgres.example.com:5432/fitpub"
+          FITPUB_DOMAIN: "fitpub.example.com"
+          FITPUB_BASE_URL: "https://fitpub.example.com"
           FITPUB_PUSH_ENABLED: "false"
         applicationSecret:
           existingSecret: fitpub-secret

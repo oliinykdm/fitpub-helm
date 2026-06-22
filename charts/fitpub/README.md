@@ -63,6 +63,7 @@ If `FITPUB_PUSH_ENABLED` is set to `"true"`, also provide VAPID public/private k
 - non-root runtime security context for UID/GID `1001`
 - ConfigMap/Secret split for application environment variables
 - startup/readiness/liveness probes on `GET /login` (FitPub 1.1.1 compatible)
+- default resources sized for Java 25 (`3072Mi` request / `3072Mi` limit)
 - optional Ingress, HPA, PDB, NetworkPolicy and ServiceMonitor resources
 - optional Markdown page mount from an existing Secret
 - extension points for extra env, envFrom, volumes, init containers and sidecars
@@ -72,3 +73,6 @@ Full documentation is available in the chart repository:
 ```text
 https://github.com/oliinykdm/fitpub-helm
 ```
+
+**ServiceMonitor:** FitPub 1.1.x requires authentication for `/actuator/metrics`.
+Enable scraping only when actuator endpoints are public or scrape auth is configured.

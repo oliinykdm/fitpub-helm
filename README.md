@@ -19,7 +19,7 @@
 
 <p align="center">
   <a href="https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml"><img src="https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml/badge.svg" alt="Lint and Test"></a>
-  <a href="https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml"><img src="https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml/badge.svg" alt="Runtime Smoke Test"></a>
+  <a href="https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml"><img src="https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml/badge.svg" alt="Kind Runtime Test"></a>
   <a href="https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml"><img src="https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml/badge.svg" alt="Release"></a>
   <img src="https://img.shields.io/badge/kubernetes-%3E%3D1.26-blue" alt="Kubernetes">
   <img src="https://img.shields.io/badge/helm-%3E%3D3.8-blue" alt="Helm">
@@ -32,8 +32,8 @@
 - Helm lint: enabled in CI with `ct lint`
 - Render tests: default values and `examples/production-values.yaml`
 - Kubernetes API validation: kind cluster with `kubectl apply --dry-run=server`
+- **Kind runtime test** (badge *Kind Runtime Test*): on every PR/push to `main` and weekly — kind cluster, PostGIS, `helm install --wait`, pod Ready, startup/readiness probes green, in-cluster `GET /login` HTTP 200 (FitPub **1.1.1**)
 - Release packaging: signed packages and `index.yaml` are published to GitHub Pages
-- Runtime install test: weekly workflow with kind, PostGIS, `helm install --wait` and `GET /login` check (FitPub **1.1.1**)
 - Production status: ready for controlled testing, not yet broadly battle-tested
 
 ## Features
@@ -238,9 +238,37 @@ The default is `replicaCount: 1` with a `Recreate` deployment strategy. This is 
 
 If you enable `autoscaling`, make sure your storage, background jobs, federation processing and database connection pool are ready for multiple pods.
 
+## Memory And JVM
+
+The FitPub container image runs Java 25 with `-XX:MaxRAMPercentage=75` against the
+cgroup memory **limit**. Default chart resources set request and limit to the same
+value so the scheduler reserves enough RAM for heap plus native overhead:
+
+```yaml
+resources:
+  requests:
+    cpu: 250m
+    memory: 3072Mi
+  limits:
+    memory: 3072Mi
+```
+
+If you see OOMKilled pods or slow Flyway startup on small nodes, raise
+`resources.limits.memory` or lower the heap fraction:
+
+```yaml
+extraEnv:
+  - name: JAVA_TOOL_OPTIONS
+    value: "-XX:MaxRAMPercentage=60"
+```
+
 ## NetworkPolicy
 
 `networkPolicy.enabled` is disabled by default. FitPub needs egress to PostgreSQL, SMTP and federated/external HTTP services. If your cluster enforces egress policies, start with explicit rules for those dependencies.
+
+Keep `networkPolicy.ingress.enabled=true` (the default) unless you add
+`networkPolicy.ingress.extraRules`. Disabling ingress without extra rules denies
+all inbound traffic to FitPub.
 
 Example shape for restricted egress:
 
@@ -262,9 +290,12 @@ networkPolicy:
             port: 53
           - protocol: TCP
             port: 587
+      - ports:
+          - protocol: TCP
+            port: 443
 ```
 
-Adjust this to your actual PostgreSQL, DNS, SMTP and federation egress model.
+Adjust this to your actual PostgreSQL, DNS, SMTP, HTTPS federation and peer egress model.
 
 ## Graceful Shutdown
 
@@ -288,7 +319,7 @@ helm upgrade fitpub fitpub/fitpub \
   --reuse-values \
   --set diagnosticMode.enabled=true
 
-kubectl exec -it deployment/fitpub -- sh
+kubectl exec -it $(kubectl get pod -l app.kubernetes.io/instance=fitpub -o jsonpath='{.items[0].metadata.name}') -- sh
 ```
 
 Disable it again when done:
@@ -323,7 +354,15 @@ serviceMonitor:
     release: kube-prometheus-stack
 ```
 
-The default scrape path is `/actuator/metrics` (exposed in the prod Spring profile). The FitPub **1.1.1** image does not ship `/actuator/prometheus`. Metrics scraping requires a FitPub release that permits unauthenticated actuator access.
+The default scrape path is `/actuator/metrics` (exposed in the prod Spring profile).
+The FitPub **1.1.1** image does not ship `/actuator/prometheus`.
+
+**Authentication:** Spring Security requires authentication for all actuator
+endpoints on FitPub 1.1.x, including `/actuator/metrics`. Unauthenticated
+Prometheus scrapes receive HTTP **302/403** and look empty. Enable ServiceMonitor
+only after the app image permits unauthenticated actuator access, or configure
+scrape authentication / a metrics sidecar. Probes intentionally use `GET /login`
+instead — see [docs/troubleshooting.md](docs/troubleshooting.md).
 
 ## Security Notes
 
@@ -360,11 +399,14 @@ See [docs/troubleshooting.md](docs/troubleshooting.md) for common Kubernetes dep
 - Enable `productionChecks.enabled=true`.
 - Set `SPRING_PROFILES_ACTIVE=prod`.
 - Set strong values for `FITPUB_DATABASE_PASSWORD`, `FITPUB_JWT_SECRET` and `FITPUB_EMAIL_SECRET`.
+- When using `applicationSecret.existingSecret`, verify the Secret contains all required keys before install.
+- Size memory for Java 25 (defaults: 3072Mi request / 3072Mi limit).
 - Keep `FITPUB_PUSH_ENABLED=false` unless VAPID public/private keys and `FITPUB_VAPID_SUBJECT` are configured.
 - Keep `FITPUB_BASE_URL` public, canonical and without a trailing slash.
 - Put FitPub behind HTTPS.
 - Back up PostgreSQL and `/app/uploads`.
-- Validate probes against your deployed security configuration.
+- Validate probes against your deployed security configuration (`GET /login` on 1.1.1 does not verify database connectivity after startup).
+- Do not enable `serviceMonitor` until actuator scraping is authenticated or public in your app version.
 - Keep `replicaCount: 1` until multi-pod behavior has been tested.
 
 The chart originated from the Kubernetes manifests discussion in [FitPub issue #301](https://codeberg.org/fitpub/fitpub/issues/301).
