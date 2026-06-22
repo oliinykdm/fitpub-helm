@@ -33,6 +33,10 @@ persistence:
 resources:
   requests:
     cpu: 100m
-    memory: 768Mi
+    memory: 1536Mi
   limits:
     memory: 1536Mi
+
+extraEnv:
+  - name: JAVA_TOOL_OPTIONS
+    value: "-XX:MaxRAMPercentage=60"

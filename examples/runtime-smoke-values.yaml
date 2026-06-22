@@ -13,8 +13,6 @@ config:
   FITPUB_BASE_URL: "http://fitpub.local"
   FITPUB_FEDERATION_PROTOCOL: "http"
   FITPUB_PUSH_ENABLED: "false"
-  FITPUB_MAIL_HOST: ""
-  FITPUB_MAIL_FROM_ADDRESS: ""
 
 applicationSecret:
   existingSecret: "fitpub-secret"
@@ -31,6 +29,10 @@ podDisruptionBudget:
 resources:
   requests:
     cpu: 100m
-    memory: 768Mi
+    memory: 1536Mi
   limits:
     memory: 1536Mi
+
+extraEnv:
+  - name: JAVA_TOOL_OPTIONS
+    value: "-XX:MaxRAMPercentage=60"
