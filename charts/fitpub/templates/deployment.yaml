@@ -154,7 +154,6 @@ spec:
           lifecycle:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if or .Values.persistence.enabled .Values.pages.existingSecret .Values.volumeMounts }}
           volumeMounts:
             {{- if .Values.persistence.enabled }}
             - name: uploads
@@ -165,14 +164,20 @@ spec:
               mountPath: {{ .Values.pages.mountPath }}
               readOnly: {{ .Values.pages.readOnly }}
             {{- end }}
+            {{- if .Values.ephemeralVolumes.tmp.enabled }}
+            - name: tmp
+              mountPath: /tmp
+            {{- end }}
+            {{- if .Values.ephemeralVolumes.logs.enabled }}
+            - name: logs
+              mountPath: {{ .Values.ephemeralVolumes.logs.mountPath }}
+            {{- end }}
             {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- end }}
         {{- with .Values.sidecars }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- if or .Values.persistence.enabled .Values.pages.existingSecret .Values.volumes }}
       volumes:
         {{- if .Values.persistence.enabled }}
         - name: uploads
@@ -183,11 +188,25 @@ spec:
         - name: pages
           secret:
             secretName: {{ .Values.pages.existingSecret }}
+            defaultMode: 0440
+        {{- end }}
+        {{- if .Values.ephemeralVolumes.tmp.enabled }}
+        - name: tmp
+          emptyDir:
+            {{- if .Values.ephemeralVolumes.tmp.sizeLimit }}
+            sizeLimit: {{ .Values.ephemeralVolumes.tmp.sizeLimit }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.ephemeralVolumes.logs.enabled }}
+        - name: logs
+          emptyDir:
+            {{- if .Values.ephemeralVolumes.logs.sizeLimit }}
+            sizeLimit: {{ .Values.ephemeralVolumes.logs.sizeLimit }}
+            {{- end }}
         {{- end }}
         {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

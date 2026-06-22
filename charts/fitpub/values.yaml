@@ -61,14 +61,26 @@ securityContext:
   capabilities:
     drop:
       - ALL
-  # App writes uploads, logs, and /tmp — read-only root won't work without extra mounts.
-  readOnlyRootFilesystem: false
+  # /tmp and /app/logs are mounted as emptyDir below; /app/uploads is the PVC.
+  readOnlyRootFilesystem: true
 
-# Chowns the uploads PVC to the app user. Runs as root, so it breaks the
-# restricted PodSecurity profile — disable it there and rely on fsGroup instead.
+# emptyDir volumes for writable paths that would otherwise break readOnlyRootFilesystem.
+# Mapped to /tmp (JVM scratch) and the log directory (logback file appender).
+ephemeralVolumes:
+  tmp:
+    enabled: true
+    sizeLimit: 256Mi
+  logs:
+    enabled: true
+    sizeLimit: 512Mi
+    mountPath: /app/logs
+
+# Chowns the uploads PVC to the app user on first mount. Disabled by default:
+# fsGroupChangePolicy: OnRootMismatch already handles this without root.
+# Enable only for StorageClasses that ignore fsGroup (e.g. some NFS provisioners).
 initContainers:
   volumePermissions:
-    enabled: true
+    enabled: false
     image:
       repository: busybox
       tag: "1.37"
