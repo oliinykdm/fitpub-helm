@@ -4,6 +4,54 @@ entries:
   - annotations:
       artifacthub.io/category: skip-prediction
       artifacthub.io/changes: |
+        - kind: fixed
+          description: Omit mail settings from the default ConfigMap until FITPUB_MAIL_HOST is set; avoids localhost:587 with forced SMTP auth.
+        - kind: added
+          description: Optional config keys for Hikari pool, ActivityPub inbox tuning, FITPUB_MAIL_PROTOCOL, OSM tiles and weather toggles.
+        - kind: fixed
+          description: Block multi-replica and RollingUpdate deployments with ReadWriteOnce upload volumes (including existingClaim).
+        - kind: added
+          description: CI runtime test for networkpolicy-smoke-values.yaml with restricted egress.
+        - kind: fixed
+          description: Documentation fixes (kubectl exec, README secret placeholders, ingress forwarded headers, application logs).
+      artifacthub.io/containsSecurityUpdates: "false"
+      artifacthub.io/images: |
+        - name: fitpub
+          image: codeberg.org/fitpub/fitpub:1.1.1
+        - name: volume-permissions
+          image: busybox:1.37
+          whitelisted: true
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/prerelease: "false"
+      artifacthub.io/signKey: |
+        fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+        url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+    apiVersion: v2
+    appVersion: 1.1.1
+    created: "2026-06-22T12:10:20.571194892Z"
+    description: Helm chart for FitPub - federated fitness tracking platform
+    digest: 8bd83580ee0436a4a1bc69084906cc300cfc4c95eb0a341fe87c051fe3079863
+    home: https://codeberg.org/fitpub/fitpub
+    icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+    keywords:
+    - fitness
+    - activitypub
+    - spring-boot
+    - postgresql
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - name: Dmytro Oliinyk
+      url: https://github.com/oliinykdm
+    name: fitpub
+    sources:
+    - https://codeberg.org/fitpub/fitpub
+    type: application
+    urls:
+    - https://oliinykdm.github.io/fitpub-helm/fitpub-0.3.7.tgz
+    version: 0.3.7
+  - annotations:
+      artifacthub.io/category: skip-prediction
+      artifacthub.io/changes: |
         - kind: changed
           description: Default probes use GET /login (HTTP 200) for reliable startup on FitPub 1.1.x where actuator health requires authentication.
         - kind: changed
@@ -493,4 +541,4 @@ entries:
     urls:
     - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.2.tgz
     version: 0.2.2
-generated: "2026-06-22T11:30:54.49101125Z"
+generated: "2026-06-22T12:10:20.568960254Z"
