@@ -11,5 +11,7 @@ metadata:
   {{- end }}
 data:
   {{- range $key, $value := .Values.config }}
+  {{- if $value }}
   {{ $key }}: {{ $value | quote }}
+  {{- end }}
   {{- end }}
