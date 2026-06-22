@@ -64,6 +64,7 @@ If `FITPUB_PUSH_ENABLED` is set to `"true"`, also provide VAPID public/private k
 - ConfigMap/Secret split for application environment variables
 - startup/readiness/liveness probes on `GET /login` (FitPub 1.1.1 compatible)
 - default resources sized for Java 25 (`3072Mi` request / `3072Mi` limit)
+- optional Hikari pool, ActivityPub inbox, mail protocol and feature-toggle config keys
 - optional Ingress, HPA, PDB, NetworkPolicy and ServiceMonitor resources
 - optional Markdown page mount from an existing Secret
 - extension points for extra env, envFrom, volumes, init containers and sidecars
@@ -73,6 +74,10 @@ Full documentation is available in the chart repository:
 ```text
 https://github.com/oliinykdm/fitpub-helm
 ```
+
+**Mail:** leave mail-related `config` keys empty until `FITPUB_MAIL_HOST` is set; then configure port/auth/starttls together (see `examples/production-values.yaml`).
+
+**Logs:** the `prod` profile writes rotated files under `/app/logs`. Mount a volume or use a log collector — not persisted by default.
 
 **ServiceMonitor:** FitPub 1.1.x requires authentication for `/actuator/metrics`.
 Enable scraping only when actuator endpoints are public or scrape auth is configured.

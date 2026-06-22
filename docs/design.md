@@ -81,7 +81,8 @@ on a schedule. It verifies:
 - a temporary PostGIS deployment becomes available;
 - FitPub installs with `helm upgrade --install --wait`;
 - the pod reaches Ready without restarts during startup (startup/readiness probes);
-- `/login` responds with HTTP 200 inside the cluster.
+- `/login` responds with HTTP 200 inside the cluster;
+- a second install with `examples/networkpolicy-smoke-values.yaml` succeeds under restricted egress (PostGIS + DNS + HTTPS only).
 
 This test pulls the FitPub and PostGIS container images and is slower than lint/render
 checks, but it is the closest automated proof that the chart is alive end-to-end.

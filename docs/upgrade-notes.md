@@ -1,5 +1,42 @@
 # Upgrade Notes
 
+## 0.3.7
+
+### Mail defaults no longer forced without a host
+
+The chart no longer renders `FITPUB_MAIL_PORT`, SMTP auth, or STARTTLS settings into
+the ConfigMap unless you set them explicitly. Previously, empty `FITPUB_MAIL_HOST`
+combined with port `587` and forced auth could make FitPub talk to `localhost:587`
+instead of the application default `localhost:25`.
+
+**Action required:** if you relied on chart defaults for SMTP, add mail settings to
+your values when `FITPUB_MAIL_HOST` is set — see
+[`examples/production-values.yaml`](../examples/production-values.yaml).
+
+### Optional config keys for pool, federation and feature toggles
+
+`values.yaml` now documents (empty by default) Hikari pool settings
+(`FITPUB_DB_*`), ActivityPub inbox tuning (`FITPUB_ACTIVITYPUB_*`,
+`FITPUB_REMOTE_ACTIVITY_BACKFILL`), `FITPUB_MAIL_PROTOCOL`, `FITPUB_OSM_TILES_ENABLED`
+and `FITPUB_WEATHER_ENABLED`. Empty values are omitted from the ConfigMap.
+
+### ReadWriteOnce scaling and RollingUpdate validation
+
+Render now fails when `persistence.accessMode=ReadWriteOnce` and either:
+
+- `replicaCount > 1`, or
+- `autoscaling.maxReplicas > 1`, or
+- `deploymentStrategy.type=RollingUpdate`
+
+This applies to chart-managed PVCs **and** `persistence.existingClaim`. Use
+`ReadWriteMany` for multi-pod uploads, or keep a single replica with `Recreate`.
+
+### CI: NetworkPolicy smoke test
+
+The runtime workflow includes a second job that installs with
+`examples/networkpolicy-smoke-values.yaml` and verifies the pod becomes Ready under
+restricted egress.
+
 ## 0.3.6
 
 ### Memory request aligned with limit
