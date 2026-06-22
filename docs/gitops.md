@@ -1,10 +1,15 @@
 # GitOps Examples
 
-These examples assume the chart is published through GitHub Pages at:
+The chart is published two ways:
 
 ```text
-https://oliinykdm.github.io/fitpub-helm
+oci://ghcr.io/oliinykdm/charts/fitpub          # OCI registry (recommended)
+https://oliinykdm.github.io/fitpub-helm        # classic HTTP repo
 ```
+
+The examples below use the HTTP repo. To switch Flux to OCI, set `type: oci` on the
+`HelmRepository` and use the `oci://ghcr.io/oliinykdm/charts` URL. For Argo CD, set
+the source `repoURL: ghcr.io/oliinykdm/charts` and keep `chart: fitpub`.
 
 Use an externally managed Kubernetes Secret for production credentials.
 

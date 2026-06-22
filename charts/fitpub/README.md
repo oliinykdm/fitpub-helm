@@ -6,6 +6,14 @@ FitPub is a federated fitness tracking platform. This chart runs it on Kubernete
 
 ## Install
 
+From the OCI registry (recommended):
+
+```bash
+helm install fitpub oci://ghcr.io/oliinykdm/charts/fitpub --version 0.4.0 -f production-values.yaml
+```
+
+Or the classic HTTP repo:
+
 ```bash
 helm repo add fitpub https://oliinykdm.github.io/fitpub-helm
 helm repo update
@@ -13,7 +21,7 @@ helm install fitpub fitpub/fitpub -f production-values.yaml
 ```
 
 Copy and adapt [`examples/production-values.yaml`](https://github.com/oliinykdm/fitpub-helm/blob/main/examples/production-values.yaml)
-from the chart repository before running the install command above.
+before running either command.
 
 ## Minimal Production Values
 

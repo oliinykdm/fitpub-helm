@@ -71,21 +71,32 @@ and tells you how to reach it. The manual steps and a troubleshooting table live
 
 ## Installation
 
-Charts are published through GitHub Pages by the release workflow:
+The chart ships two ways. Pick one.
+
+**OCI registry (recommended).** No `helm repo add`, just point at the package:
+
+```bash
+helm install fitpub oci://ghcr.io/oliinykdm/charts/fitpub --version 0.4.0 -f production-values.yaml
+```
+
+The OCI artifact carries the GPG provenance, so you can verify it on pull:
+
+```bash
+helm pull oci://ghcr.io/oliinykdm/charts/fitpub --version 0.4.0 --verify \
+  --keyring <(curl -fsSL https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc | gpg --dearmor)
+```
+
+**Classic HTTP repo (GitHub Pages).** Still published for tooling that expects it:
 
 ```bash
 helm repo add fitpub https://oliinykdm.github.io/fitpub-helm
 helm repo update
-```
-
-Install with production values. Copy [examples/production-values.yaml](examples/production-values.yaml),
-adapt it for your environment, then install:
-
-```bash
 helm install fitpub fitpub/fitpub -f production-values.yaml
 ```
 
-Or install directly from the repository while developing the chart:
+Either way, copy [examples/production-values.yaml](examples/production-values.yaml) and adapt it first.
+
+Or install straight from a checkout while hacking on the chart:
 
 ```bash
 git clone https://github.com/oliinykdm/fitpub-helm.git
