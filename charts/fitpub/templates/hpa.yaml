@@ -18,7 +18,8 @@ spec:
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:
-    {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
+    {{- $cpuTarget := .Values.autoscaling.targetCPUUtilizationPercentage | toString -}}
+    {{- if ne $cpuTarget "" }}
     - type: Resource
       resource:
         name: cpu
@@ -26,7 +27,8 @@ spec:
           type: Utilization
           averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
     {{- end }}
-    {{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- $memTarget := .Values.autoscaling.targetMemoryUtilizationPercentage | toString -}}
+    {{- if ne $memTarget "" }}
     - type: Resource
       resource:
         name: memory
