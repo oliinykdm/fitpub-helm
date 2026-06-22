@@ -2,7 +2,7 @@
 # See README.md and docs/ for the longer explanations.
 
 replicaCount: 1
-revisionHistoryLimit: 10
+revisionHistoryLimit: 3
 
 # Only matters with the RollingUpdate strategy.
 minReadySeconds: 0
@@ -108,10 +108,13 @@ resources:
   # memory limit. Keep requests.memory close to limits.memory so the scheduler
   # reserves enough RAM for heap plus metaspace/native overhead. Lower values
   # only for throwaway clusters (see examples/development-values.yaml).
+  # cpu limit: Java 25 respects cgroup CPU quota via UseContainerSupport; 1500m
+  # gives headroom above the 250m request while protecting neighbours from GC bursts.
   requests:
     cpu: 250m
     memory: 3072Mi
   limits:
+    cpu: 1500m
     memory: 3072Mi
 
 persistence:
@@ -229,11 +232,12 @@ applicationSecret:
 command: []
 args: []
 
-# preStop sleep gives the LB time to drain before SIGTERM, etc.
-lifecycleHooks: {}
-#   preStop:
-#     exec:
-#       command: ["sh", "-c", "sleep 5"]
+# preStop sleep gives kube-proxy time to remove the pod from iptables before
+# SIGTERM is delivered, preventing in-flight requests from hitting a dying pod.
+lifecycleHooks:
+  preStop:
+    exec:
+      command: ["sh", "-c", "sleep 5"]
 
 extraEnv: []
 extraEnvFrom: []
@@ -350,6 +354,14 @@ dnsConfig: {}
 nodeSelector: {}
 tolerations: []
 affinity: {}
+# Spread pods across zones/nodes when replicaCount > 1.
+# Example for zone-aware HA (uncomment and adjust maxSkew as needed):
+# topologySpreadConstraints:
+#   - maxSkew: 1
+#     topologyKey: topology.kubernetes.io/zone
+#     whenUnsatisfiable: DoNotSchedule
+#     labelSelector:
+#       matchLabels: {}  # filled by the deployment template from selectorLabels
 topologySpreadConstraints: []
 volumes: []
 volumeMounts: []
