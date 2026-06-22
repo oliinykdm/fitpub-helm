@@ -5,7 +5,10 @@
 #   --from-literal=FITPUB_DATABASE_USERNAME=fitpub \
 #   --from-literal=FITPUB_DATABASE_PASSWORD="$(openssl rand -base64 32)" \
 #   --from-literal=FITPUB_JWT_SECRET="$(openssl rand -base64 64)" \
-#   --from-literal=FITPUB_EMAIL_SECRET="$(openssl rand -base64 64)"
+#   --from-literal=FITPUB_EMAIL_SECRET="$(openssl rand -base64 64)" \
+#   --from-literal=FITPUB_MAIL_USERNAME="smtp-user" \
+#   --from-literal=FITPUB_MAIL_PASSWORD="smtp-password"
+# (mail user/password are needed because this example sets FITPUB_MAIL_SMTP_AUTH=true)
 
 productionChecks:
   enabled: true

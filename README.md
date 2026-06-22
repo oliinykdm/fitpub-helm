@@ -128,8 +128,12 @@ kubectl create secret generic fitpub-secret -n fitpub \
   --from-literal=FITPUB_DATABASE_USERNAME=fitpub \
   --from-literal=FITPUB_DATABASE_PASSWORD="$(openssl rand -base64 32)" \
   --from-literal=FITPUB_JWT_SECRET="$(openssl rand -base64 64)" \
-  --from-literal=FITPUB_EMAIL_SECRET="$(openssl rand -base64 64)"
+  --from-literal=FITPUB_EMAIL_SECRET="$(openssl rand -base64 64)" \
+  --from-literal=FITPUB_MAIL_USERNAME="smtp-user" \
+  --from-literal=FITPUB_MAIL_PASSWORD="smtp-password"
 ```
+
+The mail user/password are needed because the example above sets `FITPUB_MAIL_SMTP_AUTH: "true"`.
 
 ```yaml
 applicationSecret:
@@ -291,6 +295,8 @@ extraEnv:
 
 `networkPolicy.enabled` is disabled by default. FitPub needs egress to PostgreSQL, SMTP and federated/external HTTP services. If your cluster enforces egress policies, start with explicit rules for those dependencies.
 
+Assumes a conntrack-stateful policy engine (Calico, Cilium, etc.). A non-stateful one may drop reply traffic (e.g. DNS answers) under a restricted ingress rule.
+
 Keep `networkPolicy.ingress.enabled=true` (the default) unless you add
 `networkPolicy.ingress.extraRules`. Disabling ingress without extra rules denies
 all inbound traffic to FitPub.
@@ -322,6 +328,7 @@ networkPolicy:
             port: 53
           - protocol: TCP
             port: 53
+      # ClusterIP DNS (some CNIs match policy before DNAT) — UDP and TCP 53.
       - to:
           - ipBlock:
               cidr: 10.96.0.0/12
@@ -329,7 +336,12 @@ networkPolicy:
           - protocol: UDP
             port: 53
           - protocol: TCP
+            port: 53
+      # SMTP to your mail relay (restrict `to:` in production).
+      - ports:
+          - protocol: TCP
             port: 587
+      # HTTPS for federation.
       - ports:
           - protocol: TCP
             port: 443
@@ -407,6 +419,20 @@ instead — see [docs/troubleshooting.md](docs/troubleshooting.md).
 ## Security Notes
 
 The chart drops Linux capabilities, disables privilege escalation and runs FitPub as UID/GID `1001`. `readOnlyRootFilesystem` is disabled by default because FitPub writes uploads, logs, temp files and caches; enabling it requires additional writable mounts for every write path.
+
+### Pod Security Standards (`restricted`)
+
+The FitPub container passes the `restricted` profile. The `volume-permissions` init
+container does not — it runs as root to fix uploads ownership. On `restricted`
+clusters, disable it and let `fsGroup` handle ownership:
+
+```yaml
+initContainers:
+  volumePermissions:
+    enabled: false
+```
+
+Keep it enabled only on storage that ignores `fsGroup` (some NFS/hostPath setups).
 
 ## Upgrade
 
