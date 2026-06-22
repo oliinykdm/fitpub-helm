@@ -1,5 +1,12 @@
 # Upgrade Notes
 
+## 0.4.2
+
+Icon fix only. Nothing to do on upgrade.
+
+Corrects the chart icon shown on Artifact Hub. The bump is needed because Artifact Hub
+only re-fetches the icon when it tracks a new chart version.
+
 ## 0.4.1
 
 Distribution and supply-chain only. No chart behavior changes, nothing to do on upgrade.

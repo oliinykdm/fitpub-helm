@@ -76,13 +76,13 @@ The chart ships two ways. Pick one.
 **OCI registry (recommended).** No `helm repo add`, just point at the package:
 
 ```bash
-helm install fitpub oci://ghcr.io/oliinykdm/charts/fitpub --version 0.4.1 -f production-values.yaml
+helm install fitpub oci://ghcr.io/oliinykdm/charts/fitpub --version 0.4.2 -f production-values.yaml
 ```
 
 The OCI artifact carries the GPG provenance, so you can verify it on pull:
 
 ```bash
-helm pull oci://ghcr.io/oliinykdm/charts/fitpub --version 0.4.1 --verify \
+helm pull oci://ghcr.io/oliinykdm/charts/fitpub --version 0.4.2 --verify \
   --keyring <(curl -fsSL https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc | gpg --dearmor)
 ```
 
