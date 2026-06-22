@@ -1,9 +1,11 @@
 {{- if .Values.podDisruptionBudget.enabled }}
 {{- $minAvail := .Values.podDisruptionBudget.minAvailable | toString }}
 {{- $maxUnavail := .Values.podDisruptionBudget.maxUnavailable | toString }}
-{{- if and (ne $minAvail "") (ne $maxUnavail "") }}
-{{- fail "podDisruptionBudget: set either minAvailable or maxUnavailable, not both" }}
-{{- end }}
+{{- /*
+maxUnavailable wins when both are set. Helm merges values rather than replacing
+them, so the default minAvailable:1 would otherwise collide with a user that only
+sets maxUnavailable. Precedence keeps the override clean without nulling minAvailable.
+*/}}
 {{- if and (eq $minAvail "") (eq $maxUnavail "") }}
 {{- fail "podDisruptionBudget: one of minAvailable or maxUnavailable must be set" }}
 {{- end }}
@@ -19,10 +21,10 @@ metadata:
     {{- $ann | nindent 4 }}
   {{- end }}
 spec:
-  {{- if ne $minAvail "" }}
-  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
-  {{- else }}
+  {{- if ne $maxUnavail "" }}
   maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
+  {{- else }}
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
   {{- end }}
   selector:
     matchLabels:
