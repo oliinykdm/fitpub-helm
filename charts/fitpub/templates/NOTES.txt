@@ -39,6 +39,22 @@ Then open http://127.0.0.1:8080 in your browser.
 
 {{- end }}
 
+{{- if not .Values.config.FITPUB_DATABASE_URL }}
+
+WARNING: config.FITPUB_DATABASE_URL is empty. The pod will not start until you
+provide an external PostGIS JDBC URL, database credentials, and public URLs.
+Copy examples/production-values.yaml or run scripts/local-quickstart.sh for a
+working local setup. Enable productionChecks.enabled=true to fail at install
+time instead of CrashLoopBackOff.
+{{- end }}
+{{- if and .Values.applicationSecret.existingSecret .Values.productionChecks.enabled }}
+
+Reminder: productionChecks cannot inspect applicationSecret.existingSecret.
+Verify the Secret "{{ .Values.applicationSecret.existingSecret }}" contains at
+least FITPUB_DATABASE_USERNAME, FITPUB_DATABASE_PASSWORD, FITPUB_JWT_SECRET and
+FITPUB_EMAIL_SECRET before relying on this release.
+{{- end }}
+
 Important:
 - Non-secret environment variables are rendered from `config` into a ConfigMap
 - Secret environment variables come from `applicationSecret.data` or `applicationSecret.existingSecret`
