@@ -15,6 +15,24 @@ helm template fitpub ./charts/fitpub -f examples/production-values.yaml
 helm template fitpub ./charts/fitpub -f examples/development-values.yaml
 ```
 
+Optional: reproduce the CI kind runtime test locally (requires a reachable cluster and
+image pull access):
+
+```bash
+# Same shape as .github/workflows/runtime-smoke-test.yaml
+kubectl apply -f examples/postgis-dev.yaml
+kubectl rollout status deployment/postgis --timeout=180s
+kubectl create secret generic fitpub-secret \
+  --from-literal=FITPUB_DATABASE_USERNAME=fitpub \
+  --from-literal=FITPUB_DATABASE_PASSWORD=fitpub-smoke-test-db-password \
+  --from-literal=FITPUB_JWT_SECRET=test-jwt-secret-with-more-than-32-characters \
+  --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters
+helm upgrade --install fitpub ./charts/fitpub \
+  -f examples/runtime-smoke-values.yaml \
+  --wait --timeout 10m
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=fitpub --timeout=600s
+```
+
 ## Chart Design Principles
 
 - FitPub uses an external PostgreSQL database with PostGIS.

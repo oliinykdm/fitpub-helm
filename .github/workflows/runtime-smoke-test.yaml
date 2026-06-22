@@ -1,12 +1,28 @@
-name: Runtime Smoke Test
+name: Kind Runtime Test
 
 on:
   workflow_dispatch:
   schedule:
     - cron: '20 3 * * 1'
+  push:
+    branches: [ main ]
+    paths:
+      - 'charts/**'
+      - 'examples/**'
+      - '.github/workflows/runtime-smoke-test.yaml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'charts/**'
+      - 'examples/**'
+      - '.github/workflows/runtime-smoke-test.yaml'
+
+concurrency:
+  group: kind-runtime-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  runtime-smoke:
+  kind-runtime:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -19,27 +35,58 @@ jobs:
       - name: Create kind cluster
         uses: helm/kind-action@v1.14.0
 
+      - name: Verify kind cluster is reachable
+        run: |
+          kubectl cluster-info
+          kubectl get nodes -o wide
+          kubectl wait --for=condition=ready node --all --timeout=120s
+
       - name: Install PostGIS
         run: |
           kubectl apply -f examples/postgis-dev.yaml
           kubectl rollout status deployment/postgis --timeout=180s
+          kubectl wait --for=condition=available deployment/postgis --timeout=180s
 
       - name: Create FitPub secret
         run: |
           kubectl create secret generic fitpub-secret \
             --from-literal=FITPUB_DATABASE_USERNAME=fitpub \
-            --from-literal=FITPUB_DATABASE_PASSWORD=fitpub \
+            --from-literal=FITPUB_DATABASE_PASSWORD=fitpub-smoke-test-db-password \
             --from-literal=FITPUB_JWT_SECRET=test-jwt-secret-with-more-than-32-characters \
             --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters
 
-      - name: Install FitPub chart (app 1.1.1)
+      - name: Install FitPub chart and wait for rollout
         run: |
-          helm install fitpub ./charts/fitpub \
+          helm upgrade --install fitpub ./charts/fitpub \
             -f examples/runtime-smoke-values.yaml \
             --wait \
             --timeout 10m
 
-      - name: Check FitPub serves /login
+      - name: Verify FitPub pod readiness and probe success
+        run: |
+          kubectl get pods -l app.kubernetes.io/name=fitpub -o wide
+          kubectl rollout status deployment/fitpub --timeout=600s
+          kubectl wait --for=condition=ready pod \
+            -l app.kubernetes.io/name=fitpub \
+            --timeout=600s
+
+          ready="$(kubectl get pod -l app.kubernetes.io/name=fitpub \
+            -o jsonpath='{.items[0].status.conditions[?(@.type=="Ready")].status}')"
+          if [ "$ready" != "True" ]; then
+            echo "Expected pod Ready=True, got: $ready"
+            kubectl describe pod -l app.kubernetes.io/name=fitpub
+            exit 1
+          fi
+
+          restarts="$(kubectl get pod -l app.kubernetes.io/name=fitpub \
+            -o jsonpath='{.items[0].status.containerStatuses[0].restartCount}')"
+          if [ "$restarts" != "0" ]; then
+            echo "Pod restarted during startup (restartCount=$restarts)"
+            kubectl logs -l app.kubernetes.io/name=fitpub --tail=200
+            exit 1
+          fi
+
+      - name: Check FitPub serves /login inside the cluster
         run: |
           kubectl run fitpub-login-check \
             --image=curlimages/curl:8.11.1 \
