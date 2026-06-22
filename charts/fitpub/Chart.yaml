@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.3.4
+version: 0.3.6
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -33,10 +33,12 @@ annotations:
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
   artifacthub.io/changes: |
     - kind: changed
-      description: Default probes use GET /login (HTTP 200) for reliable startup on FitPub 1.1.x where actuator health requires authentication.
+      description: Align default memory request with limit (3072Mi) for Java 25 MaxRAMPercentage scheduling.
+    - kind: fixed
+      description: Omit empty config keys from the ConfigMap so Spring Boot defaults apply.
+    - kind: fixed
+      description: Fail render when networkPolicy disables ingress without extraRules.
     - kind: changed
-      description: Default ServiceMonitor path is /actuator/metrics (prometheus endpoint is not in the app image).
-    - kind: changed
-      description: Fail render when networkPolicy blocks all egress without extraRules.
-    - kind: removed
-      description: Drop inert config.FITPUB_ACTIVITYPUB_ENABLED (not read by the application).
+      description: Dev/smoke examples use 1536Mi request/limit and MaxRAMPercentage=60 for small clusters.
+    - kind: fixed
+      description: Correct quickstart verification to use curlimages/curl (FitPub 1.1.1 image has no curl).
