@@ -1,0 +1,61 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+annotations:
+  artifacthub.io/category: skip-prediction
+  artifacthub.io/changes: |
+    - kind: changed
+      description: Render the chart README banner as a plain Markdown image for better Artifact Hub compatibility.
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/images: |
+    - name: fitpub
+      image: codeberg.org/fitpub/fitpub:1.1.1
+    - name: volume-permissions
+      image: busybox:1.37
+      whitelisted: true
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/signKey: |
+    fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+    url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+apiVersion: v2
+appVersion: 1.1.1
+description: Helm chart for FitPub - federated fitness tracking platform
+home: https://codeberg.org/fitpub/fitpub
+icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+keywords:
+- - fitness
+- - activitypub
+- - spring-boot
+- - postgresql
+kubeVersion: '>= 1.26.0'
+maintainers:
+- - name: Dmytro Oliinyk
+  url: https://github.com/oliinykdm
+name: fitpub
+sources:
+- - https://codeberg.org/fitpub/fitpub
+type: application
+version: 0.3.2
+
+...
+files:
+  fitpub-0.3.2.tgz: sha256:91f0432a25e6edd687a903ed73c22765f1c056c476276d9d0f4e1edd637b5792
+
+-----BEGIN PGP SIGNATURE-----
+
+wsG5BAEBCgBtBYJqONewCRBJvZ5epsJDt0UUAAAAAAAcACBzYWx0QG5vdGF0aW9u
+cy5vcGVucGdwanMub3JneLAzOFb0hp/7xceRAQJSEz5wTrub1q9tBYE5FGicYBgW
+IQTkyGV3M5iVVS4cq15JvZ5epsJDtwAAnzQQAJmuvwcXrqValSBreZm0miwBKU5M
+RRvSF98NmKxZ1qxHe/Hp46/WyuRE09Va0P6z0Xul1suDiZle6292WOJzWx0xcsQT
+GN0lnlNYZQYCOhhGCG4chTh03ojUOHf+j6M+xYo7HjvKGHcZjtMhLM3ohQACNwFq
+caqKMA4FAVKnQdLZulub26rPpJuj+9dKtxR1rhHgBrzvqk2jFUNylI7h1o+ns5Iw
+wdAYqpR/i8gZxI+FjHy1vtyj6E85cG0CQCxcX+z+MZb3Rkwa5JfLlVbCehoVsPtm
+s3uJ289Z5H/Xcjws/Pe6nkCh2AIobIMswicFbqc639D1rxXkq2HvX8U+n0LPto9b
+cxVjY0VBqpvw9tOk3zsNC1JV5f4oT+bB5PCwzuiOOQ4LLL++olQgRmG0uI9PNdAO
+Hl7/S5ZbfZH+LBIyq5VYS5sBMj6t3eHCdw8w0Jo86tQqaMS9NxaQJXoIABVx8uxD
+a5i0QqPCiVSlNa6QcwNtcZmudyZMDezjXiMhtM2AiNygYPjVDR5xUdnGeqgId1IY
+XtKo44yEB2laYzzKzRqryZTVt543DC+ETsoP1Lwf932aiQCYhLF+ZSLSlyOCZ/D8
+u1kDcr8LR4UXZSb72TzOwbkSw5swrek8mGdNg1tWRh7IBvHBZn8RN+TXgbG0MU8M
+qYT0l+hugBCBFC4o
+-----END PGP SIGNATURE-----

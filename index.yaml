@@ -5,6 +5,46 @@ entries:
       artifacthub.io/category: skip-prediction
       artifacthub.io/changes: |
         - kind: changed
+          description: Render the chart README banner as a plain Markdown image for better Artifact Hub compatibility.
+      artifacthub.io/containsSecurityUpdates: "false"
+      artifacthub.io/images: |
+        - name: fitpub
+          image: codeberg.org/fitpub/fitpub:1.1.1
+        - name: volume-permissions
+          image: busybox:1.37
+          whitelisted: true
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/prerelease: "false"
+      artifacthub.io/signKey: |
+        fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+        url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+    apiVersion: v2
+    appVersion: 1.1.1
+    created: "2026-06-22T06:35:28.492885039Z"
+    description: Helm chart for FitPub - federated fitness tracking platform
+    digest: 91f0432a25e6edd687a903ed73c22765f1c056c476276d9d0f4e1edd637b5792
+    home: https://codeberg.org/fitpub/fitpub
+    icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+    keywords:
+    - fitness
+    - activitypub
+    - spring-boot
+    - postgresql
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - name: Dmytro Oliinyk
+      url: https://github.com/oliinykdm
+    name: fitpub
+    sources:
+    - https://codeberg.org/fitpub/fitpub
+    type: application
+    urls:
+    - https://oliinykdm.github.io/fitpub-helm/fitpub-0.3.2.tgz
+    version: 0.3.2
+  - annotations:
+      artifacthub.io/category: skip-prediction
+      artifacthub.io/changes: |
+        - kind: changed
           description: Add the FitPub Helm Chart banner to the chart README shown on Artifact Hub.
       artifacthub.io/containsSecurityUpdates: "false"
       artifacthub.io/images: |
@@ -365,4 +405,4 @@ entries:
     urls:
     - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.2.tgz
     version: 0.2.2
-generated: "2026-06-22T06:30:10.254422763Z"
+generated: "2026-06-22T06:35:28.491620085Z"
