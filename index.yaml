@@ -26,9 +26,9 @@ entries:
         url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
     apiVersion: v2
     appVersion: 1.1.1
-    created: "2026-06-22T04:51:50.264516706Z"
+    created: "2026-06-22T05:08:58.00766307Z"
     description: Helm chart for FitPub - federated fitness tracking platform
-    digest: 5286c906f5fd3444de543912bb085250ffe5ada4cf2b0ef85bd2e58f40af2648
+    digest: 678eb637300a439760978d4dfabe4d54d5fc092d1452fe342f6b70585dfbe945
     home: https://codeberg.org/fitpub/fitpub
     icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
     keywords:
@@ -281,4 +281,4 @@ entries:
     urls:
     - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.2.tgz
     version: 0.2.2
-generated: "2026-06-22T04:51:50.263310955Z"
+generated: "2026-06-22T05:08:58.00529679Z"
