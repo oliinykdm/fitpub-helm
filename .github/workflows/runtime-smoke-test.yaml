@@ -8,7 +8,7 @@ on:
 jobs:
   runtime-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -19,86 +19,34 @@ jobs:
       - name: Create kind cluster
         uses: helm/kind-action@v1.14.0
 
+      - name: Install PostGIS
+        run: |
+          kubectl apply -f examples/postgis-dev.yaml
+          kubectl rollout status deployment/postgis --timeout=180s
+
       - name: Create FitPub secret
         run: |
           kubectl create secret generic fitpub-secret \
             --from-literal=FITPUB_DATABASE_USERNAME=fitpub \
-            --from-literal=FITPUB_DATABASE_PASSWORD=fitpub-password \
+            --from-literal=FITPUB_DATABASE_PASSWORD=fitpub \
             --from-literal=FITPUB_JWT_SECRET=test-jwt-secret-with-more-than-32-characters \
             --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters
 
-      - name: Install PostGIS
-        run: |
-          kubectl create secret generic postgis-secret \
-            --from-literal=POSTGRES_DB=fitpub \
-            --from-literal=POSTGRES_USER=fitpub \
-            --from-literal=POSTGRES_PASSWORD=fitpub-password
-
-          kubectl apply -f - <<'EOF'
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: postgis
-          spec:
-            ports:
-              - name: postgres
-                port: 5432
-                targetPort: postgres
-            selector:
-              app.kubernetes.io/name: postgis
-          ---
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: postgis
-          spec:
-            replicas: 1
-            selector:
-              matchLabels:
-                app.kubernetes.io/name: postgis
-            template:
-              metadata:
-                labels:
-                  app.kubernetes.io/name: postgis
-              spec:
-                containers:
-                  - name: postgis
-                    image: postgis/postgis:16-3.4
-                    imagePullPolicy: IfNotPresent
-                    ports:
-                      - name: postgres
-                        containerPort: 5432
-                    envFrom:
-                      - secretRef:
-                          name: postgis-secret
-                    readinessProbe:
-                      exec:
-                        command:
-                          - sh
-                          - -c
-                          - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
-                      periodSeconds: 5
-                      timeoutSeconds: 5
-                      failureThreshold: 12
-          EOF
-
-          kubectl rollout status deployment/postgis --timeout=180s
-
-      - name: Install FitPub chart
+      - name: Install FitPub chart (app 1.1.1)
         run: |
           helm install fitpub ./charts/fitpub \
             -f examples/runtime-smoke-values.yaml \
             --wait \
             --timeout 10m
 
-      - name: Check FitPub health endpoint
+      - name: Check FitPub serves /login
         run: |
-          kubectl run fitpub-healthcheck \
+          kubectl run fitpub-login-check \
             --image=curlimages/curl:8.11.1 \
             --restart=Never \
             --rm \
             -i \
-            --command -- curl -fsS http://fitpub:8080/actuator/health
+            --command -- curl -fsS -o /dev/null -w 'HTTP:%{http_code}\n' http://fitpub:8080/login
 
       - name: Dump diagnostics on failure
         if: failure()
@@ -108,4 +56,4 @@ jobs:
           kubectl describe pod -l app.kubernetes.io/name=fitpub || true
           kubectl logs -l app.kubernetes.io/name=fitpub --all-containers=true --tail=200 || true
           kubectl describe deployment/postgis || true
-          kubectl logs -l app.kubernetes.io/name=postgis --all-containers=true --tail=200 || true
+          kubectl logs -l app=postgis --all-containers=true --tail=200 || true

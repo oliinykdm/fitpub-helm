@@ -75,9 +75,9 @@ kubectl -n fitpub port-forward svc/fitpub 8080:8080
 # Pod should be Running and 1/1 Ready
 kubectl -n fitpub get pods
 
-# Health endpoint should return {"status":"UP"}
+# Login page should return HTTP 200 once the web stack is up (matches chart probes on FitPub 1.1.1)
 kubectl -n fitpub exec deploy/fitpub -- \
-  wget -qO- http://localhost:8080/actuator/health
+  curl -fsS -o /dev/null -w 'HTTP:%{http_code}\n' http://localhost:8080/login
 ```
 
 ## Troubleshooting

@@ -132,7 +132,6 @@ config:
 
   # Security & federation
   FITPUB_SECURITY_JWT_EXPIRATION: "86400000"
-  FITPUB_ACTIVITYPUB_ENABLED: "true"
   # http is for local federation testing only.
   FITPUB_FEDERATION_PROTOCOL: "https"
   # true allows federation calls to private IPs (SSRF risk) - dev only.
@@ -207,11 +206,11 @@ sidecars: []
 productionChecks:
   enabled: false
 
-# readiness/liveness use split health groups (no DB on liveness).
-# startup uses aggregate /actuator/health until the DB is up. See docs/troubleshooting.md.
+# FitPub 1.1.x blocks unauthenticated /actuator/health/** (302/403). Probes use /login
+# (permitAll, HTTP 200) until the app image permits actuator health. See docs/troubleshooting.md.
 readinessProbe:
   httpGet:
-    path: /actuator/health/readiness
+    path: /login
     port: http
   periodSeconds: 10
   timeoutSeconds: 5
@@ -219,17 +218,17 @@ readinessProbe:
 
 startupProbe:
   httpGet:
-    path: /actuator/health
+    path: /login
     port: http
-  # ~135s budget for startup (15 + 12*10).
+  # ~195s budget for startup (15 + 18*10) — Flyway + JVM on small nodes.
   initialDelaySeconds: 15
   periodSeconds: 10
   timeoutSeconds: 5
-  failureThreshold: 12
+  failureThreshold: 18
 
 livenessProbe:
   httpGet:
-    path: /actuator/health/liveness
+    path: /login
     port: http
   periodSeconds: 15
   timeoutSeconds: 5
@@ -265,8 +264,9 @@ serviceMonitor:
   annotations: {}
   interval: 30s
   scrapeTimeout: 10s
-  # Needs prometheus endpoint + micrometer-registry-prometheus in the app image.
-  path: /actuator/prometheus
+  # Exposed in the prod profile (health,info,metrics). /actuator/prometheus is not
+  # available unless micrometer-registry-prometheus is added to the app image.
+  path: /actuator/metrics
   scheme: http
 
 terminationGracePeriodSeconds: 60

@@ -28,43 +28,51 @@ SELECT postgis_version();
 
 If this fails, use a PostGIS-capable database image, managed service or operator.
 
-## Health Probes Fail
+## Health Probes
 
-The chart uses split Actuator health groups by default:
+The chart defaults to **`GET /login`** (HTTP 200) for startup, readiness and liveness
+probes. The login page is public in FitPub's Spring Security configuration and is
+only served once the web stack has finished starting (including Flyway migrations).
 
-- `startupProbe` → `/actuator/health` (aggregate, includes DB readiness on first boot)
-- `readinessProbe` → `/actuator/health/readiness`
-- `livenessProbe` → `/actuator/health/liveness`
+| Probe | Default path | Expected code |
+|---|---|---|
+| `startupProbe` | `/login` | 200 |
+| `readinessProbe` | `/login` | 200 |
+| `livenessProbe` | `/login` | 200 |
 
-Check the aggregate endpoint from inside the cluster:
+Verify from inside the cluster:
 
 ```bash
-kubectl run fitpub-healthcheck \
+kubectl run fitpub-login-check \
   --image=curlimages/curl \
   --restart=Never \
   --rm \
   -i \
-  --command -- curl -fsS http://fitpub:8080/actuator/health
+  --command -- curl -fsS -o /dev/null -w 'HTTP:%{http_code}\n' http://fitpub:8080/login
 ```
 
-If the endpoint is blocked by application security settings, adjust probes or the application configuration before relying on Kubernetes readiness.
+### Actuator probes (after a future FitPub release)
 
-Spring Boot Actuator exposes split health groups that give Kubernetes finer-grained control, and the chart uses them by default:
+FitPub **1.1.1** requires authentication for `/actuator/health/**`. Unauthenticated
+kubelet probes receive **HTTP 302** or **403**, and Kubernetes treats **302 as
+success** — so actuator probes are unreliable on 1.1.1.
 
-| Endpoint | Used by | Default path |
-|---|---|---|
-| `/actuator/health` (aggregate) | `startupProbe` | yes |
-| `/actuator/health/readiness` | `readinessProbe` | yes |
-| `/actuator/health/liveness` | `livenessProbe` | yes |
-
-The readiness/liveness split means a transient PostGIS outage drops the pod out of readiness (no traffic) without restarting it, while the aggregate startup probe still holds the pod back until the database is reachable on first boot.
-
-Spring Boot auto-enables these groups (`management.endpoint.health.probes.enabled=true`) whenever it detects a Kubernetes environment, which is always the case here. If you run an image where they are unavailable, point all three probes back at the aggregate endpoint:
+When you deploy a FitPub image that permits unauthenticated `/actuator/health/**`,
+override probes for DB-aware readiness:
 
 ```yaml
-readinessProbe:
+startupProbe:
   httpGet:
     path: /actuator/health
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 18
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
     port: http
   periodSeconds: 10
   timeoutSeconds: 5
@@ -72,14 +80,28 @@ readinessProbe:
 
 livenessProbe:
   httpGet:
-    path: /actuator/health
+    path: /actuator/health/liveness
     port: http
   periodSeconds: 15
   timeoutSeconds: 5
   failureThreshold: 3
 ```
 
-This prevents a temporarily-unhealthy dependency (for example during a DB reconnect) from killing the pod when only readiness should be affected.
+## Health Probes Fail
+
+If probes fail or the pod restarts, check logs and the database connection:
+
+```bash
+kubectl logs deployment/fitpub
+```
+
+Common causes:
+
+- database URL, username or password is wrong;
+- PostgreSQL does not have PostGIS available;
+- Flyway migration failed;
+- the uploads directory is not writable by UID/GID `1001`;
+- startup budget exhausted on a slow node (increase `startupProbe.failureThreshold`).
 
 ## Broken ActivityPub Or WebFinger URLs
 

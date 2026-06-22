@@ -33,7 +33,7 @@
 - Render tests: default values and `examples/production-values.yaml`
 - Kubernetes API validation: kind cluster with `kubectl apply --dry-run=server`
 - Release packaging: signed packages and `index.yaml` are published to GitHub Pages
-- Runtime install test: manual and weekly workflow with kind, PostGIS, `helm install --wait` and `/actuator/health`
+- Runtime install test: weekly workflow with kind, PostGIS, `helm install --wait` and `GET /login` check (FitPub **1.1.1**)
 - Production status: ready for controlled testing, not yet broadly battle-tested
 
 ## Features
@@ -42,7 +42,7 @@
 - PersistentVolumeClaim for user uploads at `/app/uploads`
 - Optional Secret mount for Markdown legal/about pages at `/app/pages`
 - ConfigMap/Secret split for non-secret and secret environment variables
-- Startup probe on `/actuator/health` (aggregate) with readiness/liveness on the split `/actuator/health/{readiness,liveness}` groups, so a transient DB outage drops the pod from readiness instead of restarting it
+- Probes on `GET /login` (HTTP 200) for reliable startup with FitPub **1.1.1** (actuator health requires authentication in 1.1.x); see [docs/troubleshooting.md](docs/troubleshooting.md)
 - Optional Ingress, HPA, PDB, NetworkPolicy and ServiceMonitor templates
 - Extension points for extra env, envFrom, volumes, volume mounts, init containers and sidecars
 - Support for an external PostgreSQL database with PostGIS
@@ -323,7 +323,7 @@ serviceMonitor:
     release: kube-prometheus-stack
 ```
 
-The default scrape path is `/actuator/prometheus`. Make sure the FitPub application exposes that endpoint before relying on metrics scraping.
+The default scrape path is `/actuator/metrics` (exposed in the prod Spring profile). The FitPub **1.1.1** image does not ship `/actuator/prometheus`. Metrics scraping requires a FitPub release that permits unauthenticated actuator access.
 
 ## Security Notes
 

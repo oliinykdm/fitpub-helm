@@ -46,6 +46,10 @@ that can scale past 1) unless the volume is shared or an external claim is used.
 {{- end -}}
 {{- end -}}
 
+{{- if and .Values.networkPolicy.enabled (not .Values.networkPolicy.egress.allowAll) (not .Values.networkPolicy.egress.extraRules) -}}
+{{- fail "networkPolicy: egress.allowAll=false with no egress.extraRules denies all outbound traffic (PostgreSQL, DNS, SMTP, federation); set egress.allowAll=true or add egress.extraRules" -}}
+{{- end -}}
+
 {{- if and .Values.serviceMonitor.enabled -}}
 {{- $interval := .Values.serviceMonitor.interval | toString | trimSuffix "s" | int -}}
 {{- $timeout := .Values.serviceMonitor.scrapeTimeout | toString | trimSuffix "s" | int -}}

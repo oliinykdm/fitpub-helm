@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.3.3
+version: 0.3.4
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -33,6 +33,10 @@ annotations:
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
   artifacthub.io/changes: |
     - kind: changed
-      description: Disable push notifications by default until VAPID settings are configured.
+      description: Default probes use GET /login (HTTP 200) for reliable startup on FitPub 1.1.x where actuator health requires authentication.
     - kind: changed
-      description: Validate VAPID subject and chart-managed VAPID keys when push is enabled.
+      description: Default ServiceMonitor path is /actuator/metrics (prometheus endpoint is not in the app image).
+    - kind: changed
+      description: Fail render when networkPolicy blocks all egress without extraRules.
+    - kind: removed
+      description: Drop inert config.FITPUB_ACTIVITYPUB_ENABLED (not read by the application).

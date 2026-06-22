@@ -1,5 +1,45 @@
 # Upgrade Notes
 
+## 0.3.4
+
+### Default probes → `GET /login`
+
+FitPub **1.1.1** (and other 1.1.x images without a public actuator health endpoint)
+returns HTTP **302/403** on `/actuator/health/**` because Spring Security requires
+authentication. Kubelet treats **302 as success**, so actuator-based probes could
+mark the pod Ready before the application finished starting.
+
+The chart now probes **`GET /login`** (permitAll, HTTP **200**) for startup,
+readiness and liveness. This matches FitPub **1.1.1** behaviour and makes
+`helm install --wait` reliable.
+
+When you deploy a FitPub release that permits unauthenticated
+`/actuator/health/**`, override probes back to the split actuator paths — see
+[docs/troubleshooting.md](troubleshooting.md).
+
+### ServiceMonitor default path → `/actuator/metrics`
+
+The default `serviceMonitor.path` is now `/actuator/metrics`, which the prod Spring
+profile exposes. `/actuator/prometheus` is not available unless
+`micrometer-registry-prometheus` is added to the FitPub image. If you overrode the
+path explicitly, no change is required.
+
+### NetworkPolicy egress validation
+
+`helm install`/`helm upgrade` now fails when `networkPolicy.enabled=true`,
+`networkPolicy.egress.allowAll=false`, and `networkPolicy.egress.extraRules` is
+empty. That combination creates a policy with `policyTypes: [Egress]` but no
+allow rules, which denies all outbound traffic (PostgreSQL, DNS, SMTP, federation).
+
+### Removed `config.FITPUB_ACTIVITYPUB_ENABLED`
+
+This key was not read by the FitPub application (ActivityPub cannot be toggled via
+that environment variable). Remove it from your values if you copied it from older
+chart defaults.
+
+Quickstart verification uses `curl` against `/login` (the application image ships
+curl, not wget).
+
 ## 0.3.3
 
 ### Push notifications disabled by default
@@ -125,7 +165,7 @@ If `pages.existingSecret` is set and `config.FITPUB_PAGES_PATH` differs from `pa
 
 ### Validation: VAPID keys required when push is enabled (productionChecks)
 
-When `productionChecks.enabled: true` and `config.FITPUB_PUSH_ENABLED: "true"`, the chart now validates that `applicationSecret.data.FITPUB_VAPID_PUBLIC_KEY` is provided, or that `applicationSecret.existingSecret` is used. Previously, deploying with push enabled but no VAPID public key was silently accepted, resulting in broken push notifications.
+When `productionChecks.enabled: true` and `config.FITPUB_PUSH_ENABLED: "true"`, the chart now validates that both `applicationSecret.data.FITPUB_VAPID_PUBLIC_KEY` and `applicationSecret.data.FITPUB_VAPID_PRIVATE_KEY` are provided for chart-managed Secrets, or that `applicationSecret.existingSecret` is used. Previously, deploying with push enabled but no VAPID keys was silently accepted, resulting in broken push notifications.
 
 ### Validation: ServiceMonitor `scrapeTimeout` must be less than `interval`
 

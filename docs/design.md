@@ -15,11 +15,12 @@ Things I have not fully validated yet, or that are intentionally out of scope:
 - **Single replica by default.** I run and test with one pod. More replicas need shared storage for uploads and a closer look at background jobs and federation — I have not done that end-to-end.
 - **No bundled database.** You bring PostGIS yourself (managed service, operator, or something you maintain). The chart only wires FitPub to it.
 - **HPA is there, but not a recommendation.** The template exists; I would not scale FitPub horizontally without testing uploads and federation behavior first.
-- **ServiceMonitor is optional and incomplete out of the box.** Prometheus scraping needs extra application configuration (see comment on `serviceMonitor.path` in `values.yaml`).
+- **ServiceMonitor is optional.** Default scrape path is `/actuator/metrics`. `/actuator/prometheus` is not in the 1.1.1 app image.
+- **Probes use `GET /login` by default** so FitPub 1.1.1 starts reliably under `helm install --wait`.
 - **Not battle-tested at scale.** CI covers lint, render, API validation, and a weekly smoke install with PostGIS. That is not the same as a long-running public instance under load.
 - **Changing an external Secret does not restart pods.** If you use `applicationSecret.existingSecret`, roll the Deployment yourself or use something like Reloader (see `commonAnnotations` in `values.yaml`).
 
-If you find something missing or wrong, open an issue — especially around production federation and multi-instance setups.
+If you find something missing or wrong, open an issue - especially around production federation and multi-instance setups.
 
 ## External PostGIS
 
@@ -71,6 +72,6 @@ The separate runtime smoke-test workflow verifies:
 - a kind cluster can run the chart;
 - a temporary PostGIS deployment is reachable;
 - FitPub can be installed with `helm install --wait`;
-- `/actuator/health` responds inside the cluster.
+- `/login` responds with HTTP 200 inside the cluster after startup.
 
 The runtime smoke test is manual and weekly instead of mandatory on every PR because it pulls application and PostGIS images and can be slower or more sensitive to registry/network issues.

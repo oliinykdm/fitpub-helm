@@ -59,9 +59,9 @@ Useful checks:
   kubectl logs deployment/{{ include "fitpub.fullname" . }} -n {{ .Release.Namespace }}
   kubectl exec deployment/{{ include "fitpub.fullname" . }} -n {{ .Release.Namespace }} -- sh -c 'touch {{ .Values.persistence.mountPath }}/.write-test && rm {{ .Values.persistence.mountPath }}/.write-test'
 
-Health endpoint from inside the cluster:
+Login probe check from inside the cluster (matches chart defaults for FitPub 1.1.1):
 
-  kubectl run fitpub-healthcheck --image=curlimages/curl --restart=Never --rm -i -n {{ .Release.Namespace }} --command -- curl -fsS http://{{ include "fitpub.fullname" . }}:{{ .Values.service.port }}/actuator/health
+  kubectl run fitpub-login-check --image=curlimages/curl --restart=Never --rm -i -n {{ .Release.Namespace }} --command -- curl -fsS -o /dev/null -w 'HTTP:%{http_code}\n' http://{{ include "fitpub.fullname" . }}:{{ .Values.service.port }}/login
 
 If the pod does not become Ready, the cause is almost always the database:
 either it is unreachable, or it is plain PostgreSQL without the PostGIS extension
@@ -80,7 +80,8 @@ Debugging:
 If the pod fails to start, enable diagnostic mode to exec into the container
 without startup or probe failures blocking you:
 
-  helm upgrade {{ .Release.Name }} fitpub/fitpub \
+  helm upgrade {{ .Release.Name }} <CHART> \
+    --namespace {{ .Release.Namespace }} \
     --reuse-values \
     --set diagnosticMode.enabled=true
 
@@ -88,6 +89,9 @@ without startup or probe failures blocking you:
 
 Remember to disable diagnostic mode afterwards:
 
-  helm upgrade {{ .Release.Name }} fitpub/fitpub \
+  helm upgrade {{ .Release.Name }} <CHART> \
+    --namespace {{ .Release.Namespace }} \
     --reuse-values \
     --set diagnosticMode.enabled=false
+
+(<CHART> is the same reference you installed with, e.g. fitpub/fitpub or ./charts/fitpub)

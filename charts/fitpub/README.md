@@ -62,6 +62,7 @@ If `FITPUB_PUSH_ENABLED` is set to `"true"`, also provide VAPID public/private k
 
 - non-root runtime security context for UID/GID `1001`
 - ConfigMap/Secret split for application environment variables
+- startup/readiness/liveness probes on `GET /login` (FitPub 1.1.1 compatible)
 - optional Ingress, HPA, PDB, NetworkPolicy and ServiceMonitor resources
 - optional Markdown page mount from an existing Secret
 - extension points for extra env, envFrom, volumes, init containers and sidecars
