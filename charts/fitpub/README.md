@@ -12,6 +12,9 @@ helm repo update
 helm install fitpub fitpub/fitpub -f production-values.yaml
 ```
 
+Copy and adapt [`examples/production-values.yaml`](https://github.com/oliinykdm/fitpub-helm/blob/main/examples/production-values.yaml)
+from the chart repository before running the install command above.
+
 ## Minimal Production Values
 
 ```yaml
@@ -22,6 +25,7 @@ config:
   FITPUB_DATABASE_URL: "jdbc:postgresql://postgres.example.com:5432/fitpub"
   FITPUB_DOMAIN: "fitpub.example.com"
   FITPUB_BASE_URL: "https://fitpub.example.com"
+  FITPUB_PUSH_ENABLED: "false"
 
 applicationSecret:
   existingSecret: fitpub-secret
@@ -43,10 +47,13 @@ The referenced Secret must contain:
 - `FITPUB_JWT_SECRET`
 - `FITPUB_EMAIL_SECRET`
 
+If `FITPUB_PUSH_ENABLED` is set to `"true"`, also provide VAPID public/private keys in the Secret and set `FITPUB_VAPID_SUBJECT`.
+
 ## Production Notes
 
 - Use PostgreSQL with PostGIS, not plain PostgreSQL.
 - Keep `FITPUB_BASE_URL` canonical and without a trailing slash.
+- Keep push notifications disabled until VAPID keys and `FITPUB_VAPID_SUBJECT` are configured.
 - Keep `replicaCount: 1` until uploads, background jobs and federation processing have been validated for multiple pods.
 - Back up the external PostGIS database and the uploads PVC.
 - Use an externally managed Secret for production credentials.

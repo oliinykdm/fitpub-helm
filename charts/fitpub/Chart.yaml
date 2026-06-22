@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.3.2
+version: 0.3.3
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -33,4 +33,6 @@ annotations:
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
   artifacthub.io/changes: |
     - kind: changed
-      description: Render the chart README banner as a plain Markdown image for better Artifact Hub compatibility.
+      description: Disable push notifications by default until VAPID settings are configured.
+    - kind: changed
+      description: Validate VAPID subject and chart-managed VAPID keys when push is enabled.

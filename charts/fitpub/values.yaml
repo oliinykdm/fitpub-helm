@@ -143,8 +143,8 @@ config:
   SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
   SPRING_FLYWAY_VALIDATE_ON_MIGRATE: "true"
 
-  # Web push (VAPID keys go in applicationSecret)
-  FITPUB_PUSH_ENABLED: "true"
+  # Web push requires VAPID keys in applicationSecret and an operator contact subject.
+  FITPUB_PUSH_ENABLED: "false"
   FITPUB_VAPID_SUBJECT: ""
 
   # Mail

@@ -71,10 +71,17 @@ that can scale past 1) unless the volume is shared or an external claim is used.
 {{- end -}}
 {{- end -}}
 
-{{- if eq (index $.Values.config "FITPUB_PUSH_ENABLED" | default "true" | toString) "true" -}}
-{{- $hasPubKey := or (index $.Values.applicationSecret.data "FITPUB_VAPID_PUBLIC_KEY") ($.Values.applicationSecret.existingSecret) -}}
-{{- if not $hasPubKey -}}
-{{- fail "config.FITPUB_PUSH_ENABLED is true but applicationSecret.data.FITPUB_VAPID_PUBLIC_KEY is not set; provide VAPID keys or disable push with config.FITPUB_PUSH_ENABLED=false" -}}
+{{- if eq (index $.Values.config "FITPUB_PUSH_ENABLED" | default "false" | toString) "true" -}}
+{{- if not (index $.Values.config "FITPUB_VAPID_SUBJECT") -}}
+{{- fail "config.FITPUB_PUSH_ENABLED is true but config.FITPUB_VAPID_SUBJECT is not set; provide an operator contact URI such as mailto:admin@example.com or disable push with config.FITPUB_PUSH_ENABLED=false" -}}
+{{- end -}}
+{{- if not $.Values.applicationSecret.existingSecret -}}
+{{- $requiredVapidSecrets := list "FITPUB_VAPID_PUBLIC_KEY" "FITPUB_VAPID_PRIVATE_KEY" -}}
+{{- range $key := $requiredVapidSecrets -}}
+{{- if not (index $.Values.applicationSecret.data $key) -}}
+{{- fail (printf "config.FITPUB_PUSH_ENABLED is true but applicationSecret.data.%s is not set; provide VAPID keys or disable push with config.FITPUB_PUSH_ENABLED=false" $key) -}}
+{{- end -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}

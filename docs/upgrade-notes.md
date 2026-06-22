@@ -1,5 +1,18 @@
 # Upgrade Notes
 
+## 0.3.3
+
+### Push notifications disabled by default
+
+`config.FITPUB_PUSH_ENABLED` now defaults to `"false"`. Enable it only after
+providing `config.FITPUB_VAPID_SUBJECT` and VAPID public/private keys.
+
+When `productionChecks.enabled: true` and `config.FITPUB_PUSH_ENABLED: "true"`,
+the chart validates that `config.FITPUB_VAPID_SUBJECT` is set. For chart-managed
+Secrets it also requires both `applicationSecret.data.FITPUB_VAPID_PUBLIC_KEY`
+and `applicationSecret.data.FITPUB_VAPID_PRIVATE_KEY`. Existing Secrets are left
+to the operator because Helm cannot inspect their data at render time.
+
 ## 0.3.2
 
 ### Artifact Hub README banner compatibility
@@ -112,7 +125,7 @@ If `pages.existingSecret` is set and `config.FITPUB_PAGES_PATH` differs from `pa
 
 ### Validation: VAPID keys required when push is enabled (productionChecks)
 
-When `productionChecks.enabled: true` and `config.FITPUB_PUSH_ENABLED: "true"`, the chart now validates that `applicationSecret.data.FITPUB_VAPID_PUBLIC_KEY` is provided (or `applicationSecret.existingSecret` is used). Previously, deploying with push enabled but no VAPID keys was silently accepted, resulting in broken push notifications.
+When `productionChecks.enabled: true` and `config.FITPUB_PUSH_ENABLED: "true"`, the chart now validates that `applicationSecret.data.FITPUB_VAPID_PUBLIC_KEY` is provided, or that `applicationSecret.existingSecret` is used. Previously, deploying with push enabled but no VAPID public key was silently accepted, resulting in broken push notifications.
 
 ### Validation: ServiceMonitor `scrapeTimeout` must be less than `interval`
 

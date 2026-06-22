@@ -48,7 +48,7 @@ Important:
 - ConfigMap: {{ include "fitpub.configMapName" . }}
 - Secret: {{ include "fitpub.secretName" . }}
 {{- if not .Values.productionChecks.enabled }}
-- Consider enabling `productionChecks.enabled=true` in production values to fail fast on missing required settings
+- Consider enabling `productionChecks.enabled=true` in production values to fail fast on missing or inconsistent settings
 {{- end }}
 {{- if gt (int .Values.replicaCount) 1 }}
 - Multiple replicas should be used only after validating FitPub background jobs, federation processing and shared storage behavior

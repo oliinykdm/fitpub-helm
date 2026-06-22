@@ -30,13 +30,13 @@ If this fails, use a PostGIS-capable database image, managed service or operator
 
 ## Health Probes Fail
 
-The default probes use:
+The chart uses split Actuator health groups by default:
 
-```text
-/actuator/health
-```
+- `startupProbe` → `/actuator/health` (aggregate, includes DB readiness on first boot)
+- `readinessProbe` → `/actuator/health/readiness`
+- `livenessProbe` → `/actuator/health/liveness`
 
-Check from inside the cluster:
+Check the aggregate endpoint from inside the cluster:
 
 ```bash
 kubectl run fitpub-healthcheck \

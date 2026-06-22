@@ -11,6 +11,7 @@ config:
   FITPUB_DATABASE_URL: "jdbc:postgresql://postgis:5432/fitpub"
   FITPUB_DOMAIN: "fitpub.local"
   FITPUB_BASE_URL: "http://fitpub.local"
+  FITPUB_FEDERATION_PROTOCOL: "http"
   FITPUB_PUSH_ENABLED: "false"
   FITPUB_MAIL_HOST: ""
   FITPUB_MAIL_FROM_ADDRESS: ""

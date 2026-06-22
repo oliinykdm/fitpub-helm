@@ -75,7 +75,8 @@ helm repo add fitpub https://oliinykdm.github.io/fitpub-helm
 helm repo update
 ```
 
-Install with your production values:
+Install with production values. Copy [examples/production-values.yaml](examples/production-values.yaml),
+adapt it for your environment, then install:
 
 ```bash
 helm install fitpub fitpub/fitpub -f production-values.yaml
@@ -86,8 +87,12 @@ Or install directly from the repository while developing the chart:
 ```bash
 git clone https://github.com/oliinykdm/fitpub-helm.git
 cd fitpub-helm
-helm install fitpub ./charts/fitpub
+helm install fitpub ./charts/fitpub -f examples/production-values.yaml
 ```
+
+The repository install still expects an external PostGIS database and a pre-created
+Secret when using `examples/production-values.yaml`. For a working local instance
+without manual wiring, use `scripts/local-quickstart.sh` instead.
 
 ## Configuration
 
@@ -104,13 +109,15 @@ config:
   FITPUB_DOMAIN: "your-domain.com"
   # Must not end with a slash.
   FITPUB_BASE_URL: "https://your-domain.com"
+  # Enable only after providing VAPID keys and FITPUB_VAPID_SUBJECT.
+  FITPUB_PUSH_ENABLED: "false"
 
 applicationSecret:
   data:
     FITPUB_DATABASE_USERNAME: "fitpub"
     FITPUB_DATABASE_PASSWORD: "your-password"
-    FITPUB_JWT_SECRET: "your-long-random-secret"
-    FITPUB_EMAIL_SECRET: "your-long-random-secret"
+    FITPUB_JWT_SECRET: "replace-with-a-long-random-secret-at-least-32-chars"
+    FITPUB_EMAIL_SECRET: "replace-with-a-long-random-secret-at-least-32-chars"
 ```
 
 For production, create the Secret outside Helm and reference it:
@@ -128,7 +135,7 @@ applicationSecret:
   existingSecret: fitpub-secret
 ```
 
-Enable `productionChecks.enabled=true` in production values. It fails rendering early when required public settings or chart-managed secrets are missing.
+Enable `productionChecks.enabled=true` in production values. It fails rendering early when required public settings, chart-managed secrets, or incomplete push notification settings are missing.
 
 See [values.yaml](charts/fitpub/values.yaml) and [examples/production-values.yaml](examples/production-values.yaml) for available options.
 
@@ -324,6 +331,9 @@ The chart drops Linux capabilities, disables privilege escalation and runs FitPu
 
 ## Upgrade
 
+Use the same adapted values file you installed with (commonly copied from
+[examples/production-values.yaml](examples/production-values.yaml)):
+
 ```bash
 helm upgrade fitpub fitpub/fitpub -f production-values.yaml
 ```
@@ -350,6 +360,7 @@ See [docs/troubleshooting.md](docs/troubleshooting.md) for common Kubernetes dep
 - Enable `productionChecks.enabled=true`.
 - Set `SPRING_PROFILES_ACTIVE=prod`.
 - Set strong values for `FITPUB_DATABASE_PASSWORD`, `FITPUB_JWT_SECRET` and `FITPUB_EMAIL_SECRET`.
+- Keep `FITPUB_PUSH_ENABLED=false` unless VAPID public/private keys and `FITPUB_VAPID_SUBJECT` are configured.
 - Keep `FITPUB_BASE_URL` public, canonical and without a trailing slash.
 - Put FitPub behind HTTPS.
 - Back up PostgreSQL and `/app/uploads`.

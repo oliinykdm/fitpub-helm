@@ -30,7 +30,7 @@ spec:
   chart:
     spec:
       chart: fitpub
-      version: 0.2.x
+      version: 0.3.x
       sourceRef:
         kind: HelmRepository
         name: fitpub
@@ -42,6 +42,7 @@ spec:
       FITPUB_DATABASE_URL: jdbc:postgresql://postgres.example.com:5432/fitpub
       FITPUB_DOMAIN: fitpub.example.com
       FITPUB_BASE_URL: https://fitpub.example.com
+      FITPUB_PUSH_ENABLED: "false"
     applicationSecret:
       existingSecret: fitpub-secret
     ingress:
@@ -67,7 +68,7 @@ spec:
   source:
     repoURL: https://oliinykdm.github.io/fitpub-helm
     chart: fitpub
-    targetRevision: 0.2.x
+    targetRevision: 0.3.x
     helm:
       values: |
         productionChecks:
@@ -76,6 +77,7 @@ spec:
           FITPUB_DATABASE_URL: jdbc:postgresql://postgres.example.com:5432/fitpub
           FITPUB_DOMAIN: fitpub.example.com
           FITPUB_BASE_URL: https://fitpub.example.com
+          FITPUB_PUSH_ENABLED: "false"
         applicationSecret:
           existingSecret: fitpub-secret
         ingress:
@@ -106,4 +108,4 @@ Do not store production secrets directly in Git. Use your platform's preferred s
 - SOPS with Flux
 - Argo CD Vault Plugin
 
-The resulting Kubernetes Secret should contain keys matching the FitPub environment variables, such as `FITPUB_DATABASE_USERNAME`, `FITPUB_DATABASE_PASSWORD`, `FITPUB_JWT_SECRET` and `FITPUB_EMAIL_SECRET`.
+The resulting Kubernetes Secret should contain keys matching the FitPub environment variables, such as `FITPUB_DATABASE_USERNAME`, `FITPUB_DATABASE_PASSWORD`, `FITPUB_JWT_SECRET` and `FITPUB_EMAIL_SECRET`. If you enable `FITPUB_PUSH_ENABLED`, also include `FITPUB_VAPID_PUBLIC_KEY` and `FITPUB_VAPID_PRIVATE_KEY`, and set `FITPUB_VAPID_SUBJECT` in `config`.
