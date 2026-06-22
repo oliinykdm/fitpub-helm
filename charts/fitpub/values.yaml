@@ -312,13 +312,21 @@ serviceMonitor:
   annotations: {}
   interval: 30s
   scrapeTimeout: 10s
-  # Exposed in the prod profile. FitPub 1.1.x requires authentication for all
-  # actuator endpoints, so Prometheus receives 302/403 unless the app image
-  # permits unauthenticated actuator access or you add scrape auth / a sidecar.
-  # /actuator/prometheus is not available unless micrometer-registry-prometheus
-  # is added to the app image.
-  path: /actuator/metrics
+  # Requires micrometer-registry-prometheus on the classpath. FitPub 1.1.x
+  # blocks unauthenticated actuator access — configure basicAuth below or wait
+  # for an app image that permits /actuator/prometheus without credentials.
+  path: /actuator/prometheus
   scheme: http
+  # basicAuth: scrape credentials for Prometheus (Prometheus Operator Secret ref).
+  # The referenced Secret must exist in the same namespace as the ServiceMonitor.
+  # basicAuth:
+  #   username:
+  #     name: fitpub-actuator-auth
+  #     key: username
+  #   password:
+  #     name: fitpub-actuator-auth
+  #     key: password
+  basicAuth: {}
 
 terminationGracePeriodSeconds: 60
 
