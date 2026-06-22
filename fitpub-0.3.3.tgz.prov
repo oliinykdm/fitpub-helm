@@ -1,0 +1,63 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+annotations:
+  artifacthub.io/category: skip-prediction
+  artifacthub.io/changes: |
+    - kind: changed
+      description: Disable push notifications by default until VAPID settings are configured.
+    - kind: changed
+      description: Validate VAPID subject and chart-managed VAPID keys when push is enabled.
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/images: |
+    - name: fitpub
+      image: codeberg.org/fitpub/fitpub:1.1.1
+    - name: volume-permissions
+      image: busybox:1.37
+      whitelisted: true
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/signKey: |
+    fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+    url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+apiVersion: v2
+appVersion: 1.1.1
+description: Helm chart for FitPub - federated fitness tracking platform
+home: https://codeberg.org/fitpub/fitpub
+icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+keywords:
+- - fitness
+- - activitypub
+- - spring-boot
+- - postgresql
+kubeVersion: '>= 1.26.0'
+maintainers:
+- - name: Dmytro Oliinyk
+  url: https://github.com/oliinykdm
+name: fitpub
+sources:
+- - https://codeberg.org/fitpub/fitpub
+type: application
+version: 0.3.3
+
+...
+files:
+  fitpub-0.3.3.tgz: sha256:9bc875359672ac1e62813a0d3223a3f33ad6194c39960322c36fdebf4f483d47
+
+-----BEGIN PGP SIGNATURE-----
+
+wsG5BAEBCgBtBYJqOPkUCRBJvZ5epsJDt0UUAAAAAAAcACBzYWx0QG5vdGF0aW9u
+cy5vcGVucGdwanMub3JnTGyhVEO6vYGdKrrerGYliVLGZ96BmvjqPYWvirykKIMW
+IQTkyGV3M5iVVS4cq15JvZ5epsJDtwAANEAP/RlPUpLXj1cOXcux8leLm3Etey3N
+4ZEEQTzbL1DWZ12fwcH+2zjMR1o9ZrYAboELNoKe3b9nsRLPnZZmjpEEU2D/7MFa
+zFaJ+/MjMg/c1v0S4XMJx0exEMIBNMQPc7R46POIQ8s9l5TCTbWH4Qspk7m/cnDf
+J1TL5Czb5RB03JEt1Hj5BZ1cbZuXDyVIwPzRMcMJyPPYL6ipgjpzbqjqZESI0DLp
+HndgoxIQ69h5R0rvQZV/xAuzV2sOHFgnaw6fJF+4zcjzlheyBLeHwKvx+NsNOasG
+eePkfzgOUqJHGWJlO11VJcErmUGdzyp+CzZV8PEPoKe00j+g6ovohhn52IcKl+tq
+OzYE4wM1a/CX1l3ynUmvuVU5Wed7kytK1/A1OscKCuidDCoS/2nRTUzl6gnf6s/4
+2At/HnBdj9PGI8O3u+4B+Xmkka3i4M56DLFYVQBhboiDFLAjSSRiv17pYx7itPtY
+K8aKMXSQ7VspGA0x/a3VOsnFVxIcUS3l7Hcd63YzplnQ7Cmz3cbL17Wm/Q9FgcNW
+83mIXwozNdnVj9AttZn2D/4d2KY0s9VUlcKBfE+wEd0+Ju0+OqucAAchGHBnEk3p
+ciA4iYX1ghSdsILWpQFGzt1ij9AY1OKALB6mb23ZFhSPfl4ocUBPLF6nKomkTHO1
++bv+mYJ/IVvWn5ic
+-----END PGP SIGNATURE-----
