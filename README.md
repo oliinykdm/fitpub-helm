@@ -1,15 +1,29 @@
-# FitPub Helm Chart
+<p align="center">
+  <img src="docs/banner.png" alt="FitPub Helm Chart" width="820">
+</p>
 
-[![Lint and Test](https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml)
-[![Runtime Smoke Test](https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml)
-[![Release](https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml/badge.svg)](https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml)
-[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/fitpub)](https://artifacthub.io/packages/search?repo=fitpub)
-![Chart Version](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Foliinykdm%2Ffitpub-helm%2Fmain%2Fcharts%2Ffitpub%2FChart.yaml&query=%24.version&label=chart&color=blue)
-![App Version](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Foliinykdm%2Ffitpub-helm%2Fmain%2Fcharts%2Ffitpub%2FChart.yaml&query=%24.appVersion&label=app&color=blue)
-![Kubernetes](https://img.shields.io/badge/kubernetes-%3E%3D1.26-blue)
-![Helm](https://img.shields.io/badge/helm-%3E%3D3.8-blue)
+<h1 align="center">FitPub Helm Chart</h1>
 
-Helm chart for deploying [FitPub](https://codeberg.org/fitpub/fitpub), a federated fitness tracking platform.
+<p align="center">
+  Helm chart for <a href="https://codeberg.org/fitpub/fitpub">FitPub</a>, a federated fitness tracking platform.<br>
+  Live instance: <a href="https://fitpub.social"><strong>fitpub.social</strong></a>
+</p>
+
+<p align="center">
+  <a href="https://fitpub.social"><img src="https://img.shields.io/badge/live-fitpub.social-FF1E8E?logo=activitypub&logoColor=white" alt="Live instance"></a>
+  <a href="https://artifacthub.io/packages/search?repo=fitpub"><img src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/fitpub" alt="Artifact Hub"></a>
+  <img src="https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Foliinykdm%2Ffitpub-helm%2Fmain%2Fcharts%2Ffitpub%2FChart.yaml&query=%24.version&label=chart&color=7C3AED" alt="Chart Version">
+  <img src="https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Foliinykdm%2Ffitpub-helm%2Fmain%2Fcharts%2Ffitpub%2FChart.yaml&query=%24.appVersion&label=app&color=blue" alt="App Version">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml"><img src="https://github.com/oliinykdm/fitpub-helm/actions/workflows/helm-lint-and-test.yaml/badge.svg" alt="Lint and Test"></a>
+  <a href="https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml"><img src="https://github.com/oliinykdm/fitpub-helm/actions/workflows/runtime-smoke-test.yaml/badge.svg" alt="Runtime Smoke Test"></a>
+  <a href="https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml"><img src="https://github.com/oliinykdm/fitpub-helm/actions/workflows/release.yaml/badge.svg" alt="Release"></a>
+  <img src="https://img.shields.io/badge/kubernetes-%3E%3D1.26-blue" alt="Kubernetes">
+  <img src="https://img.shields.io/badge/helm-%3E%3D3.8-blue" alt="Helm">
+</p>
 
 > **Status:** Production-oriented chart in active development. Review values carefully before exposing a public instance.
 
