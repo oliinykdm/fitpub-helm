@@ -25,7 +25,7 @@
   <img src="https://img.shields.io/badge/helm-%3E%3D3.8-blue" alt="Helm">
 </p>
 
-> **Status:** Production-oriented chart in active development. Review values carefully before exposing a public instance.
+> **Status:** (Unofficial!) production-oriented chart in active development. Review values carefully before exposing a public instance. Work in progress. 
 
 ## Validation Status
 
