@@ -13,7 +13,7 @@ credentials and no persistence. For real deployments see
   - [minikube](https://minikube.sigs.k8s.io/): `minikube start`
   - Docker Desktop with Kubernetes enabled
 - [`kubectl`](https://kubernetes.io/docs/tasks/tools/) and [`helm`](https://helm.sh/docs/intro/install/) 3.8+
-- ~2 GiB of free memory for the cluster
+- ~2 GiB of free memory for the cluster (dev values request 1536Mi for FitPub)
 
 > FitPub needs PostgreSQL **with the PostGIS extension** — a plain PostgreSQL
 > database is not enough. The quickstart uses the `postgis/postgis` image so this
@@ -73,11 +73,16 @@ kubectl -n fitpub port-forward svc/fitpub 8080:8080
 
 ```bash
 # Pod should be Running and 1/1 Ready
-kubectl -n fitpub get pods
+kubectl -n fitpub get pods -l app.kubernetes.io/instance=fitpub
 
-# Login page should return HTTP 200 once the web stack is up (matches chart probes on FitPub 1.1.1)
-kubectl -n fitpub exec deploy/fitpub -- \
-  curl -fsS -o /dev/null -w 'HTTP:%{http_code}\n' http://localhost:8080/login
+# Login page should return HTTP 200 once the web stack is up (matches chart probes on FitPub 1.1.1).
+# The FitPub image is a minimal JRE — use a throwaway curl pod, not kubectl exec curl.
+kubectl -n fitpub run fitpub-login-check \
+  --image=curlimages/curl \
+  --restart=Never \
+  --rm \
+  -i \
+  --command -- curl -fsS -o /dev/null -w 'HTTP:%{http_code}\n' http://fitpub:8080/login
 ```
 
 ## Troubleshooting
@@ -92,7 +97,7 @@ your values up front) or as a pod that never becomes Ready. Common cases:
 | `helm install` fails mentioning a "known placeholder value" | Secret left at an example/default placeholder | Generate a real secret as above |
 | Pod stuck `0/1`, logs show Flyway / `extension "postgis" is not available` | Database is plain PostgreSQL, not PostGIS | Use a PostGIS-enabled database (the quickstart's `postgis/postgis` image) |
 | Pod `CrashLoopBackOff`, logs show datasource / connection refused | App cannot reach the database | Check `FITPUB_DATABASE_URL` host/port and that PostGIS is Ready |
-| Pod `Pending`, events show `Insufficient memory` | Node too small for the memory request | Lower `resources.requests.memory` (dev values already use 768Mi) |
+| Pod `Pending`, events show `Insufficient memory` | Node too small for the memory request | Lower `resources.requests.memory` or raise `MaxRAMPercentage` via `JAVA_TOOL_OPTIONS` (dev values use 1536Mi) |
 | `ImagePullBackOff` | Registry unreachable or wrong tag | Confirm `codeberg.org/fitpub/fitpub:<tag>` exists and the node has internet |
 | Pod Ready but registration emails never arrive | No SMTP configured | Set `FITPUB_MAIL_*`, or gate signups with `FITPUB_REGISTRATION_PASSWORD` |
 
@@ -102,7 +107,7 @@ diagnostic mode so probes and the entrypoint do not get in the way:
 ```bash
 helm upgrade fitpub ./charts/fitpub -n fitpub --reuse-values \
   --set diagnosticMode.enabled=true
-kubectl -n fitpub exec -it deploy/fitpub -- sh
+kubectl -n fitpub exec -it $(kubectl -n fitpub get pod -l app.kubernetes.io/instance=fitpub -o jsonpath='{.items[0].metadata.name}') -- sh
 # ... then turn it back off:
 helm upgrade fitpub ./charts/fitpub -n fitpub --reuse-values \
   --set diagnosticMode.enabled=false
