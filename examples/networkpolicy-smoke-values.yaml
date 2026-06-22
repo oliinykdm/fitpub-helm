@@ -1,0 +1,61 @@
+# CI/kind-only: restricted egress to in-namespace PostGIS + DNS + HTTPS federation.
+# PostGIS runs in the same namespace with label app=postgis (examples/postgis-dev.yaml).
+
+productionChecks:
+  enabled: true
+
+image:
+  tag: "1.1.1"
+
+config:
+  FITPUB_DATABASE_URL: "jdbc:postgresql://postgis:5432/fitpub"
+  FITPUB_DOMAIN: "fitpub.local"
+  FITPUB_BASE_URL: "http://fitpub.local"
+  FITPUB_FEDERATION_PROTOCOL: "http"
+  FITPUB_PUSH_ENABLED: "false"
+
+applicationSecret:
+  existingSecret: "fitpub-secret"
+
+ingress:
+  enabled: false
+
+persistence:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false
+
+networkPolicy:
+  enabled: true
+  ingress:
+    enabled: true
+  egress:
+    allowAll: false
+    extraRules:
+      - to:
+          - podSelector:
+              matchLabels:
+                app: postgis
+        ports:
+          - protocol: TCP
+            port: 5432
+      - ports:
+          - protocol: UDP
+            port: 53
+          - protocol: TCP
+            port: 53
+      - ports:
+          - protocol: TCP
+            port: 443
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 1536Mi
+  limits:
+    memory: 1536Mi
+
+extraEnv:
+  - name: JAVA_TOOL_OPTIONS
+    value: "-XX:MaxRAMPercentage=60"
