@@ -5,6 +5,52 @@ entries:
       artifacthub.io/category: skip-prediction
       artifacthub.io/changes: |
         - kind: fixed
+          description: Render boolean/number config and secret values (false, 0) instead of silently dropping them; empty strings and null are still omitted.
+        - kind: fixed
+          description: Correct the README restricted-egress NetworkPolicy example (ClusterIP DNS now allows TCP 53; SMTP 587 is a separate rule).
+        - kind: fixed
+          description: Production example and README now provision FITPUB_MAIL_USERNAME/FITPUB_MAIL_PASSWORD when FITPUB_MAIL_SMTP_AUTH is true.
+        - kind: added
+          description: Document that the volume-permissions init container is incompatible with the restricted Pod Security Standard and how to disable it.
+      artifacthub.io/containsSecurityUpdates: "false"
+      artifacthub.io/images: |
+        - name: fitpub
+          image: codeberg.org/fitpub/fitpub:1.1.1
+        - name: volume-permissions
+          image: busybox:1.37
+          whitelisted: true
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/prerelease: "false"
+      artifacthub.io/signKey: |
+        fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+        url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+    apiVersion: v2
+    appVersion: 1.1.1
+    created: "2026-06-22T17:10:43.902742159Z"
+    description: Helm chart for FitPub - federated fitness tracking platform
+    digest: 154194531978a2a67d164aa2a3b95cc77e94ce4533ca8c30eef27a76ef67b59f
+    home: https://codeberg.org/fitpub/fitpub
+    icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+    keywords:
+    - fitness
+    - activitypub
+    - spring-boot
+    - postgresql
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - name: Dmytro Oliinyk
+      url: https://github.com/oliinykdm
+    name: fitpub
+    sources:
+    - https://codeberg.org/fitpub/fitpub
+    type: application
+    urls:
+    - https://oliinykdm.github.io/fitpub-helm/fitpub-0.3.8.tgz
+    version: 0.3.8
+  - annotations:
+      artifacthub.io/category: skip-prediction
+      artifacthub.io/changes: |
+        - kind: fixed
           description: Omit mail settings from the default ConfigMap until FITPUB_MAIL_HOST is set; avoids localhost:587 with forced SMTP auth.
         - kind: added
           description: Optional config keys for Hikari pool, ActivityPub inbox tuning, FITPUB_MAIL_PROTOCOL, OSM tiles and weather toggles.
@@ -541,4 +587,4 @@ entries:
     urls:
     - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.2.tgz
     version: 0.2.2
-generated: "2026-06-22T12:10:20.568960254Z"
+generated: "2026-06-22T17:10:43.901382727Z"

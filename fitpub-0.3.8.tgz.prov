@@ -1,0 +1,67 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+annotations:
+  artifacthub.io/category: skip-prediction
+  artifacthub.io/changes: |
+    - kind: fixed
+      description: Render boolean/number config and secret values (false, 0) instead of silently dropping them; empty strings and null are still omitted.
+    - kind: fixed
+      description: Correct the README restricted-egress NetworkPolicy example (ClusterIP DNS now allows TCP 53; SMTP 587 is a separate rule).
+    - kind: fixed
+      description: Production example and README now provision FITPUB_MAIL_USERNAME/FITPUB_MAIL_PASSWORD when FITPUB_MAIL_SMTP_AUTH is true.
+    - kind: added
+      description: Document that the volume-permissions init container is incompatible with the restricted Pod Security Standard and how to disable it.
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/images: |
+    - name: fitpub
+      image: codeberg.org/fitpub/fitpub:1.1.1
+    - name: volume-permissions
+      image: busybox:1.37
+      whitelisted: true
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/signKey: |
+    fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+    url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+apiVersion: v2
+appVersion: 1.1.1
+description: Helm chart for FitPub - federated fitness tracking platform
+home: https://codeberg.org/fitpub/fitpub
+icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+keywords:
+- - fitness
+- - activitypub
+- - spring-boot
+- - postgresql
+kubeVersion: '>= 1.26.0'
+maintainers:
+- - name: Dmytro Oliinyk
+  url: https://github.com/oliinykdm
+name: fitpub
+sources:
+- - https://codeberg.org/fitpub/fitpub
+type: application
+version: 0.3.8
+
+...
+files:
+  fitpub-0.3.8.tgz: sha256:154194531978a2a67d164aa2a3b95cc77e94ce4533ca8c30eef27a76ef67b59f
+
+-----BEGIN PGP SIGNATURE-----
+
+wsG5BAEBCgBtBYJqOWyTCRBJvZ5epsJDt0UUAAAAAAAcACBzYWx0QG5vdGF0aW9u
+cy5vcGVucGdwanMub3JnP5NGRpOFSrVNRYzGormMHMu7vd//FhvS7HIRNTS0sFwW
+IQTkyGV3M5iVVS4cq15JvZ5epsJDtwAADQEP/1ej/A5mX9f6r1tG0Vrke50Roqeo
+3bsT81BWhde7Pa6ILpE3COtyiPIszRuA1uPrjBx/dbpGjCc+sMK983FM4lQoQLgT
+8n1HeKWMlEzs9rtlcA+gKnU5/lo21aTgFdF8Kjux+Ryh7hIajnRxPmBHOOcZNo0R
+HdTDqHOU4VVFcTvH5l6nTmLvhTBa6j66cuH81wC6vv2uppTHOuqFQQUhv1xkxXfX
+uigTADGj766bqmlfGUIFwH2VECtTyi90q0YG2WzFp4hui9NRWJ6Vxuj3k0TGLOu8
+KoX8pt8dzopxH4K4bjV4Mv+xziZSdnAckNTe+OCdAPlS+uRSQ3sBpTaSsXSDNdmc
++Yxtc3zh2GuTWEG5jLtnaE0nFwTh8sLWaOn3Fuu9gCXuXTAHg661xJenD0C919+h
+zZexN0K0m4znW2wE5XUbwy8D50NConma6Ag8/1kYkJMLipmB68fo5IySYiDtu4DZ
+RC6F5Pr7jHxX7nQfak+bNpS5rKWHWT8x+hzWjCqaD/3WtY2bzSiAFzewTdeKOt1Z
+ZhNhLJVjWhJT5CECpjWfnssMvqIi7FXOU35K2MXiTn0miis+NHi4Q0+4pP9JBJM8
+O2+55PhnT/NdD9wQfHbZRJmHR6Isd/+8BnucFLZGsHeAa8iOALQvbhhWUUah3br6
+vI4gvTMAGNxBMd9n
+-----END PGP SIGNATURE-----
