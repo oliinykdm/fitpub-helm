@@ -81,8 +81,11 @@ jobs:
 
       - name: Publish to GHCR and sign with cosign
         run: |
+          # helm and cosign use separate credential stores, so log in to both.
           echo "${{ secrets.GITHUB_TOKEN }}" \
             | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" \
+            | cosign login ghcr.io -u "${{ github.actor }}" --password-stdin
           owner="$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
           for pkg in .deploy/*.tgz; do
             name="$(helm show chart "$pkg" | awk '/^name:/{print $2}')"

@@ -9,7 +9,7 @@ FitPub is a federated fitness tracking platform. This chart runs it on Kubernete
 From the OCI registry (recommended):
 
 ```bash
-helm install fitpub oci://ghcr.io/oliinykdm/charts/fitpub --version 0.4.0 -f production-values.yaml
+helm install fitpub oci://ghcr.io/oliinykdm/charts/fitpub --version 0.4.1 -f production-values.yaml
 ```
 
 Or the classic HTTP repo:

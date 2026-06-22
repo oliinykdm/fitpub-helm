@@ -1,5 +1,33 @@
 # Upgrade Notes
 
+## 0.4.1
+
+Distribution and supply-chain only. No chart behavior changes, nothing to do on upgrade.
+
+### OCI registry
+
+The chart now ships to GHCR as an OCI artifact next to the existing HTTP repo:
+
+```bash
+helm install fitpub oci://ghcr.io/oliinykdm/charts/fitpub --version 0.4.1
+```
+
+### cosign signatures
+
+OCI artifacts are signed with cosign keyless (sigstore). Verify with:
+
+```bash
+cosign verify ghcr.io/oliinykdm/charts/fitpub:0.4.1 \
+  --certificate-identity-regexp '^https://github.com/oliinykdm/fitpub-helm/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+The GPG provenance still travels with both the OCI and HTTP packages, so `helm pull --verify` keeps working too.
+
+### GitHub Releases
+
+Each version now gets a GitHub Release with the changelog and the packaged `.tgz` and `.prov`.
+
 ## 0.4.0
 
 The "make it production-grade by default" release. Most of these flip a default that

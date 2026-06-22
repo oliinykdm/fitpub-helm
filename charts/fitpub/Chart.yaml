@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.4.0
+version: 0.4.1
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -33,12 +33,8 @@ annotations:
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
   artifacthub.io/changes: |
     - kind: added
-      description: Enable readOnlyRootFilesystem by default with emptyDir mounts for /tmp and /app/logs. The chart is now restricted Pod Security Standard compliant out of the box.
+      description: Publish the chart to the GHCR OCI registry at oci://ghcr.io/oliinykdm/charts/fitpub.
     - kind: added
-      description: CPU limit, PodDisruptionBudget and a preStop drain hook are now on by default for production reliability.
+      description: Sign OCI chart artifacts with cosign keyless signing, verifiable against the release workflow identity.
     - kind: added
-      description: NetworkPolicy ingress now supports a from selector, and serviceMonitor supports basicAuth.
-    - kind: changed
-      description: Default the volume-permissions init container off (fsGroup handles ownership). Enable it only for StorageClasses that ignore fsGroup.
-    - kind: changed
-      description: ServiceMonitor path back to /actuator/metrics. The app ships no Prometheus registry and gates actuator behind auth.
+      description: Create a GitHub Release per chart version with the changelog and packaged artifacts.
