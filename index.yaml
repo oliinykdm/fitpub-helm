@@ -4,6 +4,54 @@ entries:
   - annotations:
       artifacthub.io/category: skip-prediction
       artifacthub.io/changes: |
+        - kind: added
+          description: Enable readOnlyRootFilesystem by default with emptyDir mounts for /tmp and /app/logs; the chart is now restricted Pod Security Standard compliant out of the box.
+        - kind: added
+          description: CPU limit, PodDisruptionBudget and a preStop drain hook are now on by default for production reliability.
+        - kind: added
+          description: NetworkPolicy ingress now supports a from selector, and serviceMonitor supports basicAuth.
+        - kind: changed
+          description: Default the volume-permissions init container off (fsGroup handles ownership); enable it only for StorageClasses that ignore fsGroup.
+        - kind: changed
+          description: ServiceMonitor path back to /actuator/metrics; the app ships no Prometheus registry and gates actuator behind auth.
+      artifacthub.io/containsSecurityUpdates: "false"
+      artifacthub.io/images: |
+        - name: fitpub
+          image: codeberg.org/fitpub/fitpub:1.1.1
+        - name: volume-permissions
+          image: busybox:1.37
+          whitelisted: true
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/prerelease: "false"
+      artifacthub.io/signKey: |
+        fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+        url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+    apiVersion: v2
+    appVersion: 1.1.1
+    created: "2026-06-22T17:56:47.608198059Z"
+    description: Helm chart for FitPub - federated fitness tracking platform
+    digest: 807e15fa1e329293ea7b916866e59d5980d18706c3a4a654aaea3f4b233edeb4
+    home: https://codeberg.org/fitpub/fitpub
+    icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+    keywords:
+    - fitness
+    - activitypub
+    - spring-boot
+    - postgresql
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - name: Dmytro Oliinyk
+      url: https://github.com/oliinykdm
+    name: fitpub
+    sources:
+    - https://codeberg.org/fitpub/fitpub
+    type: application
+    urls:
+    - https://oliinykdm.github.io/fitpub-helm/fitpub-0.4.0.tgz
+    version: 0.4.0
+  - annotations:
+      artifacthub.io/category: skip-prediction
+      artifacthub.io/changes: |
         - kind: fixed
           description: Render boolean/number config and secret values (false, 0) instead of silently dropping them; empty strings and null are still omitted.
         - kind: fixed
@@ -587,4 +635,4 @@ entries:
     urls:
     - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.2.tgz
     version: 0.2.2
-generated: "2026-06-22T17:46:08.415526958Z"
+generated: "2026-06-22T17:56:47.6068543Z"
