@@ -1,5 +1,26 @@
 # Design Notes
 
+## Why I built this
+
+I came across FitPub at Hackergarten Luzern on 4 June 2026. I had already been interested in decentralization and federated software, and the project clicked with that. I work in DevOps, so my first question was practical: how do I actually run this on Kubernetes?
+
+There was no Helm chart for a proper deployment, and I did not expect one to show up in the upstream repo anytime soon. So I started this chart myself - mainly to get a test instance running on Infomaniak KaaS, but also to make self-hosting a bit less painful for anyone else who wants to try FitPub without writing manifests from scratch.
+
+This is still an unofficial, personal chart. I use it, I test it, and I improve it when I hit real problems. Feedback and PRs are welcome.
+
+## Known limitations
+
+Things I have not fully validated yet, or that are intentionally out of scope:
+
+- **Single replica by default.** I run and test with one pod. More replicas need shared storage for uploads and a closer look at background jobs and federation — I have not done that end-to-end.
+- **No bundled database.** You bring PostGIS yourself (managed service, operator, or something you maintain). The chart only wires FitPub to it.
+- **HPA is there, but not a recommendation.** The template exists; I would not scale FitPub horizontally without testing uploads and federation behavior first.
+- **ServiceMonitor is optional and incomplete out of the box.** Prometheus scraping needs extra application configuration (see comment on `serviceMonitor.path` in `values.yaml`).
+- **Not battle-tested at scale.** CI covers lint, render, API validation, and a weekly smoke install with PostGIS. That is not the same as a long-running public instance under load.
+- **Changing an external Secret does not restart pods.** If you use `applicationSecret.existingSecret`, roll the Deployment yourself or use something like Reloader (see `commonAnnotations` in `values.yaml`).
+
+If you find something missing or wrong, open an issue — especially around production federation and multi-instance setups.
+
 ## External PostGIS
 
 FitPub requires PostgreSQL with PostGIS. This chart intentionally does not install PostgreSQL as a subchart.

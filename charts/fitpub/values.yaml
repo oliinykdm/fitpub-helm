@@ -7,19 +7,18 @@ revisionHistoryLimit: 10
 # Only matters with the RollingUpdate strategy.
 minReadySeconds: 0
 
-# RWO volume + single replica -> Recreate, otherwise the new pod can't mount.
+# RWO PVC: old pod must release the volume before the new one mounts.
 deploymentStrategy:
   type: Recreate
 
-# Applied to every object the chart renders.
 commonLabels: {}
 #   environment: production
 #   team: platform
 commonAnnotations: {}
 #   reloader.stakater.com/auto: "true"
 
-# Swap the container command for `sleep infinity` so a crashlooping pod can be
-# exec'd into. Toggle with --set diagnosticMode.enabled=true --reuse-values.
+# sleep infinity instead of the app — useful when you need to exec into a broken pod.
+# helm upgrade ... --set diagnosticMode.enabled=true --reuse-values
 diagnosticMode:
   enabled: false
   command:
@@ -40,7 +39,7 @@ fullnameOverride: ""
 
 serviceAccount:
   create: true
-  # FitPub never talks to the API server, so don't mount a token.
+  # FitPub does not call the API. No token needed.
   automount: false
   annotations: {}
   name: ""
@@ -62,7 +61,7 @@ securityContext:
   capabilities:
     drop:
       - ALL
-  # Can't be true: the app writes uploads, logs and JVM temp files to disk.
+  # App writes uploads, logs, and /tmp — read-only root won't work without extra mounts.
   readOnlyRootFilesystem: false
 
 initContainers:
@@ -106,7 +105,7 @@ persistence:
   # Set helm.sh/resource-policy: keep here to survive `helm uninstall`.
   annotations: {}
   existingClaim: ""
-  # Keep in sync with config.FILE_UPLOAD_DIR (validated below).
+  # Must match config.FILE_UPLOAD_DIR (chart validates this).
   mountPath: /app/uploads
 
 # Static Markdown pages (terms.md, imprint.md, optional about.md) from a Secret.
@@ -204,18 +203,12 @@ extraEnvFrom: []
 extraInitContainers: []
 sidecars: []
 
-# Off by default so `helm lint`/template work without real secrets.
-# Turn on in prod values to fail fast on missing required settings.
+# Fail at install time if required prod settings are missing. Off by default for helm lint/template.
 productionChecks:
   enabled: false
 
-# Probes use Spring Boot's liveness/readiness health groups
-# (/actuator/health/{liveness,readiness}), which Spring Boot auto-enables when it
-# detects Kubernetes. Liveness must NOT include the DB check: a transient PostGIS
-# outage should drop the pod out of readiness (no traffic), not restart it.
-# startupProbe uses the aggregate /actuator/health so the pod only becomes ready
-# once dependencies (incl. the DB) are up; readiness/liveness start only after it
-# passes, so don't add initialDelaySeconds to those two.
+# readiness/liveness use split health groups (no DB on liveness).
+# startup uses aggregate /actuator/health until the DB is up. See docs/troubleshooting.md.
 readinessProbe:
   httpGet:
     path: /actuator/health/readiness
@@ -242,7 +235,7 @@ livenessProbe:
   timeoutSeconds: 5
   failureThreshold: 3
 
-# Off by default - uploads/background work aren't verified for multi-pod yet.
+# Multi-pod not tested yet — see docs/design.md.
 autoscaling:
   enabled: false
   minReplicas: 1
@@ -252,8 +245,7 @@ autoscaling:
 
 podDisruptionBudget:
   enabled: false
-  # maxUnavailable suits single replica; minAvailable:1 would block node drains.
-  # Set exactly one of the two.
+  # maxUnavailable:1 for single replica; minAvailable:1 blocks node drains. Pick one.
   minAvailable: ""
   maxUnavailable: 1
 
@@ -273,9 +265,7 @@ serviceMonitor:
   annotations: {}
   interval: 30s
   scrapeTimeout: 10s
-  # The prod profile exposes only health,info,metrics. To use this path also add
-  # prometheus to MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE and ship the
-  # micrometer-registry-prometheus dependency.
+  # Needs prometheus endpoint + micrometer-registry-prometheus in the app image.
   path: /actuator/prometheus
   scheme: http
 
