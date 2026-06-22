@@ -20,7 +20,13 @@ config:
   FITPUB_BASE_URL: "https://fitpub.example.com"
   FITPUB_PUSH_ENABLED: "false"
   FITPUB_MAIL_HOST: "smtp.example.com"
+  FITPUB_MAIL_PORT: "587"
+  FITPUB_MAIL_PROTOCOL: "smtp"
+  FITPUB_MAIL_SMTP_AUTH: "true"
+  FITPUB_MAIL_STARTTLS_ENABLE: "true"
+  FITPUB_MAIL_STARTTLS_REQUIRED: "true"
   FITPUB_MAIL_FROM_ADDRESS: "admin@example.com"
+  FITPUB_MAIL_FROM_NAME: "FitPub"
 
 applicationSecret:
   existingSecret: "fitpub-secret"

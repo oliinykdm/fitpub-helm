@@ -123,6 +123,12 @@ pages:
 config:
   # Database
   FITPUB_DATABASE_URL: ""
+  # Hikari pool tuning (application-prod.yml defaults apply when left empty).
+  FITPUB_DB_MAX_POOL_SIZE: ""
+  FITPUB_DB_MIN_IDLE: ""
+  FITPUB_DB_CONNECTION_TIMEOUT: ""
+  FITPUB_DB_IDLE_TIMEOUT: ""
+  FITPUB_DB_MAX_LIFETIME: ""
   SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
   SPRING_JPA_SHOW_SQL: "false"
   SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "false"
@@ -136,11 +142,17 @@ config:
   FITPUB_SITE_BANNER_TEXT: ""
 
   # Security & federation
-  FITPUB_SECURITY_JWT_EXPIRATION: "86400000"
+  FITPUB_SECURITY_JWT_EXPIRATION: ""
   # http is for local federation testing only.
   FITPUB_FEDERATION_PROTOCOL: "https"
   # true allows federation calls to private IPs (SSRF risk) - dev only.
   FITPUB_ALLOW_PRIVATE_IPS: "false"
+  FITPUB_REMOTE_ACTIVITY_BACKFILL: ""
+  FITPUB_ACTIVITYPUB_INBOX_PROCESSING_INTERVAL_MS: ""
+  FITPUB_ACTIVITYPUB_INBOX_PROCESSING_TIMEOUT_SECONDS: ""
+  FITPUB_ACTIVITYPUB_INBOX_BATCH_SIZE: ""
+  FITPUB_ACTIVITYPUB_INBOX_RETRY_DELAY_SECONDS: ""
+  FITPUB_ACTIVITYPUB_INBOX_MAX_ATTEMPTS: ""
 
   # Flyway
   SPRING_FLYWAY_ENABLED: "true"
@@ -151,14 +163,16 @@ config:
   FITPUB_PUSH_ENABLED: "false"
   FITPUB_VAPID_SUBJECT: ""
 
-  # Mail
+  # Mail — leave empty until FITPUB_MAIL_HOST is set; otherwise Spring Boot defaults
+  # apply (localhost:25 without auth). Set port/auth/starttls together with the host.
   FITPUB_MAIL_HOST: ""
-  FITPUB_MAIL_PORT: "587"
-  FITPUB_MAIL_SMTP_AUTH: "true"
-  FITPUB_MAIL_STARTTLS_ENABLE: "true"
-  FITPUB_MAIL_STARTTLS_REQUIRED: "true"
+  FITPUB_MAIL_PORT: ""
+  FITPUB_MAIL_PROTOCOL: ""
+  FITPUB_MAIL_SMTP_AUTH: ""
+  FITPUB_MAIL_STARTTLS_ENABLE: ""
+  FITPUB_MAIL_STARTTLS_REQUIRED: ""
   FITPUB_MAIL_FROM_ADDRESS: ""
-  FITPUB_MAIL_FROM_NAME: "FitPub"
+  FITPUB_MAIL_FROM_NAME: ""
 
   # Uploads - standard Spring multipart limits, keep request >= file.
   SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: "50MB"
@@ -167,6 +181,10 @@ config:
   FITPUB_PAGES_PATH: "/app/pages"
 
   FITPUB_REGISTRATION_ENABLED: "true"
+
+  # Feature toggles (application defaults apply when left empty).
+  FITPUB_OSM_TILES_ENABLED: ""
+  FITPUB_WEATHER_ENABLED: ""
 
   # Logging overrides the prod Spring profile defaults (root WARN in the app).
   # Tune here for platform visibility; remove keys to fall back to profile defaults.
