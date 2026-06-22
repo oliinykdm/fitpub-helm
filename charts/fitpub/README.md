@@ -1,8 +1,6 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/docs/banner.png" alt="FitPub Helm Chart" width="820">
-</p>
-
 # FitPub Helm Chart
+
+![FitPub Helm Chart](https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/docs/banner.png)
 
 FitPub is a federated fitness tracking platform. This chart deploys the FitPub application on Kubernetes and expects an external PostgreSQL database with PostGIS enabled.
 

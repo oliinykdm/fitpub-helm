@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.3.1
+version: 0.3.2
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -33,4 +33,4 @@ annotations:
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
   artifacthub.io/changes: |
     - kind: changed
-      description: Add the FitPub Helm Chart banner to the chart README shown on Artifact Hub.
+      description: Render the chart README banner as a plain Markdown image for better Artifact Hub compatibility.

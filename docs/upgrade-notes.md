@@ -1,5 +1,13 @@
 # Upgrade Notes
 
+## 0.3.2
+
+### Artifact Hub README banner compatibility
+
+The chart README banner now uses plain Markdown image syntax instead of an HTML
+`<img>` tag, which is safer for Artifact Hub's README renderer. No runtime or
+values changes.
+
 ## 0.3.1
 
 ### Artifact Hub README banner
