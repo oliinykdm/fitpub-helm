@@ -69,7 +69,7 @@ securityContext:
 ephemeralVolumes:
   tmp:
     enabled: true
-    sizeLimit: 256Mi
+    sizeLimit: 1Gi
   logs:
     enabled: true
     sizeLimit: 512Mi
@@ -248,8 +248,7 @@ sidecars: []
 productionChecks:
   enabled: false
 
-# FitPub 1.1.x blocks unauthenticated /actuator/health/** (302/403). Probes use /login
-# (permitAll, HTTP 200) until the app image permits actuator health. See docs/troubleshooting.md.
+# Probes use /login, not /actuator/health. Verified in fitpub 1.1.1
 readinessProbe:
   httpGet:
     path: /login
@@ -276,7 +275,7 @@ livenessProbe:
   timeoutSeconds: 5
   failureThreshold: 3
 
-# Multi-pod not tested yet — see docs/design.md.
+# Multi-pod isn't tested yet — see docs/design.md.
 autoscaling:
   enabled: false
   minReplicas: 1
