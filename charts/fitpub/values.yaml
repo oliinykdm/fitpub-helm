@@ -64,6 +64,8 @@ securityContext:
   # App writes uploads, logs, and /tmp — read-only root won't work without extra mounts.
   readOnlyRootFilesystem: false
 
+# Chowns the uploads PVC to the app user. Runs as root, so it breaks the
+# restricted PodSecurity profile — disable it there and rely on fsGroup instead.
 initContainers:
   volumePermissions:
     enabled: true
