@@ -90,11 +90,15 @@ ingress:
   tls: []
 
 resources:
+  # FitPub 1.1.x runs Java 25 with -XX:MaxRAMPercentage=75 against the cgroup
+  # memory limit. Keep requests.memory close to limits.memory so the scheduler
+  # reserves enough RAM for heap plus metaspace/native overhead. Lower values
+  # only for throwaway clusters (see examples/development-values.yaml).
   requests:
-    cpu: 100m
-    memory: 1536Mi
+    cpu: 250m
+    memory: 3072Mi
   limits:
-    memory: 2048Mi
+    memory: 3072Mi
 
 persistence:
   enabled: true
@@ -114,7 +118,8 @@ pages:
   mountPath: /app/pages
   readOnly: true
 
-# Non-secret env, rendered into a ConfigMap and loaded via envFrom.
+# Non-secret env, rendered into a ConfigMap and loaded via envFrom. Empty values
+# are omitted so Spring Boot application defaults still apply (e.g. FITPUB_MAIL_HOST).
 config:
   # Database
   FITPUB_DATABASE_URL: ""
@@ -163,7 +168,8 @@ config:
 
   FITPUB_REGISTRATION_ENABLED: "true"
 
-  # Logging - app code lives under net.javahippie.fitpub.
+  # Logging overrides the prod Spring profile defaults (root WARN in the app).
+  # Tune here for platform visibility; remove keys to fall back to profile defaults.
   LOGGING_LEVEL_ROOT: "INFO"
   LOGGING_LEVEL_NET_JAVAHIPPIE_FITPUB: "INFO"
   LOGGING_LEVEL_ORG_SPRINGFRAMEWORK: "INFO"
@@ -249,6 +255,8 @@ podDisruptionBudget:
   maxUnavailable: 1
 
 # Off by default: FitPub needs egress to PostGIS, SMTP and federated hosts.
+# Do not set ingress.enabled=false without ingress.extraRules — that denies all
+# inbound traffic when networkPolicy.enabled=true.
 networkPolicy:
   enabled: false
   ingress:
@@ -264,8 +272,11 @@ serviceMonitor:
   annotations: {}
   interval: 30s
   scrapeTimeout: 10s
-  # Exposed in the prod profile (health,info,metrics). /actuator/prometheus is not
-  # available unless micrometer-registry-prometheus is added to the app image.
+  # Exposed in the prod profile. FitPub 1.1.x requires authentication for all
+  # actuator endpoints, so Prometheus receives 302/403 unless the app image
+  # permits unauthenticated actuator access or you add scrape auth / a sidecar.
+  # /actuator/prometheus is not available unless micrometer-registry-prometheus
+  # is added to the app image.
   path: /actuator/metrics
   scheme: http
 
