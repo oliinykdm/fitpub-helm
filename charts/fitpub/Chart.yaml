@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.3.7
+version: 0.3.8
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -33,12 +33,10 @@ annotations:
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
   artifacthub.io/changes: |
     - kind: fixed
-      description: Omit mail settings from the default ConfigMap until FITPUB_MAIL_HOST is set; avoids localhost:587 with forced SMTP auth.
-    - kind: added
-      description: Optional config keys for Hikari pool, ActivityPub inbox tuning, FITPUB_MAIL_PROTOCOL, OSM tiles and weather toggles.
+      description: Render boolean/number config and secret values (false, 0) instead of silently dropping them; empty strings and null are still omitted.
     - kind: fixed
-      description: Block multi-replica and RollingUpdate deployments with ReadWriteOnce upload volumes (including existingClaim).
-    - kind: added
-      description: CI runtime test for networkpolicy-smoke-values.yaml with restricted egress.
+      description: Correct the README restricted-egress NetworkPolicy example (ClusterIP DNS now allows TCP 53; SMTP 587 is a separate rule).
     - kind: fixed
-      description: Documentation fixes (kubectl exec, README secret placeholders, ingress forwarded headers, application logs).
+      description: Production example and README now provision FITPUB_MAIL_USERNAME/FITPUB_MAIL_PASSWORD when FITPUB_MAIL_SMTP_AUTH is true.
+    - kind: added
+      description: Document that the volume-permissions init container is incompatible with the restricted Pod Security Standard and how to disable it.
