@@ -281,10 +281,12 @@ autoscaling:
   targetMemoryUtilizationPercentage: ""
 
 podDisruptionBudget:
-  enabled: false
-  # maxUnavailable:1 for single replica; minAvailable:1 blocks node drains. Pick one.
-  minAvailable: ""
-  maxUnavailable: 1
+  enabled: true
+  # minAvailable:1 blocks node drains until the pod is rescheduled — safe for any
+  # replica count. Prefer maxUnavailable:1 only if you have ≥2 replicas and want
+  # rolling node maintenance without blocking drains.
+  minAvailable: 1
+  maxUnavailable: ""
 
 # Off by default: FitPub needs egress to PostGIS, SMTP and federated hosts.
 # Do not set ingress.enabled=false without ingress.extraRules — that denies all

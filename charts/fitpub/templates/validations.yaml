@@ -57,6 +57,10 @@ Use ReadWriteMany (with a supporting StorageClass) for horizontal scaling.
 {{- fail "networkPolicy: egress.allowAll=false with no egress.extraRules denies all outbound traffic (PostgreSQL, DNS, SMTP, federation); set egress.allowAll=true or add egress.extraRules" -}}
 {{- end -}}
 
+{{- if and .Values.podDisruptionBudget.enabled .Values.podDisruptionBudget.minAvailable .Values.podDisruptionBudget.maxUnavailable -}}
+{{- fail "podDisruptionBudget: set either minAvailable or maxUnavailable, not both" -}}
+{{- end -}}
+
 {{- if and .Values.networkPolicy.enabled (not .Values.networkPolicy.ingress.enabled) (not .Values.networkPolicy.ingress.extraRules) -}}
 {{- fail "networkPolicy: ingress.enabled=false with no ingress.extraRules denies all inbound traffic to FitPub; set ingress.enabled=true or add ingress.extraRules" -}}
 {{- end -}}
