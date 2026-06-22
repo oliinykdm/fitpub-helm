@@ -49,6 +49,26 @@
     "podLabels": { "type": "object" },
     "podSecurityContext": { "type": "object" },
     "securityContext": { "type": "object" },
+    "ephemeralVolumes": {
+      "type": "object",
+      "properties": {
+        "tmp": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "sizeLimit": { "type": "string", "pattern": "^[0-9]+(Mi|Gi|Ti)$" }
+          }
+        },
+        "logs": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "sizeLimit": { "type": "string", "pattern": "^[0-9]+(Mi|Gi|Ti)$" },
+            "mountPath": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
     "initContainers": { "type": "object" },
     "service": {
       "type": "object",

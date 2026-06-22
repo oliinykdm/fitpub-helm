@@ -64,8 +64,8 @@ securityContext:
   # /tmp and /app/logs are mounted as emptyDir below; /app/uploads is the PVC.
   readOnlyRootFilesystem: true
 
-# emptyDir volumes for writable paths that would otherwise break readOnlyRootFilesystem.
-# Mapped to /tmp (JVM scratch) and the log directory (logback file appender).
+# Writable emptyDir mounts so readOnlyRootFilesystem can stay on.
+# tmp -> /tmp (OSM tile cache + image gen), logs -> logback file appender.
 ephemeralVolumes:
   tmp:
     enabled: true
