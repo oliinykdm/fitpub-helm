@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.3.0
+version: 0.3.1
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -32,9 +32,5 @@ annotations:
     fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
   artifacthub.io/changes: |
-    - kind: added
-      description: One-command local setup (scripts/local-quickstart.sh + examples/postgis-dev.yaml) and a docs/quickstart.md with a troubleshooting table.
-    - kind: added
-      description: Preflight validation of JWT/email secret length and known placeholders, plus a FITPUB_DATABASE_URL JDBC check, so misconfig fails at install time with a clear message.
     - kind: changed
-      description: development-values.yaml now uses localhost:8080 so port-forwarded links work out of the box.
+      description: Add the FitPub Helm Chart banner to the chart README shown on Artifact Hub.

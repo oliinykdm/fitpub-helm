@@ -1,5 +1,13 @@
 # Upgrade Notes
 
+## 0.3.1
+
+### Artifact Hub README banner
+
+The chart README now includes the FitPub Helm Chart banner via a raw GitHub URL,
+so the package page on Artifact Hub matches the repository branding. No runtime
+or values changes.
+
 ## 0.3.0
 
 ### One-command local quickstart
