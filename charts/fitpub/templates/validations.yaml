@@ -1,13 +1,13 @@
 {{- if and (eq (.Values.dnsPolicy | default "") "None") (not .Values.dnsConfig.nameservers) -}}
-{{- fail "dnsPolicy: None requires dnsConfig.nameservers; Kubernetes rejects pods with dnsPolicy=None and no nameservers configured" -}}
+{{- fail "dnsPolicy: None requires dnsConfig.nameservers - Kubernetes rejects pods with dnsPolicy=None and no nameservers configured" -}}
 {{- end -}}
 
 {{- if and .Values.config.FITPUB_BASE_URL (regexMatch "/$" .Values.config.FITPUB_BASE_URL) -}}
-{{- fail "config.FITPUB_BASE_URL must not end with a slash; trailing slash breaks generated ActivityPub/WebFinger URLs" -}}
+{{- fail "config.FITPUB_BASE_URL must not end with a slash - trailing slash breaks generated ActivityPub/WebFinger URLs" -}}
 {{- end -}}
 
 {{- if and .Values.config.FITPUB_DOMAIN (regexMatch "://|/" (.Values.config.FITPUB_DOMAIN | toString)) -}}
-{{- fail (printf "config.FITPUB_DOMAIN (%s) must be a bare host with optional port, not a URL; remove the scheme and any trailing slash, e.g. \"example.fit\" not \"https://example.fit/\"" .Values.config.FITPUB_DOMAIN) -}}
+{{- fail (printf "config.FITPUB_DOMAIN (%s) must be a bare host with optional port, not a URL - remove the scheme and any trailing slash, e.g. \"example.fit\" not \"https://example.fit/\"" .Values.config.FITPUB_DOMAIN) -}}
 {{- end -}}
 
 {{- if and .Values.config.FITPUB_FEDERATION_PROTOCOL (not (has (.Values.config.FITPUB_FEDERATION_PROTOCOL | toString) (list "http" "https"))) -}}
@@ -15,15 +15,15 @@
 {{- end -}}
 
 {{- if and .Values.config.FITPUB_PORT (ne (.Values.config.FITPUB_PORT | toString) (.Values.service.port | toString)) -}}
-{{- fail (printf "config.FITPUB_PORT (%v) must match service.port (%v); the app listens on FITPUB_PORT but health probes and the Service use service.port" .Values.config.FITPUB_PORT .Values.service.port) -}}
+{{- fail (printf "config.FITPUB_PORT (%v) must match service.port (%v) - the app listens on FITPUB_PORT but health probes and the Service use service.port" .Values.config.FITPUB_PORT .Values.service.port) -}}
 {{- end -}}
 
 {{- if and .Values.persistence.enabled .Values.config.FILE_UPLOAD_DIR (ne .Values.config.FILE_UPLOAD_DIR .Values.persistence.mountPath) -}}
-{{- fail (printf "config.FILE_UPLOAD_DIR (%s) must match persistence.mountPath (%s); a mismatch causes uploads to be written to ephemeral storage and lost on pod restart" .Values.config.FILE_UPLOAD_DIR .Values.persistence.mountPath) -}}
+{{- fail (printf "config.FILE_UPLOAD_DIR (%s) must match persistence.mountPath (%s) - a mismatch causes uploads to be written to ephemeral storage and lost on pod restart" .Values.config.FILE_UPLOAD_DIR .Values.persistence.mountPath) -}}
 {{- end -}}
 
 {{- if and .Values.pages.existingSecret .Values.config.FITPUB_PAGES_PATH (ne .Values.config.FITPUB_PAGES_PATH .Values.pages.mountPath) -}}
-{{- fail (printf "config.FITPUB_PAGES_PATH (%s) must match pages.mountPath (%s); a mismatch means the app looks for Markdown pages in the wrong directory" .Values.config.FITPUB_PAGES_PATH .Values.pages.mountPath) -}}
+{{- fail (printf "config.FITPUB_PAGES_PATH (%s) must match pages.mountPath (%s) - a mismatch means the app looks for Markdown pages in the wrong directory" .Values.config.FITPUB_PAGES_PATH .Values.pages.mountPath) -}}
 {{- end -}}
 
 {{- if and .Values.config.FITPUB_DATABASE_URL (not (hasPrefix "jdbc:postgresql:" (.Values.config.FITPUB_DATABASE_URL | toString))) -}}
@@ -33,32 +33,32 @@
 {{- $cpuTarget := .Values.autoscaling.targetCPUUtilizationPercentage | toString -}}
 {{- $memTarget := .Values.autoscaling.targetMemoryUtilizationPercentage | toString -}}
 {{- if and .Values.autoscaling.enabled (eq $cpuTarget "") (eq $memTarget "") -}}
-{{- fail "autoscaling: at least one of targetCPUUtilizationPercentage or targetMemoryUtilizationPercentage must be set when autoscaling.enabled=true; the HPA metrics list would be empty" -}}
+{{- fail "autoscaling: at least one of targetCPUUtilizationPercentage or targetMemoryUtilizationPercentage must be set when autoscaling.enabled=true - the HPA metrics list would be empty" -}}
 {{- end -}}
 
 {{- /*
 Running more than one pod against a ReadWriteOnce upload volume cannot work: the
 second pod fails to mount. Block replicaCount>1 or HPA maxReplicas>1 when uploads
-use ReadWriteOnce — including when persistence.existingClaim points at an RWO PVC.
+use ReadWriteOnce - including when persistence.existingClaim points at an RWO PVC.
 Use ReadWriteMany (with a supporting StorageClass) for horizontal scaling.
 */ -}}
 {{- if and .Values.persistence.enabled (eq .Values.persistence.accessMode "ReadWriteOnce") -}}
 {{- $wantsMulti := or (gt (int .Values.replicaCount) 1) (and .Values.autoscaling.enabled (gt (int .Values.autoscaling.maxReplicas) 1)) -}}
 {{- if $wantsMulti -}}
-{{- fail "Multiple pods cannot share a ReadWriteOnce upload volume; set persistence.accessMode=ReadWriteMany (with a supporting StorageClass) or keep replicaCount=1 with autoscaling.maxReplicas<=1" -}}
+{{- fail "Multiple pods cannot share a ReadWriteOnce upload volume - set persistence.accessMode=ReadWriteMany (with a supporting StorageClass) or keep replicaCount=1 with autoscaling.maxReplicas<=1" -}}
 {{- end -}}
 {{- end -}}
 
 {{- if and .Values.persistence.enabled (eq .Values.persistence.accessMode "ReadWriteOnce") (eq (.Values.deploymentStrategy.type | default "Recreate") "RollingUpdate") -}}
-{{- fail "deploymentStrategy.type must be Recreate when persistence uses ReadWriteOnce; RollingUpdate can briefly run two pods during rollout and the second pod fails to mount the upload volume" -}}
+{{- fail "deploymentStrategy.type must be Recreate when persistence uses ReadWriteOnce - RollingUpdate can briefly run two pods during rollout and the second pod fails to mount the upload volume" -}}
 {{- end -}}
 
 {{- if and .Values.networkPolicy.enabled (not .Values.networkPolicy.egress.allowAll) (not .Values.networkPolicy.egress.extraRules) -}}
-{{- fail "networkPolicy: egress.allowAll=false with no egress.extraRules denies all outbound traffic (PostgreSQL, DNS, SMTP, federation); set egress.allowAll=true or add egress.extraRules" -}}
+{{- fail "networkPolicy: egress.allowAll=false with no egress.extraRules denies all outbound traffic (PostgreSQL, DNS, SMTP, federation) - set egress.allowAll=true or add egress.extraRules" -}}
 {{- end -}}
 
 {{- if and .Values.networkPolicy.enabled (not .Values.networkPolicy.ingress.enabled) (not .Values.networkPolicy.ingress.extraRules) -}}
-{{- fail "networkPolicy: ingress.enabled=false with no ingress.extraRules denies all inbound traffic to FitPub; set ingress.enabled=true or add ingress.extraRules" -}}
+{{- fail "networkPolicy: ingress.enabled=false with no ingress.extraRules denies all inbound traffic to FitPub - set ingress.enabled=true or add ingress.extraRules" -}}
 {{- end -}}
 
 {{- if and .Values.serviceMonitor.enabled -}}
@@ -87,23 +87,23 @@ Use ReadWriteMany (with a supporting StorageClass) for horizontal scaling.
 {{- $dbPass := .Values.applicationSecret.data.FITPUB_DATABASE_PASSWORD | default "" | toString -}}
 {{- if $dbPass -}}
 {{- if lt (len $dbPass) 12 -}}
-{{- fail (printf "applicationSecret.data.FITPUB_DATABASE_PASSWORD is %d characters; use at least 12 for production" (len $dbPass)) -}}
+{{- fail (printf "applicationSecret.data.FITPUB_DATABASE_PASSWORD is %d characters - use at least 12 for production" (len $dbPass)) -}}
 {{- end -}}
 {{- if regexMatch "(?i)(replace-me|replace-with|changeme|^fitpub$|^password$|^test$)" $dbPass -}}
-{{- fail "applicationSecret.data.FITPUB_DATABASE_PASSWORD looks like a placeholder or trivial password; generate one with: openssl rand -base64 24" -}}
+{{- fail "applicationSecret.data.FITPUB_DATABASE_PASSWORD looks like a placeholder or trivial password - generate one with: openssl rand -base64 24" -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
 
 {{- if eq (index $.Values.config "FITPUB_PUSH_ENABLED" | default "false" | toString) "true" -}}
 {{- if not (index $.Values.config "FITPUB_VAPID_SUBJECT") -}}
-{{- fail "config.FITPUB_PUSH_ENABLED is true but config.FITPUB_VAPID_SUBJECT is not set; provide an operator contact URI such as mailto:admin@example.com or disable push with config.FITPUB_PUSH_ENABLED=false" -}}
+{{- fail "config.FITPUB_PUSH_ENABLED is true but config.FITPUB_VAPID_SUBJECT is not set - provide an operator contact URI such as mailto:admin@example.com or disable push with config.FITPUB_PUSH_ENABLED=false" -}}
 {{- end -}}
 {{- if not $.Values.applicationSecret.existingSecret -}}
 {{- $requiredVapidSecrets := list "FITPUB_VAPID_PUBLIC_KEY" "FITPUB_VAPID_PRIVATE_KEY" -}}
 {{- range $key := $requiredVapidSecrets -}}
 {{- if not (index $.Values.applicationSecret.data $key) -}}
-{{- fail (printf "config.FITPUB_PUSH_ENABLED is true but applicationSecret.data.%s is not set; provide VAPID keys or disable push with config.FITPUB_PUSH_ENABLED=false" $key) -}}
+{{- fail (printf "config.FITPUB_PUSH_ENABLED is true but applicationSecret.data.%s is not set - provide VAPID keys or disable push with config.FITPUB_PUSH_ENABLED=false" $key) -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
@@ -120,19 +120,19 @@ instead of a pod CrashLoopBackOff. Only runs for inline secrets.
 {{- $jwt := .Values.applicationSecret.data.FITPUB_JWT_SECRET | default "" | toString -}}
 {{- if $jwt -}}
 {{- if lt (len $jwt) 32 -}}
-{{- fail (printf "applicationSecret.data.FITPUB_JWT_SECRET is %d characters; FitPub requires at least 32 (HS256 needs a 256-bit key). Generate one with: openssl rand -base64 48" (len $jwt)) -}}
+{{- fail (printf "applicationSecret.data.FITPUB_JWT_SECRET is %d characters - FitPub requires at least 32 (HS256 needs a 256-bit key). Generate one with: openssl rand -base64 48" (len $jwt)) -}}
 {{- end -}}
 {{- if or (has $jwt $placeholders) (regexMatch "(?i)(replace-me|replace-with|changeme|your-secret|your-password)" $jwt) -}}
-{{- fail "applicationSecret.data.FITPUB_JWT_SECRET is a known placeholder value; the application refuses to start with it. Generate a real one with: openssl rand -base64 48" -}}
+{{- fail "applicationSecret.data.FITPUB_JWT_SECRET is a known placeholder value - the application refuses to start with it. Generate a real one with: openssl rand -base64 48" -}}
 {{- end -}}
 {{- end -}}
 {{- $email := .Values.applicationSecret.data.FITPUB_EMAIL_SECRET | default "" | toString -}}
 {{- if $email -}}
 {{- if lt (len $email) 32 -}}
-{{- fail (printf "applicationSecret.data.FITPUB_EMAIL_SECRET is %d characters; FitPub requires at least 32. Generate one with: openssl rand -base64 48" (len $email)) -}}
+{{- fail (printf "applicationSecret.data.FITPUB_EMAIL_SECRET is %d characters - FitPub requires at least 32. Generate one with: openssl rand -base64 48" (len $email)) -}}
 {{- end -}}
 {{- if or (has $email $placeholders) (regexMatch "(?i)(replace-me|replace-with|changeme|your-secret|your-password)" $email) -}}
-{{- fail "applicationSecret.data.FITPUB_EMAIL_SECRET is a known placeholder value; the application refuses to start with it. Generate a real one with: openssl rand -base64 48" -}}
+{{- fail "applicationSecret.data.FITPUB_EMAIL_SECRET is a known placeholder value - the application refuses to start with it. Generate a real one with: openssl rand -base64 48" -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
