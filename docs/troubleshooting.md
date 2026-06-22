@@ -157,9 +157,11 @@ FitPub runs as UID/GID `1001`. For chart-managed PVCs, the `volume-permissions` 
 If you use `persistence.existingClaim`, verify the mounted volume is writable:
 
 ```bash
-kubectl exec -l app.kubernetes.io/instance=fitpub -- \
+kubectl exec deployment/fitpub -n fitpub -- \
   sh -c 'touch /app/uploads/.write-test && rm /app/uploads/.write-test'
 ```
+
+Replace `fitpub` with your Helm release name and namespace if they differ.
 
 If this fails, fix the volume ownership or storage class permissions.
 
@@ -170,8 +172,15 @@ When mounting pages through `pages.existingSecret`, Kubernetes updates the mount
 Restart FitPub after changing the Secret if the UI still shows old content:
 
 ```bash
-kubectl rollout restart deployment -l app.kubernetes.io/instance=fitpub
+kubectl rollout restart deployment/fitpub -n fitpub
 ```
+
+## Application Logs
+
+The `prod` Spring profile writes rotated logs to `/app/logs/` inside the container.
+This chart does not mount that path by default — logs are lost when the pod is
+replaced. Use a cluster log collector, mount a volume via `volumes`/`volumeMounts`,
+or a sidecar. See the **Application Logs** section in [README.md](../README.md).
 
 ## Release Badge Is Red
 

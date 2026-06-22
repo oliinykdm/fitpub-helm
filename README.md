@@ -30,9 +30,9 @@
 ## Validation Status
 
 - Helm lint: enabled in CI with `ct lint`
-- Render tests: default values and `examples/production-values.yaml`
+- Render tests: default values, `examples/production-values.yaml`, and `examples/networkpolicy-smoke-values.yaml`
 - Kubernetes API validation: kind cluster with `kubectl apply --dry-run=server`
-- **Kind runtime test** (badge *Kind Runtime Test*): on every PR/push to `main` and weekly — kind cluster, PostGIS, `helm install --wait`, pod Ready, startup/readiness probes green, in-cluster `GET /login` HTTP 200 (FitPub **1.1.1**)
+- **Kind runtime test** (badge *Kind Runtime Test*): on every PR/push to `main` and weekly — kind cluster, PostGIS, `helm install --wait`, pod Ready, startup/readiness probes green, in-cluster `GET /login` HTTP 200 (FitPub **1.1.1**); a second job verifies `networkpolicy-smoke-values.yaml` with restricted egress
 - Release packaging: signed packages and `index.yaml` are published to GitHub Pages
 - Production status: ready for controlled testing, not yet broadly battle-tested
 
@@ -98,7 +98,7 @@ without manual wiring, use `scripts/local-quickstart.sh` instead.
 
 Non-secret settings go into `config` and are rendered into a ConfigMap. Secrets go into `applicationSecret.data` or, preferably for production, into an existing Kubernetes Secret referenced by `applicationSecret.existingSecret`.
 
-Minimum production values:
+Minimum production values (use an external Secret — do not commit real credentials to Git):
 
 ```yaml
 productionChecks:
@@ -109,21 +109,22 @@ config:
   FITPUB_DOMAIN: "your-domain.com"
   # Must not end with a slash.
   FITPUB_BASE_URL: "https://your-domain.com"
-  # Enable only after providing VAPID keys and FITPUB_VAPID_SUBJECT.
   FITPUB_PUSH_ENABLED: "false"
+  # When enabling mail, set FITPUB_MAIL_HOST together with port/auth/starttls — see production-values.yaml.
+  FITPUB_MAIL_HOST: "smtp.example.com"
+  FITPUB_MAIL_PORT: "587"
+  FITPUB_MAIL_SMTP_AUTH: "true"
+  FITPUB_MAIL_STARTTLS_ENABLE: "true"
+  FITPUB_MAIL_STARTTLS_REQUIRED: "true"
 
 applicationSecret:
-  data:
-    FITPUB_DATABASE_USERNAME: "fitpub"
-    FITPUB_DATABASE_PASSWORD: "your-password"
-    FITPUB_JWT_SECRET: "replace-with-a-long-random-secret-at-least-32-chars"
-    FITPUB_EMAIL_SECRET: "replace-with-a-long-random-secret-at-least-32-chars"
+  existingSecret: fitpub-secret
 ```
 
-For production, create the Secret outside Helm and reference it:
+Create the Secret before install (inline `applicationSecret.data` is for controlled testing only — see [examples/chart-managed-secret-values.yaml](examples/chart-managed-secret-values.yaml)):
 
 ```bash
-kubectl create secret generic fitpub-secret \
+kubectl create secret generic fitpub-secret -n fitpub \
   --from-literal=FITPUB_DATABASE_USERNAME=fitpub \
   --from-literal=FITPUB_DATABASE_PASSWORD="$(openssl rand -base64 32)" \
   --from-literal=FITPUB_JWT_SECRET="$(openssl rand -base64 64)" \
@@ -137,6 +138,8 @@ applicationSecret:
 
 Enable `productionChecks.enabled=true` in production values. It fails rendering early when required public settings, chart-managed secrets, or incomplete push notification settings are missing.
 
+Optional tuning keys (Hikari pool, ActivityPub inbox processing, `FITPUB_MAIL_PROTOCOL`, `FITPUB_OSM_TILES_ENABLED`, `FITPUB_WEATHER_ENABLED`, and others) are listed in [values.yaml](charts/fitpub/values.yaml). Leave them empty to use application defaults.
+
 See [values.yaml](charts/fitpub/values.yaml) and [examples/production-values.yaml](examples/production-values.yaml) for available options.
 
 Additional examples:
@@ -145,6 +148,7 @@ Additional examples:
 - [examples/chart-managed-secret-values.yaml](examples/chart-managed-secret-values.yaml): controlled testing values where Helm creates the Secret
 - [examples/development-values.yaml](examples/development-values.yaml): development-style values for throwaway clusters
 - [examples/runtime-smoke-values.yaml](examples/runtime-smoke-values.yaml): CI-only values used by the runtime smoke test
+- [examples/networkpolicy-smoke-values.yaml](examples/networkpolicy-smoke-values.yaml): CI-only values for restricted NetworkPolicy egress
 
 ## Extending The Pod
 
@@ -189,7 +193,9 @@ ingress:
         - fitpub.example.com
 ```
 
-Set `className` to the ingress controller used by your cluster. The example uses Traefik as a common self-hosted default. FitPub's production profile uses forwarded headers, so make sure your ingress controller or gateway passes `X-Forwarded-Proto` and `X-Forwarded-Port` correctly.
+Set `className` to the ingress controller used by your cluster. The example uses Traefik as a common self-hosted default.
+
+FitPub's production profile enables `server.forward-headers-strategy: framework` and reads `X-Forwarded-For` and `X-Forwarded-Proto` from your ingress or reverse proxy. Configure the controller to pass those headers on HTTPS termination so generated URLs, redirects and ActivityPub endpoints use the correct public scheme.
 
 ## Markdown Pages
 
@@ -230,7 +236,26 @@ persistence:
   existingClaim: fitpub-uploads
 ```
 
-Back up the uploads PVC and the external PostGIS database regularly. Application logs are expected to be collected by your cluster logging stack; they are not persisted by this chart by default.
+Back up the uploads PVC and the external PostGIS database regularly.
+
+## Application Logs
+
+In the `prod` Spring profile, FitPub writes rotated file logs under `/app/logs/` inside the container. This chart does **not** mount a volume there by default — logs are lost when the pod is replaced. For production, either:
+
+- rely on your cluster log collector (stdout is mostly WARN+; file logs hold more detail), or
+- mount `/app/logs` via `volumes` / `volumeMounts`, or
+- ship file logs with a sidecar agent.
+
+Example emptyDir mount (logs survive container restarts within the same pod, but not pod rescheduling):
+
+```yaml
+volumes:
+  - name: logs
+    emptyDir: {}
+volumeMounts:
+  - name: logs
+    mountPath: /app/logs
+```
 
 ## Replicas And Scaling
 
@@ -319,7 +344,7 @@ helm upgrade fitpub fitpub/fitpub \
   --reuse-values \
   --set diagnosticMode.enabled=true
 
-kubectl exec -it $(kubectl get pod -l app.kubernetes.io/instance=fitpub -o jsonpath='{.items[0].metadata.name}') -- sh
+kubectl exec -it deployment/fitpub -n fitpub -- sh
 ```
 
 Disable it again when done:
@@ -405,6 +430,7 @@ See [docs/troubleshooting.md](docs/troubleshooting.md) for common Kubernetes dep
 - Keep `FITPUB_BASE_URL` public, canonical and without a trailing slash.
 - Put FitPub behind HTTPS.
 - Back up PostgreSQL and `/app/uploads`.
+- Plan for `/app/logs` (file logs in prod are not persisted unless you mount a volume or collect them).
 - Validate probes against your deployed security configuration (`GET /login` on 1.1.1 does not verify database connectivity after startup).
 - Do not enable `serviceMonitor` until actuator scraping is authenticated or public in your app version.
 - Keep `replicaCount: 1` until multi-pod behavior has been tested.
