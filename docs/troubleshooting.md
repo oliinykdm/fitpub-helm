@@ -53,7 +53,7 @@ Verify from inside the cluster:
 
 ```bash
 kubectl run fitpub-login-check \
-  --image=curlimages/curl \
+  --image=curlimages/curl:8.11.1 \
   --restart=Never \
   --rm \
   -i \

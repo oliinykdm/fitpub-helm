@@ -78,7 +78,7 @@ kubectl -n fitpub get pods -l app.kubernetes.io/instance=fitpub
 # Login page should return HTTP 200 once the web stack is up (matches chart probes on FitPub 1.1.1).
 # The FitPub image is a minimal JRE - use a throwaway curl pod, not kubectl exec curl.
 kubectl -n fitpub run fitpub-login-check \
-  --image=curlimages/curl \
+  --image=curlimages/curl:8.11.1 \
   --restart=Never \
   --rm \
   -i \

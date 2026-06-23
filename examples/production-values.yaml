@@ -38,6 +38,8 @@ ingress:
   enabled: true
   className: "traefik"
   annotations:
+    # Requires cert-manager with a ClusterIssuer named letsencrypt-prod.
+    # Remove this annotation if you manage TLS differently.
     cert-manager.io/cluster-issuer: letsencrypt-prod
   hosts:
     - host: fitpub.example.com
