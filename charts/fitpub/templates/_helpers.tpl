@@ -58,6 +58,20 @@ Usage: {{- include "fitpub.annotations" (dict "annotations" .Values.service.anno
 {{- end }}
 
 {{/*
+Full metadata.annotations block (the `annotations:` key plus merged map), emitted
+only when there is something to render. Keeps the conditional wrapper in one place
+instead of repeating it in every template.
+Usage: {{ include "fitpub.metaAnnotations" (dict "annotations" .Values.service.annotations "context" $) }}
+*/}}
+{{- define "fitpub.metaAnnotations" -}}
+{{- $ann := include "fitpub.annotations" (dict "annotations" (default (dict) .annotations) "context" .context) -}}
+{{- if $ann -}}
+annotations:
+{{ $ann | indent 2 }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Selector labels
 */}}
 {{- define "fitpub.selectorLabels" -}}

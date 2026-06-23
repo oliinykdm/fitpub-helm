@@ -8,10 +8,8 @@ metadata:
     {{- with .Values.serviceMonitor.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- $ann := include "fitpub.annotations" (dict "annotations" .Values.serviceMonitor.annotations "context" $) }}
-  {{- if $ann }}
-  annotations:
-    {{- $ann | nindent 4 }}
+  {{- with (include "fitpub.metaAnnotations" (dict "annotations" .Values.serviceMonitor.annotations "context" $)) }}
+  {{- . | nindent 2 }}
   {{- end }}
 spec:
   namespaceSelector:

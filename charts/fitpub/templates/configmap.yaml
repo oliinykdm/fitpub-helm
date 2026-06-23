@@ -4,10 +4,8 @@ metadata:
   name: {{ include "fitpub.configMapName" . }}
   labels:
     {{- include "fitpub.labels" . | nindent 4 }}
-  {{- $ann := include "fitpub.annotations" (dict "annotations" (dict) "context" $) }}
-  {{- if $ann }}
-  annotations:
-    {{- $ann | nindent 4 }}
+  {{- with (include "fitpub.metaAnnotations" (dict "annotations" (dict) "context" $)) }}
+  {{- . | nindent 2 }}
   {{- end }}
 data:
   {{- range $key, $value := .Values.config }}

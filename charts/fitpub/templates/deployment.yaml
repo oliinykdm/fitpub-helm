@@ -4,10 +4,8 @@ metadata:
   name: {{ include "fitpub.fullname" . }}
   labels:
     {{- include "fitpub.labels" . | nindent 4 }}
-  {{- $ann := include "fitpub.annotations" (dict "annotations" (dict) "context" $) }}
-  {{- if $ann }}
-  annotations:
-    {{- $ann | nindent 4 }}
+  {{- with (include "fitpub.metaAnnotations" (dict "annotations" (dict) "context" $)) }}
+  {{- . | nindent 2 }}
   {{- end }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
