@@ -1,5 +1,42 @@
 # Upgrade Notes
 
+## 0.4.3
+
+Maintenance release: chart cleanup, CI hardening, and two minor behaviour changes.
+No `appVersion` change (still FitPub 1.1.1).
+
+### Trimmed default `config`
+
+`values.yaml` now lists only the keys the chart sets a non-default value for. The
+empty-string "documentation" keys (Hikari pool, ActivityPub inbox tuning, optional
+mail, `FITPUB_OSM_TILES_ENABLED`, `FITPUB_WEATHER_ENABLED`) were already omitted from
+the rendered ConfigMap, so removing them changes nothing at runtime. The chart also
+no longer pins a handful of non-default logging keys (`LOGGING_LEVEL_ORG_FLYWAYDB`
+and the `FITPUB_LOG_*` rotation knobs); those now fall back to the app's prod-profile
+defaults.
+
+**Action required:** none for a stock install. If you relied on the chart's default
+log-rotation values or Flyway log level, set them explicitly under `config` or via
+`extraEnv`. Keys you already set in your own values are unaffected.
+
+### Removed inline-secret placeholder validation
+
+The chart no longer rejects placeholder strings (e.g. `changeme`) in inline secrets.
+The application already refuses to start with them, and the minimum-length checks
+(JWT/email ≥ 32, database password ≥ 12) remain. Use an external `existingSecret`
+for production.
+
+**Action required:** none.
+
+### Internal cleanup (no runtime effect)
+
+- The metadata `annotations:` block is now a shared template helper; rendered output
+  is byte-for-byte identical.
+- CI validates the full production manifest set - including Ingress and
+  PodDisruptionBudget - against the API server.
+- Example value files no longer pin `image.tag`; it defaults to the chart appVersion.
+- Validation guards already covered by `values.schema.json` were removed as dead code.
+
 ## 0.4.2
 
 Icon fix only. Nothing to do on upgrade.

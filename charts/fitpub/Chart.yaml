@@ -2,7 +2,7 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.4.2
+version: 0.4.3
 appVersion: "1.1.1"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
@@ -33,5 +33,13 @@ annotations:
     fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
   artifacthub.io/changes: |
-    - kind: fixed
-      description: Correct the chart icon displayed on Artifact Hub.
+    - kind: changed
+      description: "Trim default config to the keys the chart actually sets; the app supplies its own defaults for the rest."
+    - kind: removed
+      description: "Inline-secret placeholder-string checks (minimum-length checks for JWT/email secrets are retained)."
+    - kind: changed
+      description: "CI now validates Ingress and PodDisruptionBudget against the Kubernetes API server."
+    - kind: changed
+      description: "Factor the metadata annotations block into a shared template helper; rendered output is unchanged."
+    - kind: changed
+      description: "Examples no longer pin image.tag; it defaults to the chart appVersion."
