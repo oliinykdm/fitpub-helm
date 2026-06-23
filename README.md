@@ -33,7 +33,7 @@
 - Render tests against default values, `examples/production-values.yaml`, and `examples/networkpolicy-smoke-values.yaml`
 - Kubernetes API validation in kind with `kubectl apply --dry-run=server`
 - **Kind runtime test** (the *Kind Runtime Test* badge): on every PR, every push to `main`, and once a week. Spins up kind + PostGIS, runs `helm install --wait`, waits for the pod to go Ready, and curls `GET /login` for an HTTP 200 (FitPub **1.1.1**). A second job does the same under restricted NetworkPolicy egress.
-- Releases ship signed packages and an `index.yaml` to GitHub Pages
+- Releases publish to GitHub Pages and the GHCR OCI registry, GPG-signed with a cosign signature, plus a GitHub Release per version
 
 So: linted, rendered, and actually booted against a real database. Not the same as years of public traffic, but a lot better than "works on my machine".
 

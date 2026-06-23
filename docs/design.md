@@ -70,7 +70,7 @@ CI verifies:
 
 - chart linting with `ct lint`
 - rendering with default values
-- rendering with `examples/production-values.yaml`
+- rendering with `examples/production-values.yaml` and `examples/networkpolicy-smoke-values.yaml`
 - Kubernetes API validation in kind with `kubectl apply --dry-run=server`
 
 The **Kind Runtime Test** workflow (`.github/workflows/runtime-smoke-test.yaml`) runs on
