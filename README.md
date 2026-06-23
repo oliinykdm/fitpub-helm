@@ -5,12 +5,11 @@
 <h1 align="center">FitPub Helm Chart</h1>
 
 <p align="center">
-  Helm chart for <a href="https://codeberg.org/fitpub/fitpub">FitPub</a>, a federated fitness tracking platform.<br>
-  Live instance: <a href="https://fitpub.social"><strong>fitpub.social</strong></a>
+  Unofficial, independently maintained Helm chart for <a href="https://codeberg.org/fitpub/fitpub">FitPub</a>, a federated fitness tracking platform.<br>
+  Not affiliated with the FitPub project or any hosted instance.
 </p>
 
 <p align="center">
-  <a href="https://fitpub.social"><img src="https://img.shields.io/badge/live-fitpub.social-FF1E8E?logo=activitypub&logoColor=white" alt="Live instance"></a>
   <a href="https://artifacthub.io/packages/search?repo=fitpub"><img src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/fitpub" alt="Artifact Hub"></a>
   <img src="https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Foliinykdm%2Ffitpub-helm%2Fmain%2Fcharts%2Ffitpub%2FChart.yaml&query=%24.version&label=chart&color=7C3AED" alt="Chart Version">
   <img src="https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Foliinykdm%2Ffitpub-helm%2Fmain%2Fcharts%2Ffitpub%2FChart.yaml&query=%24.appVersion&label=app&color=blue" alt="App Version">
@@ -25,7 +24,7 @@
   <img src="https://img.shields.io/badge/helm-%3E%3D3.8-blue" alt="Helm">
 </p>
 
-> **Status:** unofficial, production-oriented, and still moving. Read the values before you point it at a public instance. You have been warned.
+> **Status:** unofficial and production-oriented. Review the values before pointing it at a public instance.
 
 ## What CI checks
 
@@ -35,7 +34,7 @@
 - **Kind runtime test** (the *Kind Runtime Test* badge): on every PR, every push to `main`, and once a week. Spins up kind + PostGIS, runs `helm install --wait`, waits for the pod to go Ready, and curls `GET /login` for an HTTP 200 (FitPub **1.1.1**). A second job does the same under restricted NetworkPolicy egress.
 - Releases publish to GitHub Pages and the GHCR OCI registry, GPG-signed with a cosign signature, plus a GitHub Release per version
 
-So: linted, rendered, and actually booted against a real database. Not the same as years of public traffic, but a lot better than "works on my machine".
+The chart is linted, rendered, and booted against a real PostGIS database in CI. That is not a substitute for production load, but it catches most regressions before release.
 
 ## Features
 
@@ -59,8 +58,8 @@ database first? From the repo root:
 scripts/local-quickstart.sh
 ```
 
-It throws up a disposable PostGIS, installs the chart, waits for it to go healthy,
-and tells you how to reach it. The manual steps and a troubleshooting table live in
+It deploys a disposable PostGIS, installs the chart, waits for it to become healthy,
+and prints how to reach it. The manual steps and a troubleshooting table are in
 [docs/quickstart.md](docs/quickstart.md).
 
 ## Prerequisites
@@ -149,9 +148,9 @@ kubectl create secret generic fitpub-secret -n fitpub \
 
 The mail user/password are only there because the example sets `FITPUB_MAIL_SMTP_AUTH: "true"`.
 
-`productionChecks.enabled=true` fails the render early when a required public setting, a chart-managed secret, or part of the push-notification config is missing. Cheaper than a CrashLoopBackOff.
+`productionChecks.enabled=true` fails the render early when a required public setting, a chart-managed secret, or part of the push-notification config is missing, instead of surfacing later as a CrashLoopBackOff.
 
-Optional tuning keys (Hikari pool, ActivityPub inbox processing, `FITPUB_MAIL_PROTOCOL`, `FITPUB_OSM_TILES_ENABLED`, `FITPUB_WEATHER_ENABLED`, and others) are listed in [values.yaml](charts/fitpub/values.yaml). Leave them empty to use application defaults.
+`config` only carries the keys the chart sets a value for. FitPub reads many more (Hikari pool, ActivityPub inbox tuning, mail, `FITPUB_OSM_TILES_ENABLED`, `FITPUB_WEATHER_ENABLED`, log rotation) and applies its own defaults. Set any of those by adding the key to `config` or via `extraEnv`; the full list lives in the FitPub source's `application-prod.yml`.
 
 See [values.yaml](charts/fitpub/values.yaml) and [examples/production-values.yaml](examples/production-values.yaml) for available options.
 
@@ -254,9 +253,9 @@ Back up the uploads PVC and the external PostGIS database regularly.
 ## Application Logs
 
 In the `prod` profile FitPub writes rotated file logs to `/app/logs/`. The chart
-mounts that path as an emptyDir, so the read-only root filesystem stays happy and
-logs survive container restarts - but not pod rescheduling. emptyDir is scratch
-space, not a shoebox under the bed.
+mounts that path as an emptyDir, so the read-only root filesystem is preserved and
+logs survive container restarts - but not pod rescheduling, since emptyDir is tied
+to the pod lifecycle.
 
 For anything you want to keep, lean on your cluster log collector (stdout carries
 the same lines) or ship `/app/logs` with a sidecar. To grow or shrink the buffer:
@@ -274,9 +273,9 @@ over with more pods - the background schedulers claim work with row locks and th
 cleanups are idempotent, so they are safe to run concurrently. The real blocker is
 the uploads volume: `ReadWriteOnce` can only mount on one pod at a time.
 
-To actually scale out, give uploads a `ReadWriteMany` storage class and then enable
-`autoscaling`. The chart refuses `replicaCount > 1` on RWO storage so you find out
-at install time, not at 3am.
+To scale out, give uploads a `ReadWriteMany` storage class and then enable
+`autoscaling`. The chart refuses `replicaCount > 1` on RWO storage, so the
+misconfiguration fails at install time rather than at runtime.
 
 ## Memory And JVM
 
@@ -312,13 +311,12 @@ things. Turn it on once you are ready to list those dependencies.
 
 Two things worth knowing before you enable it:
 
-- It assumes a conntrack-stateful engine (Calico, Cilium, and friends). A
-  non-stateful one can drop reply traffic like DNS answers.
-- Some enforcers are picky about DNS even when you "allow all" egress. We caught
-  kindnet (kind, recent builds) dropping UDP 53 to the cluster DNS under a bare
-  allow-all rule, which surfaces as `UnknownHostException` on the database host.
-  If DNS breaks, allow it explicitly - to kube-system on UDP/TCP 53 - and confirm
-  egress works on your CNI before trusting it in prod.
+- It assumes a conntrack-stateful engine (Calico, Cilium, etc.). A non-stateful
+  one can drop reply traffic such as DNS answers.
+- Some enforcers restrict DNS even under an allow-all egress rule. kindnet (recent
+  builds) drops UDP 53 to the cluster DNS this way, which surfaces as
+  `UnknownHostException` on the database host. If DNS breaks, allow it explicitly -
+  to kube-system on UDP/TCP 53 - and confirm egress works on your CNI first.
 
 Keep `networkPolicy.ingress.enabled=true` unless you add
 `networkPolicy.ingress.extraRules`. Turning ingress off with no rules locks
@@ -431,12 +429,12 @@ serviceMonitor:
     release: kube-prometheus-stack
 ```
 
-Fair warning, it does not do much on FitPub **1.1.1** yet. The image ships no
+On FitPub **1.1.1** this does not return useful data: the image ships no
 `/actuator/prometheus`, and Spring Security gates every actuator endpoint behind
-auth, so an anonymous scrape just gets a 302 and an empty target. The wiring is
-here for when the app grows a public metrics endpoint - until then, leave it off
-and do not read an empty target as "FitPub is down". The probes use `GET /login`
-for exactly that reason. More in [docs/troubleshooting.md](docs/troubleshooting.md).
+auth, so an anonymous scrape returns a 302 and an empty target. The wiring is in
+place for an image that exposes a public metrics endpoint. Until then, leave it
+off; an empty target is expected, not a sign of an unhealthy app. More in
+[docs/troubleshooting.md](docs/troubleshooting.md).
 
 ## Security Notes
 
@@ -486,12 +484,12 @@ See [docs/troubleshooting.md](docs/troubleshooting.md) for common Kubernetes dep
 
 ## Production Checklist
 
-The short version of everything above, for the copy-paste-into-a-ticket crowd:
+A condensed version of the sections above:
 
 - PostgreSQL **with PostGIS**, not plain PostgreSQL
-- `productionChecks.enabled=true` so bad values fail at install, not at 3am
-- Strong `FITPUB_DATABASE_PASSWORD`, `FITPUB_JWT_SECRET`, `FITPUB_EMAIL_SECRET` (`openssl rand -base64 48` is your friend)
-- Using `applicationSecret.existingSecret`? Check it has every required key before install - the chart cannot peek inside it
+- `productionChecks.enabled=true` so bad values fail at install rather than at runtime
+- Strong `FITPUB_DATABASE_PASSWORD`, `FITPUB_JWT_SECRET`, `FITPUB_EMAIL_SECRET` (generate with `openssl rand -base64 48`)
+- Using `applicationSecret.existingSecret`? Confirm it has every required key before install - the chart cannot inspect its contents
 - `FITPUB_BASE_URL` public, canonical, no trailing slash
 - FitPub behind HTTPS
 - Back up PostgreSQL and `/app/uploads` (the parts you cannot regenerate)

@@ -1,8 +1,8 @@
 # Quick Start (local)
 
-FitPub on a local cluster in a few minutes. This is the kick-the-tires path - a
+FitPub on a local cluster in a few minutes. This is the evaluation path - a
 throwaway PostGIS with trivial credentials and no persistence, so do not point your
-real data at it. For the real thing see
+real data at it. For a real deployment see
 [`examples/production-values.yaml`](../examples/production-values.yaml) and the
 [publishing](publishing.md) / [upgrade](upgrade-notes.md) docs.
 
