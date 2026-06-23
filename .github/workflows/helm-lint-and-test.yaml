@@ -71,8 +71,10 @@ jobs:
             --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters \
             --dry-run=client -o yaml | kubectl apply -f -
 
+          # Validate the full production manifest set, including Ingress
+          # (networking.k8s.io/v1) and PodDisruptionBudget (policy/v1), against
+          # the API server. A non-existent IngressClass is not rejected at
+          # admission, so this is safe on a bare kind cluster.
           helm template fitpub ./charts/fitpub \
             -f examples/production-values.yaml \
-            --set ingress.enabled=false \
-            --set podDisruptionBudget.enabled=false \
             | kubectl apply --dry-run=server -f -
