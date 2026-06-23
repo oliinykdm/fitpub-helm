@@ -4,6 +4,54 @@ entries:
   - annotations:
       artifacthub.io/category: skip-prediction
       artifacthub.io/changes: |
+        - kind: changed
+          description: "Trim default config to the keys the chart actually sets; the app supplies its own defaults for the rest."
+        - kind: removed
+          description: "Inline-secret placeholder-string checks (minimum-length checks for JWT/email secrets are retained)."
+        - kind: changed
+          description: "CI now validates Ingress and PodDisruptionBudget against the Kubernetes API server."
+        - kind: changed
+          description: "Factor the metadata annotations block into a shared template helper; rendered output is unchanged."
+        - kind: changed
+          description: "Examples no longer pin image.tag; it defaults to the chart appVersion."
+      artifacthub.io/containsSecurityUpdates: "false"
+      artifacthub.io/images: |
+        - name: fitpub
+          image: codeberg.org/fitpub/fitpub:1.1.1
+        - name: volume-permissions
+          image: busybox:1.37
+          whitelisted: true
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/prerelease: "false"
+      artifacthub.io/signKey: |
+        fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+        url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+    apiVersion: v2
+    appVersion: 1.1.1
+    created: "2026-06-23T12:17:15.08818085Z"
+    description: Helm chart for FitPub - federated fitness tracking platform
+    digest: ebf9a48c512342a12c7335b7ff7fbfc2a87be241b6e7d52c5998526e09edeb99
+    home: https://codeberg.org/fitpub/fitpub
+    icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+    keywords:
+    - fitness
+    - activitypub
+    - spring-boot
+    - postgresql
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - name: Dmytro Oliinyk
+      url: https://github.com/oliinykdm
+    name: fitpub
+    sources:
+    - https://codeberg.org/fitpub/fitpub
+    type: application
+    urls:
+    - https://oliinykdm.github.io/fitpub-helm/fitpub-0.4.3.tgz
+    version: 0.4.3
+  - annotations:
+      artifacthub.io/category: skip-prediction
+      artifacthub.io/changes: |
         - kind: fixed
           description: Correct the chart icon displayed on Artifact Hub.
       artifacthub.io/containsSecurityUpdates: "false"
@@ -719,4 +767,4 @@ entries:
     urls:
     - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.2.tgz
     version: 0.2.2
-generated: "2026-06-23T12:10:33.877201178Z"
+generated: "2026-06-23T12:17:15.086846253Z"
