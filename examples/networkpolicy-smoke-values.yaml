@@ -4,9 +4,6 @@
 productionChecks:
   enabled: true
 
-image:
-  tag: "1.1.1"
-
 config:
   FITPUB_DATABASE_URL: "jdbc:postgresql://postgis:5432/fitpub"
   FITPUB_DOMAIN: "fitpub.local"

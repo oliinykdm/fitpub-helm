@@ -134,17 +134,14 @@ pages:
   mountPath: /app/pages
   readOnly: true
 
-# Non-secret env, rendered into a ConfigMap and loaded via envFrom. Empty values
-# are omitted so Spring Boot application defaults still apply (e.g. FITPUB_MAIL_HOST).
+# Non-secret env, rendered into a ConfigMap and loaded via envFrom. Only the keys
+# the chart sets a non-default value for are listed here; the app reads many more
+# (Hikari pool, ActivityPub inbox tuning, mail, feature toggles, log rotation) and
+# applies its own defaults. Set any of those through `extraEnv` or by adding the
+# key here - see application-prod.yml in the FitPub source for the full list.
 config:
-  # Database
+  # Database / JPA
   FITPUB_DATABASE_URL: ""
-  # Hikari pool tuning (application-prod.yml defaults apply when left empty).
-  FITPUB_DB_MAX_POOL_SIZE: ""
-  FITPUB_DB_MIN_IDLE: ""
-  FITPUB_DB_CONNECTION_TIMEOUT: ""
-  FITPUB_DB_IDLE_TIMEOUT: ""
-  FITPUB_DB_MAX_LIFETIME: ""
   SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
   SPRING_JPA_SHOW_SQL: "false"
   SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "false"
@@ -155,40 +152,18 @@ config:
   FITPUB_PORT: "8080"
   FITPUB_DOMAIN: ""
   FITPUB_BASE_URL: ""
-  FITPUB_SITE_BANNER_TEXT: ""
 
-  # Security & federation
-  FITPUB_SECURITY_JWT_EXPIRATION: ""
-  # http is for local federation testing only.
+  # Federation: http is for local testing only; allow-private-ips is an SSRF risk.
   FITPUB_FEDERATION_PROTOCOL: "https"
-  # true allows federation calls to private IPs (SSRF risk) - dev only.
   FITPUB_ALLOW_PRIVATE_IPS: "false"
-  FITPUB_REMOTE_ACTIVITY_BACKFILL: ""
-  FITPUB_ACTIVITYPUB_INBOX_PROCESSING_INTERVAL_MS: ""
-  FITPUB_ACTIVITYPUB_INBOX_PROCESSING_TIMEOUT_SECONDS: ""
-  FITPUB_ACTIVITYPUB_INBOX_BATCH_SIZE: ""
-  FITPUB_ACTIVITYPUB_INBOX_RETRY_DELAY_SECONDS: ""
-  FITPUB_ACTIVITYPUB_INBOX_MAX_ATTEMPTS: ""
 
   # Flyway
   SPRING_FLYWAY_ENABLED: "true"
   SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
   SPRING_FLYWAY_VALIDATE_ON_MIGRATE: "true"
 
-  # Web push requires VAPID keys in applicationSecret and an operator contact subject.
+  # Web push: enable only with VAPID keys in applicationSecret and FITPUB_VAPID_SUBJECT set.
   FITPUB_PUSH_ENABLED: "false"
-  FITPUB_VAPID_SUBJECT: ""
-
-  # Mail - leave empty until FITPUB_MAIL_HOST is set, otherwise Spring Boot defaults
-  # apply (localhost:25 without auth). Set port/auth/starttls together with the host.
-  FITPUB_MAIL_HOST: ""
-  FITPUB_MAIL_PORT: ""
-  FITPUB_MAIL_PROTOCOL: ""
-  FITPUB_MAIL_SMTP_AUTH: ""
-  FITPUB_MAIL_STARTTLS_ENABLE: ""
-  FITPUB_MAIL_STARTTLS_REQUIRED: ""
-  FITPUB_MAIL_FROM_ADDRESS: ""
-  FITPUB_MAIL_FROM_NAME: ""
 
   # Uploads - standard Spring multipart limits, keep request >= file.
   SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: "50MB"
@@ -198,20 +173,11 @@ config:
 
   FITPUB_REGISTRATION_ENABLED: "true"
 
-  # Feature toggles (application defaults apply when left empty).
-  FITPUB_OSM_TILES_ENABLED: ""
-  FITPUB_WEATHER_ENABLED: ""
-
-  # Logging overrides the prod Spring profile defaults (root WARN in the app).
-  # Tune here for platform visibility. Remove keys to fall back to profile defaults.
+  # Logging - root and app package are pinned to INFO, Hibernate to WARN. Drop a
+  # key to fall back to the prod profile default.
   LOGGING_LEVEL_ROOT: "INFO"
   LOGGING_LEVEL_NET_JAVAHIPPIE_FITPUB: "INFO"
-  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK: "INFO"
   LOGGING_LEVEL_ORG_HIBERNATE: "WARN"
-  LOGGING_LEVEL_ORG_FLYWAYDB: "INFO"
-  FITPUB_LOG_DATE_PATTERN: "yyyy-MM-dd"
-  FITPUB_LOG_MAX_FILE_SIZE: "100MB"
-  FITPUB_LOG_MAX_HISTORY: "7"
 
 # Either point existingSecret at a pre-created Secret, or fill in data below.
 applicationSecret:

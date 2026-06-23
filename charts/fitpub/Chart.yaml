@@ -22,6 +22,7 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/prerelease: "false"
   artifacthub.io/containsSecurityUpdates: "false"
+  # Keep the fitpub image tag below in sync with appVersion above on every bump.
   artifacthub.io/images: |
     - name: fitpub
       image: codeberg.org/fitpub/fitpub:1.1.1

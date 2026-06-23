@@ -13,8 +13,7 @@
 productionChecks:
   enabled: true
 
-image:
-  tag: "1.1.1"
+# image.tag defaults to the chart's appVersion. Pin it here only to override.
 
 config:
   FITPUB_DATABASE_URL: "jdbc:postgresql://postgres.example.com:5432/fitpub"

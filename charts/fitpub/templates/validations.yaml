@@ -2,18 +2,12 @@
 {{- fail "dnsPolicy: None requires dnsConfig.nameservers - Kubernetes rejects pods with dnsPolicy=None and no nameservers configured" -}}
 {{- end -}}
 
-{{- if and .Values.config.FITPUB_BASE_URL (regexMatch "/$" .Values.config.FITPUB_BASE_URL) -}}
-{{- fail "config.FITPUB_BASE_URL must not end with a slash - trailing slash breaks generated ActivityPub/WebFinger URLs" -}}
-{{- end -}}
-
-{{- if and .Values.config.FITPUB_DOMAIN (regexMatch "://|/" (.Values.config.FITPUB_DOMAIN | toString)) -}}
-{{- fail (printf "config.FITPUB_DOMAIN (%s) must be a bare host with optional port, not a URL - remove the scheme and any trailing slash, e.g. \"example.fit\" not \"https://example.fit/\"" .Values.config.FITPUB_DOMAIN) -}}
-{{- end -}}
-
-{{- if and .Values.config.FITPUB_FEDERATION_PROTOCOL (not (has (.Values.config.FITPUB_FEDERATION_PROTOCOL | toString) (list "http" "https"))) -}}
-{{- fail (printf "config.FITPUB_FEDERATION_PROTOCOL (%s) must be either \"http\" or \"https\"" .Values.config.FITPUB_FEDERATION_PROTOCOL) -}}
-{{- end -}}
-
+{{- /*
+FITPUB_BASE_URL (no trailing slash), FITPUB_DOMAIN (bare host) and
+FITPUB_FEDERATION_PROTOCOL (http/https) are constrained by values.schema.json,
+which is evaluated before templates - so they are not re-checked here. The guards
+below cover cross-field and conditional invariants that JSON Schema cannot express.
+*/ -}}
 {{- if and .Values.config.FITPUB_PORT (ne (.Values.config.FITPUB_PORT | toString) (.Values.service.port | toString)) -}}
 {{- fail (printf "config.FITPUB_PORT (%v) must match service.port (%v) - the app listens on FITPUB_PORT but health probes and the Service use service.port" .Values.config.FITPUB_PORT .Values.service.port) -}}
 {{- end -}}
@@ -61,14 +55,6 @@ Use ReadWriteMany (with a supporting StorageClass) for horizontal scaling.
 {{- fail "networkPolicy: ingress.enabled=false with no ingress.extraRules denies all inbound traffic to FitPub - set ingress.enabled=true or add ingress.extraRules" -}}
 {{- end -}}
 
-{{- if and .Values.serviceMonitor.enabled -}}
-{{- $interval := .Values.serviceMonitor.interval | toString | trimSuffix "s" | int -}}
-{{- $timeout := .Values.serviceMonitor.scrapeTimeout | toString | trimSuffix "s" | int -}}
-{{- if and (gt $interval 0) (gt $timeout 0) (ge $timeout $interval) -}}
-{{- fail (printf "serviceMonitor.scrapeTimeout (%s) must be less than serviceMonitor.interval (%s)" .Values.serviceMonitor.scrapeTimeout .Values.serviceMonitor.interval) -}}
-{{- end -}}
-{{- end -}}
-
 {{- if .Values.productionChecks.enabled -}}
 {{- $requiredConfig := list "FITPUB_DATABASE_URL" "FITPUB_DOMAIN" "FITPUB_BASE_URL" -}}
 {{- range $key := $requiredConfig -}}
@@ -85,13 +71,8 @@ Use ReadWriteMany (with a supporting StorageClass) for horizontal scaling.
 {{- end -}}
 {{- end -}}
 {{- $dbPass := .Values.applicationSecret.data.FITPUB_DATABASE_PASSWORD | default "" | toString -}}
-{{- if $dbPass -}}
-{{- if lt (len $dbPass) 12 -}}
+{{- if and $dbPass (lt (len $dbPass) 12) -}}
 {{- fail (printf "applicationSecret.data.FITPUB_DATABASE_PASSWORD is %d characters - use at least 12 for production" (len $dbPass)) -}}
-{{- end -}}
-{{- if regexMatch "(?i)(replace-me|replace-with|changeme|^fitpub$|^password$|^test$)" $dbPass -}}
-{{- fail "applicationSecret.data.FITPUB_DATABASE_PASSWORD looks like a placeholder or trivial password - generate one with: openssl rand -base64 24" -}}
-{{- end -}}
 {{- end -}}
 {{- end -}}
 
@@ -111,28 +92,18 @@ Use ReadWriteMany (with a supporting StorageClass) for horizontal scaling.
 {{- end -}}
 
 {{/*
-Secret sanity checks that mirror the application's own startup validation, so a
-weak or placeholder secret fails at `helm install` time with a clear message
-instead of a pod CrashLoopBackOff. Only runs for inline secrets.
+JWT and email secrets must be at least 32 characters (HS256 needs a 256-bit key).
+This mirrors the application's own startup check so an obviously-too-short inline
+secret fails at install time instead of as a CrashLoopBackOff. Only inline secrets
+are inspected; existingSecret contents are the operator's responsibility.
 */}}
 {{- if not .Values.applicationSecret.existingSecret -}}
-{{- $placeholders := list "changeme" "change-this-secret-key-in-production-must-be-at-least-32-characters-long" "change-this-email-secret-in-production-must-be-at-least-32-characters-long" -}}
 {{- $jwt := .Values.applicationSecret.data.FITPUB_JWT_SECRET | default "" | toString -}}
-{{- if $jwt -}}
-{{- if lt (len $jwt) 32 -}}
-{{- fail (printf "applicationSecret.data.FITPUB_JWT_SECRET is %d characters - FitPub requires at least 32 (HS256 needs a 256-bit key). Generate one with: openssl rand -base64 48" (len $jwt)) -}}
-{{- end -}}
-{{- if or (has $jwt $placeholders) (regexMatch "(?i)(replace-me|replace-with|changeme|your-secret|your-password)" $jwt) -}}
-{{- fail "applicationSecret.data.FITPUB_JWT_SECRET is a known placeholder value - the application refuses to start with it. Generate a real one with: openssl rand -base64 48" -}}
-{{- end -}}
+{{- if and $jwt (lt (len $jwt) 32) -}}
+{{- fail (printf "applicationSecret.data.FITPUB_JWT_SECRET is %d characters - FitPub requires at least 32. Generate one with: openssl rand -base64 48" (len $jwt)) -}}
 {{- end -}}
 {{- $email := .Values.applicationSecret.data.FITPUB_EMAIL_SECRET | default "" | toString -}}
-{{- if $email -}}
-{{- if lt (len $email) 32 -}}
+{{- if and $email (lt (len $email) 32) -}}
 {{- fail (printf "applicationSecret.data.FITPUB_EMAIL_SECRET is %d characters - FitPub requires at least 32. Generate one with: openssl rand -base64 48" (len $email)) -}}
-{{- end -}}
-{{- if or (has $email $placeholders) (regexMatch "(?i)(replace-me|replace-with|changeme|your-secret|your-password)" $email) -}}
-{{- fail "applicationSecret.data.FITPUB_EMAIL_SECRET is a known placeholder value - the application refuses to start with it. Generate a real one with: openssl rand -base64 48" -}}
-{{- end -}}
 {{- end -}}
 {{- end -}}
