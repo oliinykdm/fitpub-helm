@@ -75,6 +75,7 @@ Use ReadWriteMany (with a supporting StorageClass) for horizontal scaling.
 {{- fail (printf "applicationSecret.data.FITPUB_DATABASE_PASSWORD is %d characters - use at least 12 for production" (len $dbPass)) -}}
 {{- end -}}
 {{- end -}}
+{{- end -}}
 
 {{- if eq (index $.Values.config "FITPUB_PUSH_ENABLED" | default "false" | toString) "true" -}}
 {{- if not (index $.Values.config "FITPUB_VAPID_SUBJECT") -}}
@@ -85,7 +86,6 @@ Use ReadWriteMany (with a supporting StorageClass) for horizontal scaling.
 {{- range $key := $requiredVapidSecrets -}}
 {{- if not (index $.Values.applicationSecret.data $key) -}}
 {{- fail (printf "config.FITPUB_PUSH_ENABLED is true but applicationSecret.data.%s is not set - provide VAPID keys or disable push with config.FITPUB_PUSH_ENABLED=false" $key) -}}
-{{- end -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}

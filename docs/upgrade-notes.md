@@ -1,5 +1,18 @@
 # Upgrade Notes
 
+## 0.4.4
+
+Bug fix only. No appVersion change (still FitPub 1.1.1).
+
+### Push/VAPID validation no longer gated behind productionChecks
+
+The render-time check "FITPUB_PUSH_ENABLED=true requires FITPUB_VAPID_SUBJECT and
+VAPID keys" previously ran only with productionChecks.enabled=true. It now runs
+unconditionally, matching the JWT/email secret length checks.
+
+**Action required:** none. Installs that enable push without VAPID keys now fail
+at render time instead of at application startup.
+
 ## 0.4.3
 
 Maintenance release: chart cleanup, CI hardening, and two minor behaviour changes.
