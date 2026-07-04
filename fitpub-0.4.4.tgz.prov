@@ -1,0 +1,61 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+annotations:
+  artifacthub.io/category: skip-prediction
+  artifacthub.io/changes: |
+    - kind: fixed
+      description: "FITPUB_PUSH_ENABLED/VAPID validation now runs unconditionally instead of only when productionChecks.enabled=true."
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/images: |
+    - name: fitpub
+      image: codeberg.org/fitpub/fitpub:1.1.1
+    - name: volume-permissions
+      image: busybox:1.37
+      whitelisted: true
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/signKey: |
+    fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+    url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+apiVersion: v2
+appVersion: 1.1.1
+description: Helm chart for FitPub - federated fitness tracking platform
+home: https://codeberg.org/fitpub/fitpub
+icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+keywords:
+- - fitness
+- - activitypub
+- - spring-boot
+- - postgresql
+kubeVersion: '>= 1.26.0'
+maintainers:
+- - name: Dmytro Oliinyk
+  url: https://github.com/oliinykdm
+name: fitpub
+sources:
+- - https://codeberg.org/fitpub/fitpub
+type: application
+version: 0.4.4
+
+...
+files:
+  fitpub-0.4.4.tgz: sha256:411b151a7d5bab8338efbdbf5ef64ddd12ff58c8434d847bf55780fafa474a9a
+
+-----BEGIN PGP SIGNATURE-----
+
+wsG5BAEBCgBtBYJqSUJ2CRBJvZ5epsJDt0UUAAAAAAAcACBzYWx0QG5vdGF0aW9u
+cy5vcGVucGdwanMub3Jn9q9BRiYB9+J3pVlL8ZW5rDug12hZZL7vnPud7EsEXQsW
+IQTkyGV3M5iVVS4cq15JvZ5epsJDtwAA2xUP/jf2laQhmzRBMa0zigjLztqsj48D
+pPf3va3mjdPZ4CxAN3FkEpr8Oa0fyDZxIqvU2k6obxAMUdL9DzDiMn/Qmd73Xsjo
+tR8W9bLzFaIw3Qz8uDkljWiKj0a6MJP0bBX52ZghPFJu+j51QqV0vbysjxqUVLDS
+o9MLVlvuUXxn3O3+VXW1n8Mhtfpg4nFK/D5ci8fyf5nvrYGvXT68Igvfl+VmbfoX
+IpKbxD+IxQckh1IwtEwa9afQEYjHpI71hFs2UEtHWoAdKyNxMCD4S4olxOdH3uUd
+47lbCP4GcPS/7YcLQ3jjzYsp/mbdbkNevhn1RaXjaoQwb+vI3Q8cdnV7z0WLtUId
+4yFlAeXz6qtYsw5INbmpndf74wFhe+rikeIUPcDeq9zY4HPYM6OxpgqXfKrJmUCm
+5G93GAmu9yEdH59LdI+vHcd1qwHJsWGVy9oYi4XqjyAQk66D5hOt+zyAE0R/fGxP
+0HTx8W29wGByXWCpzjIngYqbgP0S1Q4Mc/zQeGfcI718aXozXRyGCm4V2NrGMNHJ
+oM2Ip8t6LCIKBZ46T8p3svSL/fgZwfhwBdndXma0BQN8XmbnYc0WldMAGW2jh3Hw
+6NvjtR/RxpUX2Ny7hfav3ElqByU6WvP+nsyp7g8xZq8Ord8Uz3ThPkkSWCSU/9tO
+ugWWqgkGMs/SiFqF
+-----END PGP SIGNATURE-----
