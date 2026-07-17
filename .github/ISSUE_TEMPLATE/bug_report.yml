@@ -22,7 +22,7 @@ body:
     id: app-version
     attributes:
       label: FitPub app version
-      placeholder: "1.1.1"
+      placeholder: "1.2.0"
   - type: input
     id: kubernetes-version
     attributes:

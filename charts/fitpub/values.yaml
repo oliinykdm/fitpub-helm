@@ -65,7 +65,8 @@ securityContext:
   readOnlyRootFilesystem: true
 
 # Writable emptyDir mounts so readOnlyRootFilesystem can stay on.
-# tmp -> /tmp (OSM tile cache + image gen), logs -> logback file appender.
+# tmp -> /tmp (OSM tile cache + image gen; config points FITPUB_TILE_CACHE_PATH
+# and FITPUB_IMAGES_PATH here), logs -> logback file appender.
 ephemeralVolumes:
   tmp:
     enabled: true
@@ -104,11 +105,11 @@ ingress:
   tls: []
 
 resources:
-  # FitPub 1.1.x runs Java 25 with -XX:MaxRAMPercentage=75 against the cgroup
-  # memory limit. Keep requests.memory close to limits.memory so the scheduler
-  # reserves enough RAM for heap plus metaspace/native overhead. Lower values
-  # only for throwaway clusters (see examples/development-values.yaml).
-  # cpu limit caps GC/Flyway bursts. Java 25 honours the cgroup quota.
+  # The image runs Java 25 with -XX:MaxRAMPercentage=65 against the cgroup limit
+  # (~2Gi heap at 3072Mi). Keep requests.memory close to limits.memory so the node
+  # has room for heap plus metaspace/native overhead. The flag is hard-coded on the
+  # java command line, so shrink the heap by lowering limits.memory, not with
+  # JAVA_TOOL_OPTIONS. cpu limit caps GC/Flyway bursts.
   requests:
     cpu: 250m
     memory: 3072Mi
@@ -125,7 +126,7 @@ persistence:
   # Set helm.sh/resource-policy: keep here to survive `helm uninstall`.
   annotations: {}
   existingClaim: ""
-  # Must match config.FILE_UPLOAD_DIR (chart validates this).
+  # Must match config.FITPUB_FILE_UPLOAD_DIR (chart validates this).
   mountPath: /app/uploads
 
 # Static Markdown pages (terms.md, imprint.md, optional about.md) from a Secret.
@@ -153,6 +154,12 @@ config:
   FITPUB_DOMAIN: ""
   FITPUB_BASE_URL: ""
 
+  # Browser CORS origins, comma-separated. Empty falls back to FITPUB_BASE_URL.
+  FITPUB_CORS_ALLOWED_ORIGINS: ""
+
+  # Comma-separated emails granted the instance admin role on startup.
+  FITPUB_ADMIN_EMAILS: ""
+
   # Federation: http is for local testing only; allow-private-ips is an SSRF risk.
   FITPUB_FEDERATION_PROTOCOL: "https"
   FITPUB_ALLOW_PRIVATE_IPS: "false"
@@ -168,8 +175,15 @@ config:
   # Uploads - standard Spring multipart limits, keep request >= file.
   SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: "50MB"
   SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: "50MB"
-  FILE_UPLOAD_DIR: "/app/uploads"
+  # Was FILE_UPLOAD_DIR before 1.2.0. Must match persistence.mountPath (validated).
+  FITPUB_FILE_UPLOAD_DIR: "/app/uploads"
   FITPUB_PAGES_PATH: "/app/pages"
+
+  # The app defaults these to /app/images and /app/tiles, which are read-only under
+  # readOnlyRootFilesystem. Redirect them to the writable /tmp emptyDir. Both are
+  # regenerable caches, so ephemeral storage is fine.
+  FITPUB_IMAGES_PATH: "/tmp/fitpub/images"
+  FITPUB_TILE_CACHE_PATH: "/tmp/fitpub/tiles"
 
   FITPUB_REGISTRATION_ENABLED: "true"
 
@@ -187,6 +201,10 @@ applicationSecret:
     FITPUB_DATABASE_PASSWORD: ""
     FITPUB_JWT_SECRET: ""
     FITPUB_EMAIL_SECRET: ""
+    # Protects the actuator endpoints (basic auth). The prod profile has no default,
+    # so the pod will not start without it. Username defaults to "actuator", override
+    # with config.FITPUB_ACTUATOR_USERNAME. Generate: openssl rand -base64 48
+    FITPUB_ACTUATOR_PASSWORD: ""
     FITPUB_REGISTRATION_PASSWORD: ""
     FITPUB_VAPID_PUBLIC_KEY: ""
     FITPUB_VAPID_PRIVATE_KEY: ""
@@ -213,19 +231,35 @@ sidecars: []
 productionChecks:
   enabled: false
 
-# /actuator/health needs auth in fitpub 1.1.1. /login is permitAll and returns 200.
+# The actuator health groups are behind basic auth, so an httpGet probe gets 401.
+# These exec probes reuse the image's wget to authenticate with the actuator
+# credentials from the pod env, keeping the password out of the pod spec and working
+# with applicationSecret.existingSecret. readiness follows Spring's readinessState
+# (drops to 503 during the shutdown drain); liveness follows livenessState only, so a
+# database outage does not restart pods. Neither re-checks the DB - see
+# docs/troubleshooting.md to gate readiness on the DB instead.
 readinessProbe:
-  httpGet:
-    path: /login
-    port: http
+  exec:
+    command:
+      - sh
+      - -c
+      - >-
+        wget --spider -q
+        --header="Authorization: Basic $(printf '%s:%s' "${FITPUB_ACTUATOR_USERNAME:-actuator}" "$FITPUB_ACTUATOR_PASSWORD" | base64 | tr -d '\n')"
+        "http://127.0.0.1:${FITPUB_PORT:-8080}/actuator/health/readiness"
   periodSeconds: 10
   timeoutSeconds: 5
   failureThreshold: 3
 
 startupProbe:
-  httpGet:
-    path: /login
-    port: http
+  exec:
+    command:
+      - sh
+      - -c
+      - >-
+        wget --spider -q
+        --header="Authorization: Basic $(printf '%s:%s' "${FITPUB_ACTUATOR_USERNAME:-actuator}" "$FITPUB_ACTUATOR_PASSWORD" | base64 | tr -d '\n')"
+        "http://127.0.0.1:${FITPUB_PORT:-8080}/actuator/health/readiness"
   # ~195s budget for startup (15 + 18*10) - Flyway + JVM on small nodes.
   initialDelaySeconds: 15
   periodSeconds: 10
@@ -233,9 +267,14 @@ startupProbe:
   failureThreshold: 18
 
 livenessProbe:
-  httpGet:
-    path: /login
-    port: http
+  exec:
+    command:
+      - sh
+      - -c
+      - >-
+        wget --spider -q
+        --header="Authorization: Basic $(printf '%s:%s' "${FITPUB_ACTUATOR_USERNAME:-actuator}" "$FITPUB_ACTUATOR_PASSWORD" | base64 | tr -d '\n')"
+        "http://127.0.0.1:${FITPUB_PORT:-8080}/actuator/health/liveness"
   periodSeconds: 15
   timeoutSeconds: 5
   failureThreshold: 3
@@ -297,12 +336,15 @@ serviceMonitor:
   annotations: {}
   interval: 30s
   scrapeTimeout: 10s
-  # fitpub 1.1.1 ships no prometheus registry and gates /actuator/** behind auth,
-  # so scraping needs an app-side change (registry + permitAll). basicAuth is wired
-  # for when that lands. /actuator/metrics is a JSON index, not exposition format.
-  path: /actuator/metrics
+  # /actuator/prometheus is behind basic auth, so scraping needs basicAuth below,
+  # referencing a Secret in the ServiceMonitor namespace with the actuator username
+  # (default "actuator") and FITPUB_ACTUATOR_PASSWORD.
+  path: /actuator/prometheus
   scheme: http
-  # Secret must live in the ServiceMonitor namespace.
+  # Example - create the referenced Secret in the ServiceMonitor namespace:
+  #   kubectl create secret generic fitpub-actuator-auth \
+  #     --from-literal=username=actuator \
+  #     --from-literal=password=<FITPUB_ACTUATOR_PASSWORD>
   # basicAuth:
   #   username:
   #     name: fitpub-actuator-auth

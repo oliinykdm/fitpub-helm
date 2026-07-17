@@ -23,6 +23,8 @@ applicationSecret:
     FITPUB_DATABASE_PASSWORD: "fitpub"
     FITPUB_JWT_SECRET: "development-jwt-secret-with-more-than-32-characters"
     FITPUB_EMAIL_SECRET: "development-email-secret-with-more-than-32-characters"
+    # Required by the prod profile in FitPub 1.2.0 (actuator basic auth).
+    FITPUB_ACTUATOR_PASSWORD: "development-actuator-password"
 
 ingress:
   enabled: false
