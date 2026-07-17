@@ -69,6 +69,7 @@ jobs:
             --from-literal=FITPUB_DATABASE_PASSWORD=test-password \
             --from-literal=FITPUB_JWT_SECRET=test-jwt-secret-with-more-than-32-characters \
             --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters \
+            --from-literal=FITPUB_ACTUATOR_PASSWORD=test-actuator-password \
             --dry-run=client -o yaml | kubectl apply -f -
 
           # Validate the full production manifest set, including Ingress

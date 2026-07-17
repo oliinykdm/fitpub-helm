@@ -53,7 +53,8 @@ jobs:
             --from-literal=FITPUB_DATABASE_USERNAME=fitpub \
             --from-literal=FITPUB_DATABASE_PASSWORD=fitpub \
             --from-literal=FITPUB_JWT_SECRET=test-jwt-secret-with-more-than-32-characters \
-            --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters
+            --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters \
+            --from-literal=FITPUB_ACTUATOR_PASSWORD=test-actuator-password
 
       - name: Verify PostGIS accepts smoke-test credentials
         run: |
@@ -104,14 +105,15 @@ jobs:
             exit 1
           fi
 
-      - name: Check FitPub serves /login inside the cluster
+      - name: Check authenticated actuator readiness inside the cluster
         run: |
-          kubectl run fitpub-login-check \
+          # Mirrors the chart's default probe: /actuator/** is behind basic auth.
+          kubectl run fitpub-health-check \
             --image=curlimages/curl:8.11.1 \
             --restart=Never \
             --rm \
             -i \
-            --command -- curl -fsS -o /dev/null -w 'HTTP:%{http_code}\n' http://fitpub:8080/login
+            --command -- curl -fsS -u actuator:test-actuator-password -o /dev/null -w 'HTTP:%{http_code}\n' http://fitpub:8080/actuator/health/readiness
 
       - name: Dump diagnostics on failure
         if: failure()
@@ -148,7 +150,8 @@ jobs:
             --from-literal=FITPUB_DATABASE_USERNAME=fitpub \
             --from-literal=FITPUB_DATABASE_PASSWORD=fitpub \
             --from-literal=FITPUB_JWT_SECRET=test-jwt-secret-with-more-than-32-characters \
-            --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters
+            --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters \
+            --from-literal=FITPUB_ACTUATOR_PASSWORD=test-actuator-password
 
       - name: Verify PostGIS accepts smoke-test credentials
         run: |
@@ -184,14 +187,15 @@ jobs:
             -l app.kubernetes.io/instance=fitpub \
             --timeout=600s
 
-      - name: Check FitPub serves /login inside the cluster
+      - name: Check authenticated actuator readiness inside the cluster
         run: |
-          kubectl run fitpub-login-check-np \
+          # Mirrors the chart's default probe: /actuator/** is behind basic auth.
+          kubectl run fitpub-health-check-np \
             --image=curlimages/curl:8.11.1 \
             --restart=Never \
             --rm \
             -i \
-            --command -- curl -fsS -o /dev/null -w 'HTTP:%{http_code}\n' http://fitpub:8080/login
+            --command -- curl -fsS -u actuator:test-actuator-password -o /dev/null -w 'HTTP:%{http_code}\n' http://fitpub:8080/actuator/health/readiness
 
       - name: Dump diagnostics on failure
         if: failure()

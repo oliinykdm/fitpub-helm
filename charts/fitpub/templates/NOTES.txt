@@ -51,8 +51,10 @@ time instead of CrashLoopBackOff.
 
 Reminder: productionChecks cannot inspect applicationSecret.existingSecret.
 Verify the Secret "{{ .Values.applicationSecret.existingSecret }}" contains at
-least FITPUB_DATABASE_USERNAME, FITPUB_DATABASE_PASSWORD, FITPUB_JWT_SECRET and
-FITPUB_EMAIL_SECRET before relying on this release.
+least FITPUB_DATABASE_USERNAME, FITPUB_DATABASE_PASSWORD, FITPUB_JWT_SECRET,
+FITPUB_EMAIL_SECRET and FITPUB_ACTUATOR_PASSWORD before relying on this release.
+FitPub 1.2.0 requires FITPUB_ACTUATOR_PASSWORD in the prod profile - the pod
+CrashLoops without it.
 {{- end }}
 
 Important:
@@ -75,9 +77,10 @@ Useful checks:
   kubectl logs deployment/{{ include "fitpub.fullname" . }} -n {{ .Release.Namespace }}
   kubectl exec deployment/{{ include "fitpub.fullname" . }} -n {{ .Release.Namespace }} -- sh -c 'touch {{ .Values.persistence.mountPath }}/.write-test && rm {{ .Values.persistence.mountPath }}/.write-test'
 
-Login probe check from inside the cluster (matches chart defaults for FitPub 1.1.1):
+Health probe check from inside the cluster (chart probes hit the authenticated
+actuator readiness group on FitPub 1.2.0; replace <PASSWORD> with FITPUB_ACTUATOR_PASSWORD):
 
-  kubectl run fitpub-login-check --image=curlimages/curl --restart=Never --rm -i -n {{ .Release.Namespace }} --command -- curl -fsS -o /dev/null -w 'HTTP:%{http_code}\n' http://{{ include "fitpub.fullname" . }}:{{ .Values.service.port }}/login
+  kubectl run fitpub-health-check --image=curlimages/curl --restart=Never --rm -i -n {{ .Release.Namespace }} --command -- curl -fsS -u actuator:<PASSWORD> -o /dev/null -w 'HTTP:%{http_code}\n' http://{{ include "fitpub.fullname" . }}:{{ .Values.service.port }}/actuator/health/readiness
 
 Pod not going Ready? The most common cause is the database: either FitPub cannot
 reach it, or it is plain PostgreSQL without PostGIS, in which case the

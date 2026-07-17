@@ -31,7 +31,7 @@
 - `ct lint` on every change
 - Render tests against default values, `examples/production-values.yaml`, and `examples/networkpolicy-smoke-values.yaml`
 - Kubernetes API validation in kind with `kubectl apply --dry-run=server`
-- **Kind runtime test** (the *Kind Runtime Test* badge): on every PR, every push to `main`, and once a week. Spins up kind + PostGIS, runs `helm install --wait`, waits for the pod to go Ready, and curls `GET /login` for an HTTP 200 (FitPub **1.1.1**). A second job does the same under restricted NetworkPolicy egress.
+- **Kind runtime test** (the *Kind Runtime Test* badge): on every PR, every push to `main`, and once a week. Spins up kind + PostGIS, runs `helm install --wait`, waits for the pod to go Ready, and curls `GET /login` for an HTTP 200 (FitPub **1.2.0**). A second job does the same under restricted NetworkPolicy egress.
 - Releases publish to GitHub Pages and the GHCR OCI registry, GPG-signed with a cosign signature, plus a GitHub Release per version
 
 The chart is linted, rendered, and booted against a real PostGIS database in CI. That is not a substitute for production load, but it catches most regressions before release.
@@ -43,7 +43,7 @@ The chart is linted, rendered, and booted against a real PostGIS database in CI.
 - PersistentVolumeClaim for uploads at `/app/uploads`
 - Optional Secret mount for Markdown legal/about pages at `/app/pages`
 - ConfigMap/Secret split for plain and secret environment variables
-- Probes on `GET /login` (actuator health needs auth on 1.1.x, see [docs/troubleshooting.md](docs/troubleshooting.md))
+- Probes hit the authenticated actuator health groups (`/actuator/health/readiness` and `/actuator/health/liveness`) via an exec wget that reads the actuator password from the pod env, see [docs/troubleshooting.md](docs/troubleshooting.md)
 - CPU/memory limits, a PodDisruptionBudget, and a preStop drain hook on by default
 - Optional Ingress, HPA, NetworkPolicy and ServiceMonitor
 - Extension points for extra env, envFrom, volumes, mounts, init containers and sidecars
@@ -142,9 +142,12 @@ kubectl create secret generic fitpub-secret -n fitpub \
   --from-literal=FITPUB_DATABASE_PASSWORD="$(openssl rand -base64 32)" \
   --from-literal=FITPUB_JWT_SECRET="$(openssl rand -base64 64)" \
   --from-literal=FITPUB_EMAIL_SECRET="$(openssl rand -base64 64)" \
+  --from-literal=FITPUB_ACTUATOR_PASSWORD="$(openssl rand -base64 48)" \
   --from-literal=FITPUB_MAIL_USERNAME="smtp-user" \
   --from-literal=FITPUB_MAIL_PASSWORD="smtp-password"
 ```
+
+`FITPUB_ACTUATOR_PASSWORD` is required on FitPub 1.2.0: actuator endpoints are behind basic auth and the prod profile has no default password, so the pod will not start without it.
 
 The mail user/password are only there because the example sets `FITPUB_MAIL_SMTP_AUTH: "true"`.
 
@@ -420,20 +423,33 @@ commonAnnotations:
 
 ## Monitoring
 
-Running Prometheus Operator? There is a `ServiceMonitor`:
+Running Prometheus Operator? There is a `ServiceMonitor`. FitPub **1.2.0** ships
+`micrometer-registry-prometheus` and serves the exposition format at
+`/actuator/prometheus`, so scraping works - but every actuator endpoint is behind
+HTTP basic auth, so you must supply credentials. Create a Secret in the
+ServiceMonitor namespace and reference it via `serviceMonitor.basicAuth`:
+
+```bash
+kubectl create secret generic fitpub-actuator-auth \
+  --from-literal=username=actuator \
+  --from-literal=password="$FITPUB_ACTUATOR_PASSWORD"
+```
 
 ```yaml
 serviceMonitor:
   enabled: true
   labels:
     release: kube-prometheus-stack
+  basicAuth:
+    username:
+      name: fitpub-actuator-auth
+      key: username
+    password:
+      name: fitpub-actuator-auth
+      key: password
 ```
 
-On FitPub **1.1.1** this does not return useful data: the image ships no
-`/actuator/prometheus`, and Spring Security gates every actuator endpoint behind
-auth, so an anonymous scrape returns a 302 and an empty target. The wiring is in
-place for an image that exposes a public metrics endpoint. Until then, leave it
-off; an empty target is expected, not a sign of an unhealthy app. More in
+Without `basicAuth`, scrapes return HTTP 401 and the target stays empty. More in
 [docs/troubleshooting.md](docs/troubleshooting.md).
 
 ## Security Notes
@@ -488,14 +504,15 @@ A condensed version of the sections above:
 
 - PostgreSQL **with PostGIS**, not plain PostgreSQL
 - `productionChecks.enabled=true` so bad values fail at install rather than at runtime
-- Strong `FITPUB_DATABASE_PASSWORD`, `FITPUB_JWT_SECRET`, `FITPUB_EMAIL_SECRET` (generate with `openssl rand -base64 48`)
+- Strong `FITPUB_DATABASE_PASSWORD`, `FITPUB_JWT_SECRET`, `FITPUB_EMAIL_SECRET`, `FITPUB_ACTUATOR_PASSWORD` (generate with `openssl rand -base64 48`)
+- `FITPUB_ACTUATOR_PASSWORD` is **required** on FitPub 1.2.0 - the pod CrashLoops without it
 - Using `applicationSecret.existingSecret`? Confirm it has every required key before install - the chart cannot inspect its contents
 - `FITPUB_BASE_URL` public, canonical, no trailing slash
 - FitPub behind HTTPS
 - Back up PostgreSQL and `/app/uploads` (the parts you cannot regenerate)
 - Ship `/app/logs` somewhere if you want history - emptyDir does not survive rescheduling
 - `FITPUB_PUSH_ENABLED=false` unless VAPID keys and `FITPUB_VAPID_SUBJECT` are set
-- Leave `serviceMonitor` off until actuator scraping is authenticated or public in your image
+- Scraping metrics? Set `serviceMonitor.basicAuth` against the actuator credentials - `/actuator/prometheus` is behind basic auth on 1.2.0
 - Want more than one replica? Switch uploads to `ReadWriteMany` first
 
 This chart grew out of the Kubernetes manifests discussion in [FitPub issue #301](https://codeberg.org/fitpub/fitpub/issues/301).
