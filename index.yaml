@@ -5,6 +5,46 @@ entries:
       artifacthub.io/category: skip-prediction
       artifacthub.io/changes: |
         - kind: changed
+          description: "Update appVersion to FitPub 1.2.1 (upstream bug-fix release; no chart configuration changes)."
+      artifacthub.io/containsSecurityUpdates: "false"
+      artifacthub.io/images: |
+        - name: fitpub
+          image: codeberg.org/fitpub/fitpub:1.2.1
+        - name: volume-permissions
+          image: busybox:1.37
+          whitelisted: true
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/prerelease: "false"
+      artifacthub.io/signKey: |
+        fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+        url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+    apiVersion: v2
+    appVersion: 1.2.1
+    created: "2026-07-18T12:01:58.735031833Z"
+    description: Helm chart for FitPub - federated fitness tracking platform
+    digest: a762d3441526e03227ec5d6ae017064b85f8ea136fb3bfaea782ec6ce1e8b142
+    home: https://codeberg.org/fitpub/fitpub
+    icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+    keywords:
+    - fitness
+    - activitypub
+    - spring-boot
+    - postgresql
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - name: Dmytro Oliinyk
+      url: https://github.com/oliinykdm
+    name: fitpub
+    sources:
+    - https://codeberg.org/fitpub/fitpub
+    type: application
+    urls:
+    - https://oliinykdm.github.io/fitpub-helm/fitpub-0.5.1.tgz
+    version: 0.5.1
+  - annotations:
+      artifacthub.io/category: skip-prediction
+      artifacthub.io/changes: |
+        - kind: changed
           description: "Update appVersion to FitPub 1.2.0."
         - kind: added
           description: "FITPUB_ACTUATOR_PASSWORD is now required: 1.2.0 puts every actuator endpoint behind basic auth and the prod profile has no default."
@@ -859,4 +899,4 @@ entries:
     urls:
     - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.2.tgz
     version: 0.2.2
-generated: "2026-07-18T04:09:40.02908194Z"
+generated: "2026-07-18T12:01:58.73308934Z"

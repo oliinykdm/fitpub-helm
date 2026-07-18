@@ -1,0 +1,61 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+annotations:
+  artifacthub.io/category: skip-prediction
+  artifacthub.io/changes: |
+    - kind: changed
+      description: "Update appVersion to FitPub 1.2.1 (upstream bug-fix release; no chart configuration changes)."
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/images: |
+    - name: fitpub
+      image: codeberg.org/fitpub/fitpub:1.2.1
+    - name: volume-permissions
+      image: busybox:1.37
+      whitelisted: true
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/signKey: |
+    fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+    url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+apiVersion: v2
+appVersion: 1.2.1
+description: Helm chart for FitPub - federated fitness tracking platform
+home: https://codeberg.org/fitpub/fitpub
+icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+keywords:
+- - fitness
+- - activitypub
+- - spring-boot
+- - postgresql
+kubeVersion: '>= 1.26.0'
+maintainers:
+- - name: Dmytro Oliinyk
+  url: https://github.com/oliinykdm
+name: fitpub
+sources:
+- - https://codeberg.org/fitpub/fitpub
+type: application
+version: 0.5.1
+
+...
+files:
+  fitpub-0.5.1.tgz: sha256:a762d3441526e03227ec5d6ae017064b85f8ea136fb3bfaea782ec6ce1e8b142
+
+-----BEGIN PGP SIGNATURE-----
+
+wsG5BAEBCgBtBYJqW2sxCRBJvZ5epsJDt0UUAAAAAAAcACBzYWx0QG5vdGF0aW9u
+cy5vcGVucGdwanMub3JnxRVIxo31Hz3SlZTiPSZLsXz96u4YKVN4v0/djgMUi+gW
+IQTkyGV3M5iVVS4cq15JvZ5epsJDtwAAEAIP/izpOwO8diNzFjhCCnfJO5ywbqjX
+i+gUjkxEpcYcfC/O6imdFVrefMCFDeFk8ufm5uP7LtBbslRNYvF+aiGsnIvMErdI
+n81IRayGyc+KFdEckN347JPyBRlSlxrbQN9NbOci+Xyc9POmYQo4p7LjdFUTmPIB
+Fe7HFonZ6mShQdaawr+qOtc2jCGZ/2gFn13VFRtsvQtXvhpbS7JaHSxOJ0jHO0Zi
+jdW28/cP9sCshcTYKD/nxnavxONgcSlrixagctYn3aRAyd/YcDFD+nZ48031/rNA
+rcszg9xEiaHUfkq3ciJaed8pPT5m9dYahEDNhGLX7TOfvXzCfoYS+O2zb4jTLIQ6
+yq6y3rzWvq195V1xTvulrxI24249KsPX5YyxcX0M0romoCQcMZ/aoTgok+1piC6y
+uT47Tdb4bvIfAb8iti9cBH18r1f7KwFLaBRal/6IiKGwh8LYLjzFUOZjN2cFu7IF
+ha7SdYbLiVGsLqX1dxnE/IheYbKEHiGNQe/0ga3+41MuqjmcGH9ps3TXxUldQmQ3
+NYLF8nL5LuCMjGvFfFDPcIx8jJVBKjC1KEJpeHRIWWtrr0pI9kFYEPmDb3IV/VWD
+rOu/qHZ5vBo1XTcP92qMeHAOvItz2wwRLxH0Z0fYv0Sqz++kqqkHEBpRAyA2TCZc
+gUJHLNEfoOkl25E+
+-----END PGP SIGNATURE-----
