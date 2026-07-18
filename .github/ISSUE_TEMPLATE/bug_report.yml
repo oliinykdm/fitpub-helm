@@ -15,14 +15,14 @@ body:
     id: chart-version
     attributes:
       label: Chart version
-      placeholder: "0.4.0"
+      placeholder: "0.5.1"
     validations:
       required: true
   - type: input
     id: app-version
     attributes:
       label: FitPub app version
-      placeholder: "1.2.0"
+      placeholder: "1.2.1"
   - type: input
     id: kubernetes-version
     attributes:

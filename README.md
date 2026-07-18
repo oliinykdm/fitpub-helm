@@ -31,7 +31,7 @@
 - `ct lint` on every change
 - Render tests against default values, `examples/production-values.yaml`, and `examples/networkpolicy-smoke-values.yaml`
 - Kubernetes API validation in kind with `kubectl apply --dry-run=server`
-- **Kind runtime test** (the *Kind Runtime Test* badge): on every PR, every push to `main`, and once a week. Spins up kind + PostGIS, runs `helm install --wait`, waits for the pod to go Ready, and curls `GET /login` for an HTTP 200 (FitPub **1.2.0**). A second job does the same under restricted NetworkPolicy egress.
+- **Kind runtime test** (the *Kind Runtime Test* badge): on every PR, every push to `main`, and once a week. Spins up kind + PostGIS, runs `helm install --wait`, waits for the pod to go Ready, and checks the authenticated actuator readiness endpoint. A second job does the same under restricted NetworkPolicy egress.
 - Releases publish to GitHub Pages and the GHCR OCI registry, GPG-signed with a cosign signature, plus a GitHub Release per version
 
 The chart is linted, rendered, and booted against a real PostGIS database in CI. That is not a substitute for production load, but it catches most regressions before release.
@@ -75,13 +75,13 @@ The chart ships two ways. Pick one.
 **OCI registry (recommended).** No `helm repo add`, just point at the package:
 
 ```bash
-helm install fitpub oci://ghcr.io/oliinykdm/charts/fitpub --version 0.4.3 -f production-values.yaml
+helm install fitpub oci://ghcr.io/oliinykdm/charts/fitpub --version 0.5.1 -f production-values.yaml
 ```
 
 The OCI artifact carries the GPG provenance, so you can verify it on pull:
 
 ```bash
-helm pull oci://ghcr.io/oliinykdm/charts/fitpub --version 0.4.3 --verify \
+helm pull oci://ghcr.io/oliinykdm/charts/fitpub --version 0.5.1 --verify \
   --keyring <(curl -fsSL https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc | gpg --dearmor)
 ```
 

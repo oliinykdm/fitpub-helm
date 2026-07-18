@@ -35,7 +35,7 @@ spec:
   chart:
     spec:
       chart: fitpub
-      version: 0.4.x
+      version: 0.5.x
       sourceRef:
         kind: HelmRepository
         name: fitpub
@@ -73,7 +73,7 @@ spec:
   source:
     repoURL: https://oliinykdm.github.io/fitpub-helm
     chart: fitpub
-    targetRevision: 0.4.x
+    targetRevision: 0.5.x
     helm:
       values: |
         productionChecks:
