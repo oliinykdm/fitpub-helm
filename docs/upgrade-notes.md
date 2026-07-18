@@ -1,5 +1,100 @@
 # Upgrade Notes
 
+## 0.5.0
+
+FitPub 1.2.0 support. `appVersion` is now **1.2.0**. Several upstream changes
+require operator action - read before you `helm upgrade`.
+
+### Actuator is now behind HTTP basic auth - `FITPUB_ACTUATOR_PASSWORD` is required
+
+FitPub 1.2.0 protects **every** `/actuator` endpoint (health, info, prometheus)
+with HTTP basic auth. In the prod profile the actuator password has no default, so
+**the pod fails to start without `FITPUB_ACTUATOR_PASSWORD`**.
+
+**Action required:** add `FITPUB_ACTUATOR_PASSWORD` to your Secret (or
+`applicationSecret.data`). The username defaults to `actuator`; override with
+`config.FITPUB_ACTUATOR_USERNAME`. With `productionChecks.enabled=true` the chart
+now fails the render if an inline `FITPUB_ACTUATOR_PASSWORD` is missing.
+
+```bash
+kubectl create secret generic fitpub-secret \
+  ... \
+  --from-literal=FITPUB_ACTUATOR_PASSWORD="$(openssl rand -base64 48)"
+```
+
+### Health probes now use the authenticated actuator health groups
+
+FitPub 1.2.0 enables the Spring Boot readiness/liveness probe groups
+(`/actuator/health/readiness`, `/actuator/health/liveness`), but every `/actuator`
+endpoint is behind basic auth, so a plain `httpGet` probe gets 401. The chart uses
+`exec` probes that run the image's own `wget` and build the basic-auth header from
+`FITPUB_ACTUATOR_USERNAME` (default `actuator`) and `FITPUB_ACTUATOR_PASSWORD` in
+the pod env - the password never enters the pod spec, and it works with
+`existingSecret`. There is **no separate management port**: everything, actuator
+included, is served on `FITPUB_PORT` (8080).
+
+This replaces the previous `GET /login` probe. Readiness now follows Spring's
+`readinessState`, so it goes `OUT_OF_SERVICE` during the graceful-shutdown drain and
+kube-proxy stops routing to a terminating pod; liveness follows `livenessState`, so
+a DB outage does not restart pods.
+
+**Action required:** none for a stock install (`FITPUB_ACTUATOR_PASSWORD` is already
+required, see above). If you pinned custom `/login` probes, you can drop the override
+to pick up the actuator probes, or keep `/login` - it still works. Neither health
+group re-checks the DB; see docs/troubleshooting.md for DB-gated readiness.
+
+### `FILE_UPLOAD_DIR` renamed to `FITPUB_FILE_UPLOAD_DIR`
+
+FitPub 1.2.0 renamed the upload-directory variable. The chart now sets
+`config.FITPUB_FILE_UPLOAD_DIR` and validates it against `persistence.mountPath`.
+
+**Action required:** if you set `config.FILE_UPLOAD_DIR` in your own values, rename
+it to `config.FITPUB_FILE_UPLOAD_DIR`. The old key is silently ignored by 1.2.0.
+
+### Image and tile-cache paths moved to `/tmp`
+
+FitPub 1.2.0 changed the defaults for generated images and the OSM tile cache to
+`/app/images` and `/app/tiles`. Those sit on the **read-only** container root when
+`securityContext.readOnlyRootFilesystem` is on (the chart default), so writes would
+fail. The chart now sets `FITPUB_IMAGES_PATH=/tmp/fitpub/images` and
+`FITPUB_TILE_CACHE_PATH=/tmp/fitpub/tiles`, backed by the existing `/tmp` emptyDir.
+
+**Action required:** none for a stock install. Heavy tile/image usage shares the
+1Gi `ephemeralVolumes.tmp.sizeLimit` - raise it, or mount dedicated volumes at those
+paths via `volumes`/`volumeMounts` and override the two env vars.
+
+### ServiceMonitor scrapes `/actuator/prometheus` with basic auth
+
+FitPub 1.2.0 ships `micrometer-registry-prometheus`, so `/actuator/prometheus` now
+returns the Prometheus exposition format. The chart default `serviceMonitor.path` is
+now `/actuator/prometheus`. Because actuator is behind basic auth, scraping requires
+`serviceMonitor.basicAuth` pointing at a Secret (in the ServiceMonitor namespace)
+with the actuator username and password.
+
+**Action required:** if you scrape metrics, create the auth Secret and set
+`serviceMonitor.basicAuth` (see `values.yaml` for the exact shape).
+
+### New optional config keys
+
+- `FITPUB_CORS_ALLOWED_ORIGINS` - comma-separated browser origins; empty defaults to
+  `FITPUB_BASE_URL`.
+- `FITPUB_ADMIN_EMAILS` - comma-separated emails bootstrapped into the new instance
+  admin role.
+
+**Action required:** none. Both default to empty (unchanged behaviour).
+
+### Graceful shutdown
+
+FitPub 1.2.0 enables Spring Boot graceful shutdown with a 30-second drain window.
+The chart `terminationGracePeriodSeconds` (default 60) already covers the preStop
+sleep (5s) plus the drain window (30s). No action required.
+
+### Known limitation: memory-dump admin feature
+
+The 1.2.0 admin memory-dump feature writes to `/app/dumps`, which is read-only under
+`readOnlyRootFilesystem` and has no path override. If you use it, mount a writable
+volume at `/app/dumps` via `volumes`/`volumeMounts`.
+
 ## 0.4.4
 
 Bug fix only. No appVersion change (still FitPub 1.1.1).

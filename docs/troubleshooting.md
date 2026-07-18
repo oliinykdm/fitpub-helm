@@ -34,30 +34,43 @@ If this fails, use a PostGIS-capable database image, managed service or operator
 
 ## Health Probes
 
-The chart defaults to **`GET /login`** (HTTP 200) for startup, readiness and liveness
-probes on FitPub **1.1.1**. The login page is public in Spring Security and is only
-served once the web stack has finished starting (including Flyway migrations).
+FitPub 1.2.0 enables the Spring Boot probe groups at `/actuator/health/readiness`
+and `/actuator/health/liveness`, but every `/actuator` endpoint is behind HTTP basic
+auth (there is no separate management port - actuator lives on `FITPUB_PORT`, default
+8080). An unauthenticated `httpGet` probe therefore gets a 401.
 
-| Probe | Default path | Expected code |
+The chart uses `exec` probes that mirror the image's own `HEALTHCHECK`: the BusyBox
+`wget` in the `eclipse-temurin:25-jre-alpine` base builds the basic-auth header from
+`FITPUB_ACTUATOR_USERNAME` (default `actuator`) and `FITPUB_ACTUATOR_PASSWORD`, both
+read from the pod env. The password never lands in the pod spec, and it works with
+`applicationSecret.existingSecret`.
+
+| Probe | Default endpoint | Reflects |
 |---|---|---|
-| `startupProbe` | `/login` | 200 |
-| `readinessProbe` | `/login` | 200 |
-| `livenessProbe` | `/login` | 200 |
+| `startupProbe` | `/actuator/health/readiness` | app finished starting (Flyway + context) |
+| `readinessProbe` | `/actuator/health/readiness` | Spring `readinessState` |
+| `livenessProbe` | `/actuator/health/liveness` | Spring `livenessState` |
 
-**Limitation on 1.1.1:** `GET /login` does not query the database. Startup catches
-PostGIS/Flyway failures, but if the database becomes unavailable **after** the pod
-is Ready, probes can still succeed while authenticated features fail. Monitor PostGIS
-externally until a FitPub release exposes unauthenticated actuator health endpoints.
+Readiness follows `readinessState`, which flips to `OUT_OF_SERVICE` (HTTP 503) when
+the graceful-shutdown drain starts, so kube-proxy stops routing to a terminating pod
+- the `/login` page could not do that. Liveness follows `livenessState` only, so a
+database outage does not restart pods.
 
-Verify from inside the cluster:
+One caveat: with the default health groups neither readiness nor liveness runs the
+DB indicator; only the aggregate `/actuator/health` does. If PostgreSQL disappears
+after the pod is Ready, the probes stay green while authenticated features fail.
+Monitor PostGIS separately, or point readiness at the aggregate endpoint (below).
+
+Verify from inside the cluster (replace `<PASSWORD>` with `FITPUB_ACTUATOR_PASSWORD`):
 
 ```bash
-kubectl run fitpub-login-check \
+kubectl run fitpub-health-check \
   --image=curlimages/curl:8.11.1 \
   --restart=Never \
   --rm \
   -i \
-  --command -- curl -fsS -o /dev/null -w 'HTTP:%{http_code}\n' http://fitpub:8080/login
+  --command -- curl -fsS -u actuator:<PASSWORD> -o /dev/null -w 'HTTP:%{http_code}\n' \
+      http://fitpub:8080/actuator/health/readiness
 ```
 
 If probes fail or the pod restarts during startup, check logs and the database
@@ -69,59 +82,66 @@ kubectl logs -l app.kubernetes.io/instance=fitpub
 
 Usual suspects:
 
+- wrong `FITPUB_ACTUATOR_PASSWORD` (probe gets 401 - the pod never turns Ready)
 - wrong database URL, username or password
 - PostgreSQL without PostGIS
 - a failed Flyway migration
 - uploads directory not writable by UID/GID `1001`
 - startup budget blown on a slow node (raise `startupProbe.failureThreshold`)
 
-### Actuator probes (after a future FitPub release)
+### DB-gated readiness (optional)
 
-FitPub **1.1.1** requires authentication for `/actuator/health/**`. Unauthenticated
-kubelet probes receive **HTTP 302** or **403**, and Kubernetes treats **302 as
-success** - so actuator probes are unreliable on 1.1.1.
-
-When you deploy a FitPub image that permits unauthenticated `/actuator/health/**`,
-override probes for DB-aware readiness:
+To take a pod out of the Service endpoints when its DB connection drops, point
+readiness at the aggregate `/actuator/health` (which includes the `db` indicator)
+instead of the readiness group:
 
 ```yaml
-startupProbe:
-  httpGet:
-    path: /actuator/health
-    port: http
-  initialDelaySeconds: 15
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 18
-
 readinessProbe:
-  httpGet:
-    path: /actuator/health/readiness
-    port: http
+  exec:
+    command:
+      - sh
+      - -c
+      - >-
+        wget --spider -q
+        --header="Authorization: Basic $(printf '%s:%s' "${FITPUB_ACTUATOR_USERNAME:-actuator}" "$FITPUB_ACTUATOR_PASSWORD" | base64 | tr -d '\n')"
+        "http://127.0.0.1:${FITPUB_PORT:-8080}/actuator/health"
   periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
-
-livenessProbe:
-  httpGet:
-    path: /actuator/health/liveness
-    port: http
-  periodSeconds: 15
   timeoutSeconds: 5
   failureThreshold: 3
 ```
 
+Weigh the trade-off: on a shared-DB outage every replica goes NotReady at once, so
+the Service ends up with no endpoints. Keep `livenessProbe` on
+`/actuator/health/liveness` so a DB blip never restarts the pods.
+
+### Simpler credential-free probes (fallback)
+
+`GET /login` is public and returns HTTP 200 once the web layer is up, so it works as
+a probe without actuator credentials. It does not query the DB, and it keeps
+returning 200 during the shutdown drain (so traffic is not drained cleanly). Use it
+only if the `exec`/`wget` approach does not fit your image:
+
+```yaml
+readinessProbe:
+  httpGet: { path: /login, port: http }
+livenessProbe:
+  httpGet: { path: /login, port: http }
+startupProbe:
+  httpGet: { path: /login, port: http }
+```
+
 ## ServiceMonitor Returns No Metrics
 
-The chart can create a `ServiceMonitor` that scrapes `/actuator/metrics`, but
-FitPub **1.1.1** requires authentication for all actuator endpoints. Prometheus
-receives HTTP **302/403** unless the app image permits unauthenticated actuator
-access or you configure scrape authentication.
+The chart creates a `ServiceMonitor` scraping `/actuator/prometheus` (the FitPub
+1.2.0 Prometheus endpoint). Every actuator endpoint is behind HTTP basic auth, so
+without scrape credentials Prometheus receives **HTTP 401** and the target stays
+empty.
 
-Do not enable `serviceMonitor.enabled` expecting useful metrics on 1.1.1 without
-one of those workarounds. Do not treat an empty Prometheus target as proof that
-FitPub is unhealthy - chart probes intentionally use `GET /login` instead. See
-the Monitoring section in README.md.
+Provide `serviceMonitor.basicAuth` pointing at a Secret (in the ServiceMonitor
+namespace) that holds the actuator username (default `actuator`) and
+`FITPUB_ACTUATOR_PASSWORD` - see the Monitoring section in README.md. An empty
+target is a scrape-auth problem, not proof that FitPub is unhealthy - the pod's own
+readiness probe authenticates separately.
 
 ## NetworkPolicy Blocks Traffic
 

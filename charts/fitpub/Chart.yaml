@@ -2,8 +2,8 @@ apiVersion: v2
 name: fitpub
 description: Helm chart for FitPub - federated fitness tracking platform
 type: application
-version: 0.4.4
-appVersion: "1.1.1"
+version: 0.5.0
+appVersion: "1.2.0"
 kubeVersion: ">= 1.26.0"
 home: https://codeberg.org/fitpub/fitpub
 sources:
@@ -25,7 +25,7 @@ annotations:
   # Keep the fitpub image tag below in sync with appVersion above on every bump.
   artifacthub.io/images: |
     - name: fitpub
-      image: codeberg.org/fitpub/fitpub:1.1.1
+      image: codeberg.org/fitpub/fitpub:1.2.0
     - name: volume-permissions
       image: busybox:1.37
       whitelisted: true
@@ -33,5 +33,17 @@ annotations:
     fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
     url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "FITPUB_PUSH_ENABLED/VAPID validation now runs unconditionally instead of only when productionChecks.enabled=true."
+    - kind: changed
+      description: "Update appVersion to FitPub 1.2.0."
+    - kind: added
+      description: "FITPUB_ACTUATOR_PASSWORD is now required: 1.2.0 puts every actuator endpoint behind basic auth and the prod profile has no default."
+    - kind: changed
+      description: "Health probes switched to authenticated actuator groups (exec wget); readiness now drains on graceful shutdown."
+    - kind: changed
+      description: "Renamed config key FILE_UPLOAD_DIR to FITPUB_FILE_UPLOAD_DIR."
+    - kind: changed
+      description: "Redirect FITPUB_IMAGES_PATH and FITPUB_TILE_CACHE_PATH to /tmp; their new /app defaults are read-only under readOnlyRootFilesystem."
+    - kind: changed
+      description: "ServiceMonitor scrapes /actuator/prometheus and needs serviceMonitor.basicAuth against the actuator credentials."
+    - kind: added
+      description: "FITPUB_CORS_ALLOWED_ORIGINS and FITPUB_ADMIN_EMAILS config keys."

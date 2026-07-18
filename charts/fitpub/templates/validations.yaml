@@ -12,8 +12,8 @@ below cover cross-field and conditional invariants that JSON Schema cannot expre
 {{- fail (printf "config.FITPUB_PORT (%v) must match service.port (%v) - the app listens on FITPUB_PORT but health probes and the Service use service.port" .Values.config.FITPUB_PORT .Values.service.port) -}}
 {{- end -}}
 
-{{- if and .Values.persistence.enabled .Values.config.FILE_UPLOAD_DIR (ne .Values.config.FILE_UPLOAD_DIR .Values.persistence.mountPath) -}}
-{{- fail (printf "config.FILE_UPLOAD_DIR (%s) must match persistence.mountPath (%s) - a mismatch causes uploads to be written to ephemeral storage and lost on pod restart" .Values.config.FILE_UPLOAD_DIR .Values.persistence.mountPath) -}}
+{{- if and .Values.persistence.enabled .Values.config.FITPUB_FILE_UPLOAD_DIR (ne .Values.config.FITPUB_FILE_UPLOAD_DIR .Values.persistence.mountPath) -}}
+{{- fail (printf "config.FITPUB_FILE_UPLOAD_DIR (%s) must match persistence.mountPath (%s) - a mismatch causes uploads to be written to ephemeral storage and lost on pod restart" .Values.config.FITPUB_FILE_UPLOAD_DIR .Values.persistence.mountPath) -}}
 {{- end -}}
 
 {{- if and .Values.pages.existingSecret .Values.config.FITPUB_PAGES_PATH (ne .Values.config.FITPUB_PAGES_PATH .Values.pages.mountPath) -}}
@@ -64,7 +64,7 @@ Use ReadWriteMany (with a supporting StorageClass) for horizontal scaling.
 {{- end -}}
 
 {{- if not .Values.applicationSecret.existingSecret -}}
-{{- $requiredSecrets := list "FITPUB_DATABASE_USERNAME" "FITPUB_DATABASE_PASSWORD" "FITPUB_JWT_SECRET" "FITPUB_EMAIL_SECRET" -}}
+{{- $requiredSecrets := list "FITPUB_DATABASE_USERNAME" "FITPUB_DATABASE_PASSWORD" "FITPUB_JWT_SECRET" "FITPUB_EMAIL_SECRET" "FITPUB_ACTUATOR_PASSWORD" -}}
 {{- range $key := $requiredSecrets -}}
 {{- if not (index $.Values.applicationSecret.data $key) -}}
 {{- fail (printf "applicationSecret.data.%s is required when productionChecks.enabled=true" $key) -}}

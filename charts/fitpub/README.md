@@ -54,6 +54,7 @@ The referenced Secret must contain:
 - `FITPUB_DATABASE_PASSWORD`
 - `FITPUB_JWT_SECRET`
 - `FITPUB_EMAIL_SECRET`
+- `FITPUB_ACTUATOR_PASSWORD` (required on FitPub 1.2.0 - actuator is behind basic auth; the pod CrashLoops without it)
 
 If `FITPUB_PUSH_ENABLED` is set to `"true"`, also provide VAPID public/private keys in the Secret and set `FITPUB_VAPID_SUBJECT`.
 
@@ -71,7 +72,7 @@ If `FITPUB_PUSH_ENABLED` is set to `"true"`, also provide VAPID public/private k
 - non-root UID/GID `1001`, restricted Pod Security Standard compliant out of the box
 - `readOnlyRootFilesystem` on by default, with emptyDir for `/tmp` and `/app/logs`
 - ConfigMap/Secret split for application environment variables
-- startup/readiness/liveness probes on `GET /login` (FitPub 1.1.1 compatible)
+- startup/readiness/liveness probes on the authenticated actuator health groups (exec `wget` builds the basic-auth header from the actuator password in the pod env)
 - CPU/memory limits sized for Java 25, plus a PDB and a preStop drain hook by default
 - optional Hikari pool, ActivityPub inbox, mail and feature-toggle config keys
 - optional Ingress, HPA, NetworkPolicy and ServiceMonitor
@@ -88,4 +89,4 @@ https://github.com/oliinykdm/fitpub-helm
 
 **Logs:** the `prod` profile writes rotated files to `/app/logs`, mounted as emptyDir. They survive container restarts but not rescheduling - collect them if you want history.
 
-**ServiceMonitor:** FitPub 1.1.x gates `/actuator/metrics` behind auth, so leave scraping off until actuator access is public or you wire up scrape auth.
+**ServiceMonitor:** FitPub 1.2.0 serves `/actuator/prometheus` (the chart default path) but gates every actuator endpoint behind HTTP basic auth. Set `serviceMonitor.basicAuth` to a Secret holding the actuator username (default `actuator`) and `FITPUB_ACTUATOR_PASSWORD`, or scrapes return 401.

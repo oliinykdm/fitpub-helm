@@ -48,7 +48,10 @@ jobs:
         uses: helm/chart-testing-action@v2
 
       - name: Run chart-testing (lint)
-        run: ct lint --target-branch main --chart-dirs charts
+        # --config is explicit: recent ct no longer auto-discovers ./ct.yaml in the
+        # action's working dir, which would drop validate-maintainers: false and fail
+        # on the human-readable maintainer name.
+        run: ct lint --config ct.yaml
 
       - name: Render chart templates
         run: helm template fitpub ./charts/fitpub
@@ -69,6 +72,7 @@ jobs:
             --from-literal=FITPUB_DATABASE_PASSWORD=test-password \
             --from-literal=FITPUB_JWT_SECRET=test-jwt-secret-with-more-than-32-characters \
             --from-literal=FITPUB_EMAIL_SECRET=test-email-secret-with-more-than-32-characters \
+            --from-literal=FITPUB_ACTUATOR_PASSWORD=test-actuator-password \
             --dry-run=client -o yaml | kubectl apply -f -
 
           # Validate the full production manifest set, including Ingress
