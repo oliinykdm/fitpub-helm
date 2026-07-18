@@ -1,5 +1,14 @@
 # Upgrade Notes
 
+## 0.5.1
+
+`appVersion` bumped to FitPub **1.2.1**, an upstream bug-fix release (federation
+activity times, analytics and logging fixes). No chart configuration changes: the
+container image, actuator security, required env and probe endpoints are identical
+to 1.2.0.
+
+**Action required:** none. `helm upgrade` picks up the new image.
+
 ## 0.5.0
 
 FitPub 1.2.0 support. `appVersion` is now **1.2.0**. Several upstream changes
