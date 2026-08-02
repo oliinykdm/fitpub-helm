@@ -251,7 +251,7 @@ persistence:
   existingClaim: fitpub-uploads
 ```
 
-Back up the uploads PVC and the external PostGIS database regularly.
+Back up the uploads PVC and the external PostGIS database regularly. It's important!
 
 ## Application Logs
 
