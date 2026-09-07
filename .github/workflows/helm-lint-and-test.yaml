@@ -63,7 +63,7 @@ jobs:
         run: helm template fitpub ./charts/fitpub -f examples/networkpolicy-smoke-values.yaml
 
       - name: Create kind cluster
-        uses: helm/kind-action@v1.14.0
+        uses: helm/kind-action@v1.15.0
 
       - name: Validate manifests against Kubernetes API
         run: |
