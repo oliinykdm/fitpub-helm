@@ -75,13 +75,13 @@ The chart ships two ways. Pick one.
 **OCI registry (recommended).** No `helm repo add`, just point at the package:
 
 ```bash
-helm install fitpub oci://ghcr.io/oliinykdm/charts/fitpub --version 0.5.1 -f production-values.yaml
+helm install fitpub oci://ghcr.io/oliinykdm/charts/fitpub --version 0.6.0 -f production-values.yaml
 ```
 
 The OCI artifact carries the GPG provenance, so you can verify it on pull:
 
 ```bash
-helm pull oci://ghcr.io/oliinykdm/charts/fitpub --version 0.5.1 --verify \
+helm pull oci://ghcr.io/oliinykdm/charts/fitpub --version 0.6.0 --verify \
   --keyring <(curl -fsSL https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc | gpg --dearmor)
 ```
 
@@ -502,12 +502,12 @@ See [docs/troubleshooting.md](docs/troubleshooting.md) for common Kubernetes dep
 
 A condensed version of the sections above:
 
-- PostgreSQL **with PostGIS**, not plain PostgreSQL
+- PostgreSQL **with PostGIS**, not plain PostgreSQL. The database role must also be able to create `btree_gist` and, from FitPub 1.3.0, `pg_trgm`
 - `productionChecks.enabled=true` so bad values fail at install rather than at runtime
 - Strong `FITPUB_DATABASE_PASSWORD`, `FITPUB_JWT_SECRET`, `FITPUB_EMAIL_SECRET`, `FITPUB_ACTUATOR_PASSWORD` (generate with `openssl rand -base64 48`)
 - `FITPUB_ACTUATOR_PASSWORD` is **required** on FitPub 1.2.0 - the pod CrashLoops without it
 - Using `applicationSecret.existingSecret`? Confirm it has every required key before install - the chart cannot inspect its contents
-- `FITPUB_BASE_URL` public, canonical, no trailing slash
+- `FITPUB_BASE_URL` public, canonical, HTTPS, no trailing slash (HTTP only for localhost)
 - FitPub behind HTTPS
 - Back up PostgreSQL and `/app/uploads` (the parts you cannot regenerate)
 - Ship `/app/logs` somewhere if you want history - emptyDir does not survive rescheduling

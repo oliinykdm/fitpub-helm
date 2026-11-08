@@ -7,7 +7,8 @@ productionChecks:
 config:
   FITPUB_DATABASE_URL: "jdbc:postgresql://postgis:5432/fitpub"
   FITPUB_DOMAIN: "fitpub.local"
-  FITPUB_BASE_URL: "http://fitpub.local"
+  # HTTPS is required for any non-localhost origin as of FitPub 1.3.0.
+  FITPUB_BASE_URL: "https://fitpub.local"
   FITPUB_FEDERATION_PROTOCOL: "http"
   FITPUB_PUSH_ENABLED: "false"
 

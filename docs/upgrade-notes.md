@@ -1,5 +1,81 @@
 # Upgrade Notes
 
+## 0.6.0
+
+FitPub **1.3.1** support. `appVersion` is now **1.3.1**
+(`codeberg.org/fitpub/fitpub:1.3.1`). 1.3.1 is a bug-fix on top of 1.3.0; the
+chart changes below are from the 1.3.0 release. The container port, UID, Java
+command (`-XX:MaxRAMPercentage=65`), image repository, and authenticated
+readiness/liveness probes are unchanged.
+
+### `FITPUB_BASE_URL` must be HTTPS
+
+FitPub 1.3.0 binds passkeys to the origin in `FITPUB_BASE_URL` and **refuses to
+start** unless that URL is HTTPS. HTTP is allowed only when the host is
+`localhost`, `127.0.0.1`, or `[::1]`. `http://fitpub.local` and any other
+non-localhost HTTP origin crash the process.
+
+**Action required:** set `config.FITPUB_BASE_URL` to an `https://` URL before
+upgrading. The chart now rejects other HTTP origins at render time.
+`FITPUB_FEDERATION_PROTOCOL=http` is still allowed for local federation tests.
+Changing the HTTPS origin later can make existing passkeys unusable; password
+sign-in still works.
+
+### Upload limit is no longer pinned at 50MB
+
+The chart used to set `SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE` and
+`SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE` to `50MB`, which matched the 1.2.x
+default. FitPub 1.3.0 raises `FITPUB_FILE_UPLOAD_MAX_SIZE` to `500MB` and uses
+that value for both Spring multipart limits. Leaving the chart keys at 50MB
+would reject uploads the app now accepts, including batch-import archives.
+
+**Action required:** none if you want the 500MB default. The chart no longer
+sets those Spring keys. To keep the old cap, set
+`config.FITPUB_FILE_UPLOAD_MAX_SIZE: "50MB"`. A batch import can also stage the
+archive and extracted files together, up to
+`FITPUB_BATCH_IMPORT_MAX_EXTRACTED_SIZE` (default 5GB) under the uploads
+directory, so the default 1Gi PVC is too small for a full-size batch. Raise
+`persistence.size`, and allow request bodies of at least the upload limit on
+the ingress (the annotation depends on the controller).
+
+### Application logger is `social.fitpub`
+
+The package moved from `net.javahippie.fitpub` to `social.fitpub`. The chart now
+sets `LOGGING_LEVEL_SOCIAL_FITPUB=INFO`. The old environment variable is ignored.
+
+**Action required:** if your values set `LOGGING_LEVEL_NET_JAVAHIPPIE_FITPUB`,
+rename it to `LOGGING_LEVEL_SOCIAL_FITPUB`.
+
+### Database role must be able to create `pg_trgm`
+
+Flyway `V98` (manual activity entry) runs `CREATE EXTENSION IF NOT EXISTS pg_trgm`.
+The role already needed `postgis` and `btree_gist`. Migrations are forward-only:
+rolling the image back does not undo them.
+
+**Action required:** grant the FitPub role permission to create `pg_trgm`, or
+create the extension as a superuser before upgrading. The first boot applies
+migrations through `V166`. If that exceeds the startup probe budget (~195s),
+raise `startupProbe.failureThreshold`.
+
+### Sessions
+
+1.3.0 changes the authentication-cookie claims. Old and new versions do not
+accept each other's JWTs, so every user is logged out once and must sign in
+again. Roll all replicas to 1.3.1 together.
+
+### Paths that stay unmounted
+
+Generated images and the OSM tile cache still use the `/tmp` emptyDir
+(`FITPUB_IMAGES_PATH`, `FITPUB_TILE_CACHE_PATH`). GeoIP is off by default
+(`FITPUB_GEOIP_ENABLED=false`) and downloads its database to `/app/geoip`, which
+is read-only under `readOnlyRootFilesystem`. Mount a volume there, or set
+`FITPUB_GEOIP_DATABASE_PATH`, before enabling it. Heap dumps still need a
+writable `/app/dumps`.
+
+Probes are unchanged. The new `databasePools` contributor is part of the
+aggregate `/actuator/health` endpoint only, so readiness and liveness still do
+not restart pods for a pool incident.
+
 ## 0.5.1
 
 `appVersion` bumped to FitPub **1.2.1**, an upstream bug-fix release (federation

@@ -138,8 +138,8 @@
       "properties": {
         "FITPUB_BASE_URL": {
           "type": "string",
-          "pattern": "^$|^https?://.+[^/]$",
-          "description": "Public base URL without trailing slash"
+          "pattern": "^$|^https://.+[^/]$|^http://(localhost|127\\.0\\.0\\.1)(:[0-9]+)?$|^http://\\[::1\\](:[0-9]+)?$",
+          "description": "Public base URL without a trailing slash. FitPub 1.3.0+ requires HTTPS. HTTP is accepted only for localhost, 127.0.0.1, and [::1], because passkeys are bound to this origin and the app refuses to start otherwise."
         },
         "FITPUB_DOMAIN": {
           "type": "string",
