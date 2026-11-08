@@ -5,6 +5,52 @@ entries:
       artifacthub.io/category: skip-prediction
       artifacthub.io/changes: |
         - kind: changed
+          description: "Update appVersion to FitPub 1.3.1."
+        - kind: changed
+          description: "Require an HTTPS FITPUB_BASE_URL, except localhost HTTP, matching the 1.3.0 passkey origin check."
+        - kind: removed
+          description: "Stop pinning Spring multipart limits at 50MB so the app default FITPUB_FILE_UPLOAD_MAX_SIZE of 500MB applies."
+        - kind: changed
+          description: "Pin the application log level with LOGGING_LEVEL_SOCIAL_FITPUB after the package rename."
+      artifacthub.io/containsSecurityUpdates: "false"
+      artifacthub.io/images: |
+        - name: fitpub
+          image: codeberg.org/fitpub/fitpub:1.3.1
+        - name: volume-permissions
+          image: busybox:1.37
+          whitelisted: true
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/prerelease: "false"
+      artifacthub.io/signKey: |
+        fingerprint: E4C86577339895552E1CAB5E49BD9E5EA6C243B7
+        url: https://oliinykdm.github.io/fitpub-helm/pgp-public-key.asc
+    apiVersion: v2
+    appVersion: 1.3.1
+    created: "2026-11-08T23:39:17.251394564Z"
+    description: Helm chart for FitPub - federated fitness tracking platform
+    digest: addf88f64078646c1922c3140d91056e6bcf4444fd3c883be81064b813dae7e2
+    home: https://codeberg.org/fitpub/fitpub
+    icon: https://raw.githubusercontent.com/oliinykdm/fitpub-helm/main/icon.png
+    keywords:
+    - fitness
+    - activitypub
+    - spring-boot
+    - postgresql
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - name: Dmytro Oliinyk
+      url: https://github.com/oliinykdm
+    name: fitpub
+    sources:
+    - https://codeberg.org/fitpub/fitpub
+    type: application
+    urls:
+    - https://oliinykdm.github.io/fitpub-helm/fitpub-0.6.0.tgz
+    version: 0.6.0
+  - annotations:
+      artifacthub.io/category: skip-prediction
+      artifacthub.io/changes: |
+        - kind: changed
           description: "Update appVersion to FitPub 1.2.1 (upstream bug-fix release; no chart configuration changes)."
       artifacthub.io/containsSecurityUpdates: "false"
       artifacthub.io/images: |
@@ -899,4 +945,4 @@ entries:
     urls:
     - https://oliinykdm.github.io/fitpub-helm/fitpub-0.2.2.tgz
     version: 0.2.2
-generated: "2026-07-31T12:15:53.727750538Z"
+generated: "2026-11-08T23:39:17.250167713Z"
