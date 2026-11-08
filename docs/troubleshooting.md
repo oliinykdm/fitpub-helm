@@ -158,7 +158,11 @@ explicitly (to kube-system on UDP/TCP 53, see the NetworkPolicy section in
 
 ## Broken ActivityPub Or WebFinger URLs
 
-`FITPUB_BASE_URL` must not end with a slash.
+`FITPUB_BASE_URL` must not end with a slash. From FitPub 1.3.0 it must also be
+HTTPS, except `http://localhost`, `http://127.0.0.1`, or `http://[::1]` (with an
+optional port). Any other HTTP origin prevents the process from starting,
+because passkeys are bound to that origin. `FITPUB_FEDERATION_PROTOCOL` is a
+separate setting and may still be `http` for local federation tests.
 
 Use:
 

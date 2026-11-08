@@ -9,7 +9,7 @@ FitPub is a federated fitness tracking platform. This chart runs it on Kubernete
 From the OCI registry (recommended):
 
 ```bash
-helm install fitpub oci://ghcr.io/oliinykdm/charts/fitpub --version 0.5.1 -f production-values.yaml
+helm install fitpub oci://ghcr.io/oliinykdm/charts/fitpub --version 0.6.0 -f production-values.yaml
 ```
 
 Or the classic HTTP repo:
@@ -60,8 +60,8 @@ If `FITPUB_PUSH_ENABLED` is set to `"true"`, also provide VAPID public/private k
 
 ## Production Notes
 
-- PostgreSQL **with PostGIS**, not plain PostgreSQL
-- `FITPUB_BASE_URL` canonical, no trailing slash
+- PostgreSQL **with PostGIS**, not plain PostgreSQL. The database role must also be able to create `btree_gist` and, from FitPub 1.3.0, `pg_trgm`
+- `FITPUB_BASE_URL` canonical, HTTPS, no trailing slash (HTTP only for localhost)
 - Push notifications off until VAPID keys and `FITPUB_VAPID_SUBJECT` are set
 - One replica unless uploads use `ReadWriteMany` storage (RWO can only mount on one pod)
 - Back up the PostGIS database and the uploads PVC

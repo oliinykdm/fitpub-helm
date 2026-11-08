@@ -3,8 +3,9 @@
 {{- end -}}
 
 {{- /*
-FITPUB_BASE_URL (no trailing slash), FITPUB_DOMAIN (bare host) and
-FITPUB_FEDERATION_PROTOCOL (http/https) are constrained by values.schema.json,
+FITPUB_BASE_URL (HTTPS, or HTTP only for localhost / 127.0.0.1 / [::1], and no
+trailing slash), FITPUB_DOMAIN (bare host) and FITPUB_FEDERATION_PROTOCOL
+(http/https) are constrained by values.schema.json,
 which is evaluated before templates - so they are not re-checked here. The guards
 below cover cross-field and conditional invariants that JSON Schema cannot express.
 */ -}}
